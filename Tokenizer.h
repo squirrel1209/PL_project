@@ -8,7 +8,6 @@
 #include <fstream>
 
 using namespace std;
-
 enum class TokenType {
     IDENT,
     NUM,
@@ -41,27 +40,7 @@ public:
             tokenWithType.token = token;
 
             // 假設此函數返回token的型態
-            TokenType type = getTokenType( token ); 
-            
-            // 將型態分配給token
-            switch ( type ) {
-                case TokenType::IDENT:
-                    tokenWithType.type = TokenType::IDENT;
-                    break;
-
-                case TokenType::NUM:
-                    tokenWithType.type = TokenType::NUM;
-                    break;
-                    
-                case TokenType::SIGN:
-                    tokenWithType.type = TokenType::SIGN;
-                    break;
-
-                default:
-                    tokenWithType.type = TokenType::OTHER;
-                    break;
-            } // end switch
-
+            tokenWithType.type = getTokenType( token ); 
             tokensWithType.push_back(tokenWithType);
             token = getNextToken() ;
         }  // end while
@@ -128,7 +107,7 @@ public:
     } // end isIDENT
     
     bool isDelimiter( char ch ) {
-        if ( ch == '\0' || ch == '#' || ch == '+' || ch == '-' )
+        if ( ch == '\0' || ch == '+' || ch == '-' )
             return true ;
         else return false ;
     	
@@ -144,10 +123,22 @@ public:
         if ( lineIndex == input.size() ) {
             return "quit";
         } // end if 
-         
-        else if ( nextChar == '\n' ) {
-            return "換行";
-        } // end if
+        
+        else if ( nextChar == '/' ) {
+            nextChar = getNextChar();
+            
+            if ( nextChar == '/' ) {
+                while ( nextChar != '\n' ) nextChar = getNextChar() ;
+                nextChar = getNextNonWhiteSpaceChar();
+                string tokenValue = readRemainingToken();
+                return nextChar + tokenValue;
+            } // end if
+            
+	  else {
+	    columnIndex-- ;
+	    return "/" + readRemainingToken() ;
+	  } // end else
+        } // end else if 
         
         else {
             string tokenValue = readRemainingToken();
@@ -162,12 +153,22 @@ public:
 
         string tokenValue;
         char nextChar = getNextChar();
+        
         while ( !isspace( nextChar ) && !isDelimiter( nextChar ) ) { // 如果不是writespace 和 delimiter 
-            tokenValue += nextChar;
-            nextChar = getNextChar();
+            if ( nextChar == '/' ) {       // 處理連續的註解 
+                nextChar = getNextChar() ;
+                if ( nextChar == '/' ) 
+                	while ( nextChar != '\n' ) nextChar = getNextChar() ;
+	      else columnIndex-- ;
+            } // end if
+            
+            else {
+                tokenValue += nextChar;
+                nextChar = getNextChar();
+            } // end else
         } // end while
         
-        if ( isDelimiter( nextChar ) ) columnIndex-- ;
+        if ( isDelimiter( nextChar ) ) columnIndex-- ; // delimiter不算此token，往前一個column 
         return tokenValue;
     } // readRemainingToken() 
 

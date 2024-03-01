@@ -6,19 +6,7 @@
 #include "Tokenizer.h"
 
 using namespace std;
-/*
-enum class TokenType {
-    IDENT,
-    NUM,
-    SIGN,
-    OTHER
-};
 
-struct TokenWithType {
-    string token;
-    TokenType type;
-};
-*/
 // 函數用於從文件中讀取內容並返回一個存儲行的向量
 vector<string> read_lines_from_file( string filename ) {
     vector<string> input_lines ;
@@ -67,5 +55,5 @@ int main() {
         printTokenType( tokenGroup[i].type ) ;
         cout << endl ;
     } 
-
+    
 }
