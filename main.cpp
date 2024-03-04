@@ -4,7 +4,8 @@
 #include <string>
 #include <fstream>
 #include "Tokenizer.h"
-
+//#include "Parser.h"
+ 
 using namespace std;
 
 // 函數用於從文件中讀取內容並返回一個存儲行的向量
@@ -25,19 +26,28 @@ vector<string> read_lines_from_file( string filename ) {
     return input_lines;
 } // end read_lines_from_file
 
-void printTokenType(TokenType type) {
+void printTokenType(Type type) {
     switch (type) {
-        case TokenType::IDENT:
+        case Type::IDENT:
             std::cout << "Identifier\n";
             break;
-        case TokenType::NUM:
+        case Type::NUM:
             std::cout << "Number\n";
             break;
-        case TokenType::SIGN:
+        case Type::SIGN:
             std::cout << "Sign\n";
             break;
-        case TokenType::OTHER:
+        case Type::RPAREN:
+            std::cout << "RPAREN\n";
+            break;
+        case Type::LPAREN:
+            std::cout << "LPAREN\n";
+            break;
+        case Type::OTHER:
             std::cout << "Other\n";
+            break;
+        case Type::QUIT:
+            std::cout << "QUIT\n";
             break;
         default:
             std::cout << "Unknown\n";

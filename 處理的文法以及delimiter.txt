@@ -1,5 +1,28 @@
+tokenType:
+    IDENT,
+    NUM,
+    SIGN,
+    OTHER,
 delimiter:
+待處理 : '*'、'/'、'+'、'-'、'=' 、 '<>' 、 '>' 、 '<' 、 '>=' 、 '<='、':='
 
 
+文法:
+<Statement> ::= IDENT ':=' <ArithExp>
 
-文法
+<BooleanExp>   ::= <ArithExp> ( '=' | '<>' | '>' | '<' | '>=' | '<=' ) <ArithExp>
+
+<ArithExp>::= <Term> | <ArithExp> '+' <Term> | <ArithExp> '-' <Term>
+<ArithExp>::= <Term> { '+' <Term> | '-' <Term> }
+
+<Factor>::= IDENT | [ SIGN ] NUM | '(' <ArithExp> ')'
+
+<Term> ::= <Factor> | <Term> '*' <Factor> | <Term> '/' <Factor>
+<Term>::= <Factor> { '*' <Factor> | '/' <Factor> }
+
+command
+<Command> ::= <Statement> ';' | <BooleanExp> ';' | <ArithExp> ';' | QUIT
+<Command> ::= IDENT ( ':=' <ArithExp> 
+            | <IDlessArithExpOrBexp> ) ';' 
+            | <NOT_IDStartArithExpOrBexp> ';' 
+            | QUIT

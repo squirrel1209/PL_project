@@ -8,16 +8,19 @@
 #include <fstream>
 
 using namespace std;
-enum class TokenType {
+enum class Type {
+    RPAREN,    // ')'
+    LPAREN,    // '('
     IDENT,
     NUM,
     SIGN,
-    OTHER
+    OTHER,
+    QUIT
 };
 
 struct TokenWithType {
     string token;
-    TokenType type;
+    Type type;
 };
 
 class Tokenizer {
@@ -49,11 +52,14 @@ public:
     }  // end processTokens()
 
     // 函數：返回token的型態
-    TokenType getTokenType( string token ) {
-        if ( isIDENT( token ) ) return TokenType::IDENT;
-        else if ( isNUM( token ) ) return TokenType::NUM;
-        else if ( isSIGN( token ) ) return TokenType::SIGN;
-        else return TokenType::OTHER;
+    Type getTokenType( string token ) {
+        if ( isIDENT( token ) ) return Type::IDENT;
+        else if ( isNUM( token ) ) return Type::NUM;
+        else if ( isSIGN( token ) ) return Type::SIGN;
+        else if ( token.compare( "(" ) == 0 ) return Type::LPAREN;
+        else if ( token.compare( ")" ) == 0 ) return Type::RPAREN;
+        else if ( token.compare( "\0" ) == 0 ) return Type::QUIT;
+        else return Type::OTHER;
     } // end getTokenType()
 
     bool isSIGN( string str ) {
@@ -107,11 +113,17 @@ public:
     } // end isIDENT
     
     bool isDelimiter( char ch ) {
-        if ( ch == '\0' || ch == '+' || ch == '-' )
+        if ( ch == '\0' || ch == '+' || ch == '-' || ch == '(' || ch == ')' )
             return true ;
         else return false ;
     	
     } // end isDelimiter
+    
+    string getDelimiter( char ch ) {
+        if ( ch == '\0' || ch == '+' || ch == '-' || ch == '(' || ch == ')' ) {
+            return string(1, ch);
+        } // end if
+    } // end getDelimiter()
 //---------------------------------------GetToken--------------------------------------- 
     string getNextToken() {
     //getNextToken():取得下一個 token
@@ -140,6 +152,10 @@ public:
 	  } // end else
         } // end else if 
         
+        else if ( isDelimiter( nextChar ) ) {
+           return getDelimiter( nextChar ) ;
+        } // end else if
+        
         else {
             string tokenValue = readRemainingToken();
             return nextChar + tokenValue;
@@ -155,6 +171,7 @@ public:
         char nextChar = getNextChar();
         
         while ( !isspace( nextChar ) && !isDelimiter( nextChar ) ) { // 如果不是writespace 和 delimiter 
+        
             if ( nextChar == '/' ) {       // 處理連續的註解 
                 nextChar = getNextChar() ;
                 if ( nextChar == '/' ) 
