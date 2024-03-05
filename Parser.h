@@ -3,24 +3,11 @@
 
 #include <vector>
 #include <string>
-//#include <stdexcept>
+#include "Tokenizer.h"
+#include <stdexcept>
 
 using namespace std;
 
-enum class Type {
-    RPAREN,    // ')'
-    LPAREN,    // '('
-    IDENT,
-    NUM,
-    SIGN,
-    OTHER,
-    QUIT
-};
-
-struct TokenWithType {
-    string token;
-    Type type;
-};
 
 class Parser {
 private:
@@ -31,26 +18,29 @@ public:
     Parser( vector<TokenWithType> inputTokens ): tokens(inputTokens), currentTokenIndex(0) {}
 	
     void parse() {  // 呼叫此function作為開始 
-        command();
+        if ( factor() ) cout << "isfactor" ;
+        else cout << "isNotFactor" ;
+        //command();
     } // end parse
 
     void command() {
         if ( currentTokenType() == Type::QUIT ) {
-        	match( TokenType::QUIT );
+        	match( Type::QUIT );
         } // end if
         
-        else if (  ) {
+        /*else if (  ) {
         	
-        } // end else if
+        } // end else if*/ 
     } // end command()
 
     // <Statement> ::= IDENT ':=' <ArithExp>
+    /*
     void statement() {
-        if ( currentTokenType() == TokenType::IDENT ) {
-            match( TokenType::IDENT );
+        if ( currentTokenType() == Type::IDENT ) {
+            match( Type::IDENT );
             
-            if ( currentTokenType() == TokenType::ASSIGN ) {
-                match( TokenType::ASSIGN );
+            if ( currentTokenType() == Type::ASSIGN ) {
+                match( Type::ASSIGN );
                 arithExp();
             } // end if
             
@@ -74,37 +64,62 @@ public:
         
         arithExp();
     } // end booleanExp()
-
+*/
     // <ArithExp> ::= <Term> | <ArithExp> '+' <Term> | <ArithExp> '-' <Term>
-    void arithExp() {
-        term();
-        while ( currentTokenType() == TokenType::PLUS || currentTokenType() == TokenType::MINUS ) {
-            match( currentTokenType() );
-            term();
-        } // end while
+    bool arithExp() {
+        if ( term() ) {
+            while ( currentTokenType() == TokenType::PLUS || currentTokenType() == TokenType::MINUS ) {
+                match( currentTokenType() );
+                
+                if ( !term() ) {
+                    throw runtime_error("Error: Unexpected token in arithExp.");
+                    return false ;
+	      } // end if
+            } // end while
+            
+            return true ;
+        } // end if
+        
+        else {
+            throw runtime_error("Error: Unexpected token in arithExp.");
+            return false ;
+        } // end else
     } // end arithExp()
 
     // <Term> ::= <Factor> | <Term> '*' <Factor> | <Term> '/' <Factor>
-    void term() {
-        factor();
-        while ( currentTokenType() == TokenType::MULTIPLY || currentTokenType() == TokenType::DIVIDE ) {
-            match( currentTokenType() );
-            factor();
-        } // end while
+    bool term() {
+        if ( factor() ) {
+            while ( currentTokenType() == TokenType::MULTIPLY || currentTokenType() == TokenType::DIVIDE ) {
+                match( currentTokenType() );
+                
+                if ( !factor() ) {
+                    throw runtime_error("Error: Unexpected token in term.");
+                    return false ;
+	      } // end if
+            } // end while
+            
+            return true ;
+        } // end if
+        
+        else {
+        	  throw runtime_error("Error: Unexpected token in term.");
+            return false ;
+        } // end else
+
     } // end term
 
     // <Factor> ::= [ SIGN ] NUM | IDENT | '(' <ArithExp> ')'	
     bool factor() {
         if ( currentTokenType() == Type::IDENT ) {
-        	 match(TokenType::IDENT);
+        	 match(Type::IDENT);
         	 return true ;
         } // end if
         
-        else if ( currentTokenType() == TokenType::SIGN ) {
-            match(TokenType::SIGN);
+        else if ( currentTokenType() == Type::SIGN ) {
+            match(Type::SIGN);
             
-            if ( currentTokenType() == TokenType::NUM ) {
-                match(TokenType::NUM);
+            if ( currentTokenType() == Type::NUM ) {
+                match(Type::NUM);
                 return true ;
             } // end if
             
@@ -114,19 +129,19 @@ public:
 	  } // end else
         } // end else if
         
-        else if ( currentTokenType() == TokenType::NUM ) {
-            match(TokenType::NUM);
+        else if ( currentTokenType() == Type::NUM ) {
+            match(Type::NUM);
             return true ;
         } // end else if
-        
-        else if ( currentTokenType() == TokenType::LPAREN ) {
-            match(TokenType::LPAREN);
+        /*
+        else if ( currentTokenType() == Type::LPAREN ) {
+            match(Type::LPAREN);
             
             if ( arithExp() ) {
-                match(TokenType::ARITHEXP);
+                match(Type::ARITHEXP);
                 
-                if ( currentTokenType() == TokenType::RPAREN ) {
-                    match(TokenType::RPAREN);
+                if ( currentTokenType() == Type::RPAREN ) {
+                    match(Type::RPAREN);
                     return true ;
 	      } // end if
 	      
@@ -141,7 +156,7 @@ public:
                 return false ;
 	  } // end else 
         } // end else if 
-        
+        */
         else {
             throw runtime_error("Error: Unexpected token in factor.");
             return false ;
@@ -164,7 +179,7 @@ public:
         } // end if
          
         else {
-            return Type::END;
+            return Type::QUIT;
         } // end else
     } // end currentTokenType
     

@@ -8,14 +8,25 @@
 #include <fstream>
 
 using namespace std;
+
 enum class Type {
+    LESSEQUAL,    // '<='
+    GREATEREQUAL, // '>='
+    LESS,      // '<'
+    GREATER,   // '>'
+    NOTEQUAL,  // '<>'	
+    EQUAL,     // '='
+    MINUS,     // '-'
+    PLUS,      // '+'
+    DIVIDE,    // '/'
+    MULTIPLY,  // '*'
     RPAREN,    // ')'
     LPAREN,    // '('
     IDENT,
     NUM,
     SIGN,
     OTHER,
-    QUIT
+    QUIT,
 };
 
 struct TokenWithType {
@@ -58,6 +69,16 @@ public:
         else if ( isSIGN( token ) ) return Type::SIGN;
         else if ( token.compare( "(" ) == 0 ) return Type::LPAREN;
         else if ( token.compare( ")" ) == 0 ) return Type::RPAREN;
+        else if ( token.compare( "*" ) == 0 ) return Type::MULTIPLY;
+        else if ( token.compare( "/" ) == 0 ) return Type::DIVIDE;
+        else if ( token.compare( "+" ) == 0 ) return Type::PLUS;
+        else if ( token.compare( "-" ) == 0 ) return Type::MINUS;
+        else if ( token.compare( "=" ) == 0 ) return Type::EQUAL;
+        else if ( token.compare( "<>" ) == 0 ) return Type::NOTEQUAL;
+        else if ( token.compare( ">" ) == 0 ) return Type::GREATER;
+        else if ( token.compare( "<" ) == 0 ) return Type::LESS;
+        else if ( token.compare( ">=" ) == 0 ) return Type::GREATEREQUAL;
+        else if ( token.compare( "<=" ) == 0 ) return Type::LESSEQUAL;
         else if ( token.compare( "\0" ) == 0 ) return Type::QUIT;
         else return Type::OTHER;
     } // end getTokenType()
@@ -113,16 +134,37 @@ public:
     } // end isIDENT
     
     bool isDelimiter( char ch ) {
-        if ( ch == '\0' || ch == '+' || ch == '-' || ch == '(' || ch == ')' )
+        if ( ch == '\0' || ch == '+' || ch == '-' || ch == '(' || ch == ')' || ch == '*' || ch == '/'
+             ch == '=' || ch == '<' || ch == '>' )
             return true ;
         else return false ;
     	
     } // end isDelimiter
     
     string getDelimiter( char ch ) {
-        if ( ch == '\0' || ch == '+' || ch == '-' || ch == '(' || ch == ')' ) {
+        if ( ch == '\0' || ch == '+' || ch == '-' || ch == '(' || ch == ')' || ch == '*' || ch == '/' 
+             ch == '=' ) {
             return string(1, ch);
         } // end if
+        
+        else if ( ch == '<' ) {
+            nextChar = getNextChar() ;
+            if ( ch == '>' ) return "<>" ;
+            else if ( ch == '=' ) return "<=" ;
+            else {
+                columnIndex-- ;
+                return "<" ;
+	  } // end else
+        } // end else if
+        
+        else if ( ch == '>' ) {
+            nextChar = getNextChar() ;
+            if ( ch == '=' ) return ">=" ;
+            else {
+                columnIndex-- ;
+                return ">" ;
+	  } // end else
+        } // end else if
     } // end getDelimiter()
 //---------------------------------------GetToken--------------------------------------- 
     string getNextToken() {

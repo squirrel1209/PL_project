@@ -4,9 +4,10 @@
 #include <string>
 #include <fstream>
 #include "Tokenizer.h"
-//#include "Parser.h"
+#include "Parser.h"
  
 using namespace std;
+
 
 // 函數用於從文件中讀取內容並返回一個存儲行的向量
 vector<string> read_lines_from_file( string filename ) {
@@ -59,11 +60,20 @@ int main() {
     vector<string> input = read_lines_from_file("input.txt");
     Tokenizer tokenizer(input);
     vector<TokenWithType> tokenGroup = tokenizer.processTokens() ;
-    
+
+
+    Parser parse( tokenGroup ) ;
+    try {
+        parse.parse() ;
+    } catch (runtime_error e) {
+        std::cerr << e.what() << std::endl;
+    }
+
+/*    
     for ( int i = 0 ; i < tokenGroup.size() ; i++ ) {
         cout << "token:" << tokenGroup[i].token << " type:" ;
         printTokenType( tokenGroup[i].type ) ;
         cout << endl ;
     } 
-    
+*/
 }
