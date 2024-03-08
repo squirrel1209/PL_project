@@ -8,7 +8,6 @@
  
 using namespace std;
 
-
 // 函數用於從文件中讀取內容並返回一個存儲行的向量
 vector<string> read_lines_from_file( string filename ) {
     vector<string> input_lines ;
@@ -29,6 +28,13 @@ vector<string> read_lines_from_file( string filename ) {
 
 void printTokenType(Type type) {
     switch (type) {
+        case Type::INT:
+            std::cout << "INT\n";
+            break;
+        case Type::FLOAT:
+            std::cout << "FLOAT\n";
+            break;
+
         case Type::IDENT:
             std::cout << "Identifier\n";
             break;
@@ -61,19 +67,20 @@ int main() {
     Tokenizer tokenizer(input);
     vector<TokenWithType> tokenGroup = tokenizer.processTokens() ;
 
-
+/*
     Parser parse( tokenGroup ) ;
     try {
         parse.parse() ;
-    } catch (runtime_error e) {
-        std::cerr << e.what() << std::endl;
+    } 
+    catch (runtime_error e) {
+        cerr << e.what() << std::endl;
     }
+*/
 
-/*    
     for ( int i = 0 ; i < tokenGroup.size() ; i++ ) {
         cout << "token:" << tokenGroup[i].token << " type:" ;
         printTokenType( tokenGroup[i].type ) ;
         cout << endl ;
     } 
-*/
+
 }

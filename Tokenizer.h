@@ -10,6 +10,8 @@
 using namespace std;
 
 enum class Type {
+    SEMICOLON,    // ';' 
+    ASSIGN,       // ':='
     LESSEQUAL,    // '<='
     GREATEREQUAL, // '>='
     LESS,      // '<'
@@ -24,9 +26,19 @@ enum class Type {
     LPAREN,    // '('
     IDENT,
     NUM,
+    INT,
+    FLOAT,
     SIGN,
     OTHER,
     QUIT,
+    
+//-------文法--------
+    ARITHEXP,
+    FACTOR,
+    TERM,
+    STATEMENT,
+    COMMAND,
+    BOOLEANEXP
 };
 
 struct TokenWithType {
@@ -65,7 +77,10 @@ public:
     // 函數：返回token的型態
     Type getTokenType( string token ) {
         if ( isIDENT( token ) ) return Type::IDENT;
-        else if ( isNUM( token ) ) return Type::NUM;
+        else if ( isNUM( token ) ) {
+            if ( isInt( token ) ) return Type::INT;
+	  else return Type::FLOAT;
+        } // end else if
         else if ( isSIGN( token ) ) return Type::SIGN;
         else if ( token.compare( "(" ) == 0 ) return Type::LPAREN;
         else if ( token.compare( ")" ) == 0 ) return Type::RPAREN;
@@ -79,6 +94,8 @@ public:
         else if ( token.compare( "<" ) == 0 ) return Type::LESS;
         else if ( token.compare( ">=" ) == 0 ) return Type::GREATEREQUAL;
         else if ( token.compare( "<=" ) == 0 ) return Type::LESSEQUAL;
+        else if ( token.compare( ":=" ) == 0 ) return Type::ASSIGN;
+        else if ( token.compare( ";" ) == 0 ) return Type::SEMICOLON;
         else if ( token.compare( "\0" ) == 0 ) return Type::QUIT;
         else return Type::OTHER;
     } // end getTokenType()
@@ -88,6 +105,18 @@ public:
             return true ;
         else return false ;
     } // end isSIGN
+
+    bool isInt( string str) {
+        if ( str.empty() ) return false;
+
+        for ( char c : str ) {
+            if ( !isdigit(c) ) {
+                return false;
+            } // end if
+       } // end for
+
+        return true;
+    } // end isInt()
 
     bool isNUM( string str ) {
     // 空字符串不是數字
@@ -134,16 +163,32 @@ public:
     } // end isIDENT
     
     bool isDelimiter( char ch ) {
-        if ( ch == '\0' || ch == '+' || ch == '-' || ch == '(' || ch == ')' || ch == '*' || ch == '/'
-             ch == '=' || ch == '<' || ch == '>' )
+        if ( ch == '\0' || ch == '+' || ch == '-' || ch == '(' || ch == ')' || ch == '*' || ch == '/' ||
+             ch == '=' || ch == '<' || ch == '>' || ch == ';' )
             return true ;
+            
+        else if ( ch == ':' ) {
+        	  char nextChar ;
+        	  
+        	  nextChar = getNextChar() ;
+        	  if ( ch == '=' ) {
+        	      columnIndex-- ;
+        	      return true ;
+	  } // end if
+	  
+	  else {
+	      columnIndex-- ;
+	      return false ;
+	  } // end else
+        } // end else if
         else return false ;
     	
     } // end isDelimiter
     
     string getDelimiter( char ch ) {
-        if ( ch == '\0' || ch == '+' || ch == '-' || ch == '(' || ch == ')' || ch == '*' || ch == '/' 
-             ch == '=' ) {
+        char nextChar ;
+        if ( ch == '\0' || ch == '+' || ch == '-' || ch == '(' || ch == ')' || ch == '*' || ch == '/' ||
+             ch == '='  || ch == ';' ) {
             return string(1, ch);
         } // end if
         
@@ -164,6 +209,11 @@ public:
                 columnIndex-- ;
                 return ">" ;
 	  } // end else
+        } // end else if
+        
+        else if ( ch == ':' ) {
+            nextChar = getNextChar() ;
+            if ( ch == '=' ) return ":=" ;
         } // end else if
     } // end getDelimiter()
 //---------------------------------------GetToken--------------------------------------- 
