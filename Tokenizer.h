@@ -29,7 +29,7 @@ enum class Type {
     INT,
     FLOAT,
     SIGN,
-    OTHER,
+    ERROR,
     QUIT,
     
 //-------ゅ猭--------
@@ -41,9 +41,22 @@ enum class Type {
     BOOLEANEXP
 };
 
-struct TokenWithType {
-    string token;
+enum class ErrorType {
+    lexicalError,
+    syntacticalError,
+    semanticError
+};
+
+struct Error {
+    ErrorType type;
+    int line;
+    string errorValue;
+};
+
+struct Token {
+    string tokenName;
     Type type;
+    Error error;
 };
 
 class Tokenizer {
@@ -55,28 +68,94 @@ private:
 public:
     Tokenizer( vector<string> input) : input(input), lineIndex(0), columnIndex(0) {}
 
-    // ㄧ计矪瞶token盢–token篈
-    vector<TokenWithType> processTokens() {
-        vector<TokenWithType> tokensWithType;
-        string token = getNextToken() ;
+    // ㄧ计矪瞶token盢–token篈の岿粇 
+    vector<Token> processTokens() {
+        vector<Token> tokens;
+        string tokenName = getNextToken() ;
         
         // 癹伴矪瞶–token倒ぉ篈 
-        while ( token != "quit" ) {
-            TokenWithType tokenWithType;
-            tokenWithType.token = token;
+        while ( tokenName != "quit" ) {
+            Token token;
+            token.tokenName = tokenName;
 
             // 安砞ㄧ计token篈
-            tokenWithType.type = getTokenType( token ); 
-            tokensWithType.push_back(tokenWithType);
-            token = getNextToken() ;
+            token.type = analyzeToken( tokenName );
+            
+            if ( token.type == Type::ERROR ) {
+                // 矪瞶ㄒ﹟ゼちЧ俱token ㄒ:floatfloat 1.23.23
+
+	      if ( isMultiFloat(tokenName) ) {
+	      	string left = "";
+	      	string right= "";
+	          splitString( tokenName, left, right) ;
+	          token.tokenName = left;
+	          token.type = Type::FLOAT;
+	          tokens.push_back(token);
+	          token.tokenName = right;
+	      } // end if
+	       
+	      else {
+	          // 岿粇矪瞶 
+                    token.error.errorValue = string( 1, checkError( tokenName ) );
+                } // end else
+	  } // end if
+	  
+            tokens.push_back(token);
+            tokenName = getNextToken() ;
         }  // end while
 
-        return tokensWithType;
+        return tokens;
     }  // end processTokens()
 
-    // ㄧ计token篈
-    Type getTokenType( string token ) {
-        if ( isIDENT( token ) ) return Type::IDENT;
+    char checkError( string str ) {
+        Error error ;
+        int i = 0 ;
+        if ( isalpha( str[0] ) ) {  // 琌IDENT岿粇 
+        
+            while ( i < str.length() && ( !isalnum( str[i] ) && str[i] != '_' ) ) {
+                if ( !isalnum( str[i] ) && str[i] != '_' ) {   // ㄤ緇じゲ斗琌计ダ┪┏絬
+                    return str[i] ;
+                } // end if
+                
+                i++ ;
+            } // end while
+        } // end if
+        
+        else {
+            bool hasDot = false; // 夹癘琌Τ计翴
+            bool hasDigit = false; // 夹癘琌Τ计
+
+            // 浪琩–才
+            for ( char c : str ) {
+                if (c == '.' && !hasDot) {
+                    hasDot = true;
+                } // end if
+	      
+	      else if (c == '+' || c == '-') {
+                // 狦竒Τ计瞷筁タ璽腹ぃ材玥 false
+                    if (hasDigit || &c != &str[0]) {
+                        return c ;
+                    } // end if
+                } // end else if
+                
+	      else if (isdigit(c)) {
+                    hasDigit = true;
+                } // end else if
+	      
+	      else {
+                    // 狦ぃ琌计ぃ琌计翴 false
+                    return c ;
+                } // end else
+            } // end for
+            
+            if ( hasDot == true && str.size() == 1 ) return '.';
+        } // end else
+    } // end checkError()
+
+    // ㄧ计だ猂token篈浪琩琌ΤError 
+    Type analyzeToken( string token ) {
+        
+        if ( isIDENT( token ) ) Type::IDENT;
         else if ( isNUM( token ) ) {
             if ( isInt( token ) ) return Type::INT;
 	  else return Type::FLOAT;
@@ -97,16 +176,38 @@ public:
         else if ( token.compare( ":=" ) == 0 ) return Type::ASSIGN;
         else if ( token.compare( ";" ) == 0 ) return Type::SEMICOLON;
         else if ( token.compare( "\0" ) == 0 ) return Type::QUIT;
-        else return Type::OTHER;
+        else return Type::ERROR;
     } // end getTokenType()
 
+    void splitString( string str, string& left, string& right) {
+        bool firstDot = false;
+        bool secondDot = false;
+        bool thirdThrow = false;
+        
+        for ( int i = 0 ; i < str.size() ; i++ ) {
+            if ( str[i] == '.' && firstDot == false ) firstDot = true;
+            else if ( secondDot == true && ( !isdigit(str[i]) ) ) thirdThrow = true;
+            else if ( firstDot == true && str[i] == '.' ) secondDot = true;
+	      
+	  if ( thirdThrow == false ) {
+	      if ( secondDot == true ) {
+	          right = right + str[i];
+	      } // end if
+	  
+	      else left = left + str[i];
+            } // end if
+        } // end for
+    } // end splitString()
+    
     bool isSIGN( string str ) {
         if ( str.compare( "+" ) == 0 || str.compare( "-" ) == 0 )
             return true ;
-        else return false ;
+        else {
+            return false ;
+        } // end else
     } // end isSIGN
 
-    bool isInt( string str) {
+    bool isInt( string str ) {
         if ( str.empty() ) return false;
 
         for ( char c : str ) {
@@ -131,7 +232,8 @@ public:
             if ( hasDot ) {
                 // 竒Τ计翴硂ぃ琌猭疊翴计
                 return false;
-            }
+            } // end if
+            
             hasDot = true;
         } // end if 
         
@@ -146,6 +248,37 @@ public:
         // 程沧惠璶ぶΤ计絋﹚琌Τ计ボ
         return hasDigit;
     } // end isNum
+
+    // ゼ糶Ч 
+    bool isMultiFloat( string str ) {
+        bool lastDigit = false ;
+        int dot = 0 ;
+        int digit = 0 ;
+        int i = 0 ;
+        if ( str[ str.size() -1 ] == '.' ) return false ;
+        
+        while ( i < str.size() ) {
+        	  while ( isdigit( str[i] ) && i < str.size() ) {
+        	      lastDigit = true ;
+        	      i++;
+	  } // end while
+	  
+	  if ( lastDigit == true ) {
+	      digit++ ;
+	      i-- ; //  
+	  } // end if
+	  
+	  else if ( str[i] == '.' ) dot++ ;
+	  
+	  lastDigit = false ;
+        	  i++ ;
+        	  
+        	  if ( ( dot == digit - 1 ) && digit > 2 ) return true ;
+        } // end while
+        
+        if ( digit == 2 && dot == 2 ) return true ;
+        else return false ;
+    } // end isMultiFloat
 
     bool isIDENT( string str ) {
       if ( str.empty() ) // ﹃ぃ琌猭夹醚才
@@ -261,7 +394,7 @@ public:
 
         string tokenValue;
         char nextChar = getNextChar();
-        
+        bool hasDot = false;
         while ( !isspace( nextChar ) && !isDelimiter( nextChar ) ) { // 狦ぃ琌writespace ㎝ delimiter 
         
             if ( nextChar == '/' ) {       // 矪瞶硈尿爹秆 
@@ -270,7 +403,7 @@ public:
                 	while ( nextChar != '\n' ) nextChar = getNextChar() ;
 	      else columnIndex-- ;
             } // end if
-            
+
             else {
                 tokenValue += nextChar;
                 nextChar = getNextChar();

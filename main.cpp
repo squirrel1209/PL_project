@@ -50,8 +50,8 @@ void printTokenType(Type type) {
         case Type::LPAREN:
             std::cout << "LPAREN\n";
             break;
-        case Type::OTHER:
-            std::cout << "Other\n";
+        case Type::ERROR:
+        	  std::cout << "ERROR\n";
             break;
         case Type::QUIT:
             std::cout << "QUIT\n";
@@ -65,7 +65,7 @@ void printTokenType(Type type) {
 int main() {
     vector<string> input = read_lines_from_file("input.txt");
     Tokenizer tokenizer(input);
-    vector<TokenWithType> tokenGroup = tokenizer.processTokens() ;
+    vector<Token> tokenGroup = tokenizer.processTokens() ;
 
 /*
     Parser parse( tokenGroup ) ;
@@ -78,8 +78,10 @@ int main() {
 */
 
     for ( int i = 0 ; i < tokenGroup.size() ; i++ ) {
-        cout << "token:" << tokenGroup[i].token << " type:" ;
+        cout << "token:" << tokenGroup[i].tokenName << " type:" ;
         printTokenType( tokenGroup[i].type ) ;
+        if ( tokenGroup[i].type == Type::ERROR )
+            cout << "ErrorName:"  << tokenGroup[i].error.errorValue << endl ;
         cout << endl ;
     } 
 

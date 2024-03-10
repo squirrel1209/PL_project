@@ -16,17 +16,18 @@ struct GrammerRule {
 
 class Parser {
 private:
-    vector<TokenWithType> tokens;
+    vector<Token> tokens;
     int currentTokenIndex;
 
 public:
-    Parser( vector<TokenWithType> inputTokens ): tokens(inputTokens), currentTokenIndex(0) {}
-	
+    Parser( vector<Token> inputTokens ): tokens(inputTokens), currentTokenIndex(0) {}
+    /* 
     void parse() {  // 呼叫此function作為開始 
         GrammerRule rule ;
          
         if ( factor( rule ) ) cout << "Correct" ;
         else cout << "isNotCorrect" ;
+         
         //command();
     } // end parse
 
@@ -482,6 +483,7 @@ public:
          
         else return "";
     } // end currentTokenValue()
+    */ 
 };
 
 #endif // PARSER_H
