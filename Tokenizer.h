@@ -9,7 +9,7 @@
 
 using namespace std;
 
-enum class Type {
+enum Type {
     SEMICOLON,    // ';' 
     ASSIGN,       // ':='
     LESSEQUAL,    // '<='
@@ -25,8 +25,7 @@ enum class Type {
     RPAREN,    // ')'
     LPAREN,    // '('
     IDENT,
-    NUM,
-    INT,
+    INT,       // NUM == INT || FLOAT
     FLOAT,
     SIGN,
     ERROR,
@@ -41,7 +40,7 @@ enum class Type {
     BOOLEANEXP
 };
 
-enum class ErrorType {
+enum ErrorType {
     lexicalError,
     syntacticalError,
     semanticError
@@ -81,7 +80,7 @@ public:
             // 安砞ㄧ计token篈
             token.type = analyzeToken( tokenName );
             
-            if ( token.type == Type::ERROR ) {
+            if ( token.type == ERROR ) {
                 // 矪瞶ㄒ﹟ゼちЧ俱token ㄒ:floatfloat 1.23.23
 
 	      if ( isMultiFloat(tokenName) ) {
@@ -89,7 +88,7 @@ public:
 	      	string right= "";
 	          splitString( tokenName, left, right) ;
 	          token.tokenName = left;
-	          token.type = Type::FLOAT;
+	          token.type = FLOAT;
 	          tokens.push_back(token);
 	          token.tokenName = right;
 	      } // end if
@@ -109,6 +108,7 @@ public:
 
     char checkError( string str ) {
         Error error ;
+        char c;
         int i = 0 ;
         if ( isalpha( str[0] ) ) {  // 琌IDENT岿粇 
         
@@ -125,7 +125,7 @@ public:
             bool hasDot = false; // 夹癘琌Τ计翴
             bool hasDigit = false; // 夹癘琌Τ计
 
-            // 浪琩–才
+            // 浪琩–才  
             for ( char c : str ) {
                 if (c == '.' && !hasDot) {
                     hasDot = true;
@@ -249,7 +249,7 @@ public:
         return hasDigit;
     } // end isNum
 
-    // ゼ糶Ч 
+
     bool isMultiFloat( string str ) {
         bool lastDigit = false ;
         int dot = 0 ;

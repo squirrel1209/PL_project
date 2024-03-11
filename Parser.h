@@ -10,18 +10,28 @@ using namespace std;
 
 //template<typename T>
 struct GrammerRule {
-    string  value;
+    Token  token;
     Type type;
 };
 
 class Parser {
 private:
-    vector<Token> tokens;
+    vector<Token>& tokens;
     int currentTokenIndex;
 
 public:
     Parser( vector<Token> inputTokens ): tokens(inputTokens), currentTokenIndex(0) {}
-    /* 
+    
+    Token evaluateOperation( Token a, Token b, Type op ) {
+        Token answer ;
+        float floatA = atof( a.tokenName.c_str() );
+        float floatB = atof( b.tokenName.c_str() );
+        
+        if ( op == Type::MULTIPLY ) {
+            float 
+        } // end if
+    } // end evaluateOperation()
+    
     void parse() {  // 呼叫此function作為開始 
         GrammerRule rule ;
          
@@ -388,25 +398,28 @@ public:
         } // end else
     } // end term
 
-    // <Factor> ::= [ SIGN ] NUM | IDENT | '(' <ArithExp> ')'  
-    	
+    // <Factor> ::= [ SIGN ] NUM | IDENT | '(' <ArithExp> ')'  	
     bool factor( GrammerRule & rule ) {
+        
+        if ( currentTokenType() == Type::ERROR ) {
+            return false ;
+        } // end if
+    	
         if ( currentTokenType() == Type::IDENT ) {
         	 match(Type::IDENT);
-        	 rule.value = currentTokenValue() ;
+        	 rule.token = currentToken() ;
         	 rule.type = Type::FACTOR ;
         	 return true ;
         } // end if
         
         else if ( currentTokenType() == Type::SIGN ) {
-        	  rule.value = currentTokenValue() ; 
+        	  rule.token = currentToken() ;
             match(Type::SIGN);
             
-            if ( currentTokenType() == Type::NUM ) {
-                rule.value = rule.value + currentTokenValue() ;
+            if ( currentTokenType() == Type::INT || currentTokenType() == Type::FLOAT ) {
+                rule.token.tokenName = rule.token.tokenName + currentToken().tokenName ;
                 rule.type = Type::FACTOR ;
-                match(Type::NUM);
-                cout << "符合FACTOR" << endl ;
+                match(currentTokenType());
                 return true ;
             } // end if
             
@@ -416,11 +429,10 @@ public:
 	  } // end else
         } // end else if
         
-        else if ( currentTokenType() == Type::NUM ) {
-        	  rule.value = currentTokenValue() ;
+        else if ( currentTokenType() == Type::INT || currentTokenType() == Type::FLOAT ) {
+        	  rule.token = currentToken() ;
         	  rule.type = Type::FACTOR ;
-            match(Type::NUM);
-            cout << "符合FACTOR" << endl ;
+            match(currentTokenType());
             return true ;
         } // end else if
         
@@ -433,7 +445,7 @@ public:
                 if ( currentTokenType() == Type::RPAREN ) {
                 	
                     match(Type::RPAREN);
-                    cout << "符合FACTOR" << endl ;
+
                     rule.type = Type::FACTOR ;
                     return true ;
 	      } // end if
@@ -476,14 +488,15 @@ public:
         } // end else
     } // end currentTokenType
     
-    string currentTokenValue() {
+    Token currentToken() {
+        Token none;
         if ( currentTokenIndex < tokens.size() ) {
-            return tokens[currentTokenIndex].token;
+            return tokens[currentTokenIndex];
         } // end if
          
-        else return "";
+        else return none;
     } // end currentTokenValue()
-    */ 
+    
 };
 
 #endif // PARSER_H
