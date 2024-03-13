@@ -8,6 +8,7 @@
 #include <fstream>
 
 using namespace std;
+typedef char string200[200];
 
 enum Type {
     SEMICOLON,    // ';' 
@@ -27,6 +28,7 @@ enum Type {
     IDENT,
     INT,       // NUM == INT || FLOAT
     FLOAT,
+    BOOL,
     SIGN,
     ERROR,
     QUIT,
@@ -57,6 +59,31 @@ struct Token {
     Type type;
     Error error;
 };
+
+string anyToString(int num) {
+    string200 buffer; // Assuming a maximum of 200 characters for the string
+    sprintf(buffer, "%d", num);
+    return string(buffer);
+}
+
+string anyToString(float num) {
+    string200 buffer; // Assuming a maximum of 200 characters for the string
+    sprintf(buffer, "%.3f", num);
+    return string(buffer);
+}
+
+string anyToString(double num) {
+    string200 buffer; // Assuming a maximum of 200 characters for the string
+    sprintf(buffer, "%.3f", num);
+    return string(buffer);
+}
+
+string anyToString(char ch) {
+    string200 buffer; // Single character plus null terminator
+    buffer[0] = ch;
+    buffer[1] = '\0';
+    return string(buffer);
+}
 
 class Tokenizer {
 private:
