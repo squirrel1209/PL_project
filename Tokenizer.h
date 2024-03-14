@@ -11,6 +11,7 @@ using namespace std;
 typedef char string200[200];
 
 enum Type {
+    NONE,
     SEMICOLON,    // ';' 
     ASSIGN,       // ':='
     LESSEQUAL,    // '<='
@@ -59,6 +60,14 @@ struct Token {
     Type type;
     Error error;
 };
+
+Token createToken( string name, Type type, Error error = {lexicalError, 0, ""}) {
+    Token token;
+    token.tokenName = name;
+    token.type = type;
+    token.error = error;
+    return token;
+}
 
 string anyToString(int num) {
     string200 buffer; // Assuming a maximum of 200 characters for the string
@@ -275,8 +284,7 @@ public:
         // 最終，需要至少有一個數字才能確定是有效的數字表示
         return hasDigit;
     } // end isNum
-
-
+ 
     bool isMultiFloat( string str ) {
         bool lastDigit = false ;
         int dot = 0 ;

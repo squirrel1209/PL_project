@@ -38,9 +38,7 @@ void printTokenType(Type type) {
         case Type::IDENT:
             std::cout << "Identifier\n";
             break;
-        case Type::NUM:
-            std::cout << "Number\n";
-            break;
+            
         case Type::SIGN:
             std::cout << "Sign\n";
             break;
@@ -66,17 +64,7 @@ int main() {
     vector<string> input = read_lines_from_file("input.txt");
     Tokenizer tokenizer(input);
     vector<Token> tokenGroup = tokenizer.processTokens() ;
-
-/*
-    Parser parse( tokenGroup ) ;
-    try {
-        parse.parse() ;
-    } 
-    catch (runtime_error e) {
-        cerr << e.what() << std::endl;
-    }
-*/
-
+    /*
     for ( int i = 0 ; i < tokenGroup.size() ; i++ ) {
         cout << "token:" << tokenGroup[i].tokenName << " type:" ;
         printTokenType( tokenGroup[i].type ) ;
@@ -84,5 +72,17 @@ int main() {
             cout << "ErrorName:"  << tokenGroup[i].error.errorValue << endl ;
         cout << endl ;
     } 
+*/
+    
+    Parser parse( tokenGroup ) ;
+    try {
+         parse.parse() ;
+    } 
+    catch (runtime_error e) {
+        cerr << e.what() << endl;
+    }
+    
+    
 
+    
 }

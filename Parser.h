@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 #include "Tokenizer.h"
 #include <stdexcept>
 
@@ -10,12 +11,39 @@ using namespace std;
 map<string, double> symbolTable;
 
 class Parser {
-private:
-    vector<Token>& tokens;
-    int currentTokenIndex;
-
 public:
     Parser( vector<Token> inputTokens ): tokens(inputTokens), currentTokenIndex(0) {}
+    void parse() {
+        Token parsedResult ;
+        factor( parsedResult ) ;
+        while ( parsedResult.type != QUIT ) {
+        
+        if ( parsedResult.type == ERROR ) {
+            if ( parsedResult.error.type == lexicalError ) {
+                cout << "unrecognized token with first char : '" << parsedResult.error.errorValue << "'" << endl;
+	  } // end if
+	  
+	  else if ( parsedResult.error.type == syntacticalError ) {
+	      cout << "unexpected token : '" << parsedResult.error.errorValue << "'" << endl;
+	  } // end else if
+	  
+	  else if ( parsedResult.error.type == semanticError ) {
+	      cout << "undefined identifier : '" << parsedResult.error.errorValue << "'" << endl;
+	  } // end else if
+	  
+	  else cout << "unknowed Error" << endl ;
+        } // end if
+        
+        else cout << "correct:" << parsedResult.tokenName << endl;
+        parsedResult = createToken( "", NONE, {lexicalError, 0, ""} ) ;
+        term( parsedResult ) ;
+        }
+    } // end parse
+
+	
+private:
+    vector<Token> tokens;
+    int currentTokenIndex;
     
     Token evaluateOperation( Token a, Token b, Type op ) {
         Token answer ;
@@ -97,51 +125,47 @@ public:
                 throw runtime_error("Unsupported comparison operator.");
         }
     } //
-    
-    void parse() {  // 呼叫此function作為開始 
-        Token parsedResult ;
-         
-        if ( command( parsedResult ) ) cout << "Correct" ;
-        else cout << "isNotCorrect" ;
 
-    } // end parse
-
-    bool command( Token &parsedResult ) {
-        if ( currentTokenType() == Type::QUIT ) {
+    void command( Token &parsedResult ) {
+        Token currentToken = getCurrentToken();
+        
+        if ( currentToken.type == QUIT || currentToken.type == ERROR ) {
+            parsedResult = currentToken;
             match();
-            cout << "command" << endl ;
-            return true ;
         } // end if
 
-        else if ( currentTokenType() == Type::IDENT ) {
-            Token ident = currentToken();
+        else if ( currentToken.type == IDENT ) {
+            Token ident = currentToken;
             match();  // 移動到下一個 token，即 ASSIGN
             
-            if (currentTokenType() == Type::ASSIGN) {
+            if (currentTokenType() == ASSIGN) {
                 match();  // 移動到賦值表達式 
                 
-                Token arithResult;
-	      if ( arithExp( arithResult ) ) {
+	      if ( arithExp( parsedResult ) ) {
                     // 將算術表達式的結果賦值給標識符
-                    symbolTable[ident.tokenName] = atod(arithResult.tokenName.c_str());
+                    symbolTable[ident.tokenName] = atof(parsedResult.tokenName.c_str());
 	          
-	          if ( currentTokenType() == Type::SEMICOLON ) {
+	          if ( currentTokenType() == SEMICOLON ) {
 	              match();  // 消耗掉分號
-	              return true ;
+	              return ;
 		} // end if
 		
 		else {
+		    parsedResult.type = ERROR;
+                        parsedResult.error.type = syntacticalError;
+                        parsedResult.error.errorValue = getCurrentToken().tokenName;
 	              throw runtime_error("Error: Missing ';' after assignment command.");
-                        return false ;	
+                        return ;	
 		} // end else
 	      }  // end if
 	      
 	      else {
                     throw runtime_error("Error: Invalid arithmetic expression in assignment.");
-                    return false ; 	
+                    return; 	
 	      } // end else
 	  } // end if
-	  
+        } // end else if
+	  /*
 	  else if ( IDlessArithExpOrBexp(ident) ) {
 	      parsedResult = ident; 
 	      
@@ -178,6 +202,7 @@ public:
             throw runtime_error("Error: Unexpected token in command.");
             return false ;
         } // end else
+        */
     } // end command()
 
     bool NOT_IDStartArithExpOrBexp(Token &parsedResult) {
@@ -396,13 +421,13 @@ public:
 	   return true ;
         else return false ;	
     } // end BooleanOperator()
-
+/*
     // <Statement> ::= IDENT ':=' <ArithExp>
-    bool statement() {
+    bool statement ( Token &parsedResult ) {
         Token identToken, resultToken;
         
         if ( currentTokenType() == Type::IDENT ) {
-            identToken = currentToken();  // 獲取標識符 Token
+            identToken = getCurrentToken();  // 獲取標識符 Token
             match();  // 移過標識符
             
             if ( currentTokenType() == Type::ASSIGN ) {
@@ -411,6 +436,8 @@ public:
                 if ( arithExp(resultToken) ) { // 解析算術表達式並獲取結果
                     // 將算術表達式的結果賦值給標識符
                     symbolTable[identToken.tokenName] = stod(resultToken.tokenName);
+                    parsedResult = resultToken;
+                    match();
                     return true ;    
 	      } // end if
 	      
@@ -421,17 +448,23 @@ public:
             } // end if
             
             else {
+                parsedResult.type = ERROR;
+                parsedResult.error.type = syntacticalError;
+                parsedResult.error.errorValue = resultToken.tokenName;
                 throw runtime_error("Error: Unexpected token in statement.");
                 return false ;
 	  } // end else 
         } // end if
         
         else {
+        	  parsedResult.type = ERROR;
+            parsedResult.error.type = syntacticalError;
+            parsedResult.error.errorValue = resultToken.tokenName;
             throw runtime_error("Error: Expected an identifier in statement.");
 	  return false ;   
         } // end else
     } // end statement()
-
+*/
     // <BooleanExp> ::= <ArithExp> ( '=' | '<>' | '>' | '<' | '>=' | '<=' ) <ArithExp>
     bool booleanExp( Token &parsedResult ) {
         if ( arithExp(parsedResult) ) {
@@ -469,6 +502,14 @@ public:
 
     // <ArithExp> ::= <Term> | <ArithExp> '+' <Term> | <ArithExp> '-' <Term>
     bool arithExp(Token &parsedResult) {
+        Token currentToken = getCurrentToken();
+        
+        if ( currentToken.type == Type::ERROR || currentToken.type == Type::QUIT ) {
+            parsedResult = currentToken;
+        	  match();  // match ERROR || QUIT
+            return false ;
+        } // end if
+        
         // 解析第一個 term
         if (!term(parsedResult)) {
             throw runtime_error("Error: Unexpected token in arithExp, expecting a term.");
@@ -477,7 +518,7 @@ public:
 
         // 保存當前解析到的 token，可能用於後續的加法或減法運算
         Token a = parsedResult;
-
+        
         // 當當前 token 是加號或減號時，進行運算
         while (currentTokenType() == Type::PLUS || currentTokenType() == Type::MINUS) {
             // 保存運算符
@@ -485,9 +526,10 @@ public:
             match();  // 移動到下一個 token
 
             // 解析下一個 term
+            
             Token b;
             if (!term(b)) {
-                throw runtime_error("Error: Unexpected token in arithExp after operator.");
+                throw runtime_error("Error: Unexpected token in arithExp, expecting a term.");
                 return false;
             } // end if
 
@@ -499,11 +541,20 @@ public:
         } // end while 
 
         // 返回 true 表示成功解析 arithExp
+        match();
         return true;
     } // end arithExp()
 
     // <Term> ::= <Factor> | <Term> '*' <Factor> | <Term> '/' <Factor>
     bool term(Token &parsedResult) {
+        Token currentToken = getCurrentToken();
+        
+        if ( currentToken.type == Type::ERROR || currentToken.type == Type::QUIT ) {
+            parsedResult = currentToken;
+        	  match();  // match ERROR || QUIT
+            return false ;
+        } // end if
+    	
         // 首先解析一個 factor
         if (!factor(parsedResult)) {
             throw runtime_error("Error: Unexpected token in term, expecting a factor.");
@@ -522,7 +573,8 @@ public:
             // 解析下一個 factor
             Token b;
             if (!factor(b)) {
-                throw runtime_error("Error: Unexpected token in term after operator.");
+                parsedResult = b ;
+                throw runtime_error("Error: Unexpected token in term, expecting a factor.");
                 return false;
             } // end if
 
@@ -534,25 +586,40 @@ public:
         } // end while
 
         // 返回 true 表示成功解析 term
+        match();
         return true;
     } // end term()
     
     // <Factor> ::= [ SIGN ] NUM | IDENT | '(' <ArithExp> ')'  	
     bool factor( Token &parsedResult ) {
-        Token currentToken = getCurrentToken(); 
-        
-        if ( currentToken.type == Type::ERROR ) {
+        Token currentToken = getCurrentToken();
+        if ( currentToken.type == Type::ERROR || currentToken.type == Type::QUIT ) {
+        	  parsedResult = currentToken;
+        	  match();  // match ERROR || QUIT
             return false ;
         } // end if
-    	
+
         if ( currentToken.type == Type::IDENT ) {
-        	 match();
-        	 parsedResult = currentToken ;
-        	 return true ;
+        	 if ( symbolTable.find(currentToken.tokenName) != symbolTable.end() ) {
+        	     parsedResult = currentToken ;
+        	     match();  // factor
+        	     return true ;
+	 } // end if
+
+           else {
+               //undefined identifier
+               parsedResult.type = ERROR;
+               parsedResult.error.type = semanticError;
+               parsedResult.error.errorValue = currentToken.tokenName;
+               match();
+               return false;
+	 } // end else
         } // end if
-        
+
         else if ( currentToken.type == Type::SIGN ) {
-        	  parsedResult = currentToken ;
+        	  if ( currentToken.tokenName.compare( "-" ) == 0 )
+        	      parsedResult = currentToken ;
+
             match();
             currentToken = getCurrentToken(); // 更新 Token 類型
             
@@ -564,8 +631,11 @@ public:
             } // end if
             
             else {
-                throw runtime_error("Error: Unexpected token in factor.");
-	      return false ;	
+               parsedResult.type = ERROR;
+               parsedResult.error.type = syntacticalError;
+               parsedResult.error.errorValue = currentToken.tokenName;
+               match();
+	     return false ;	
 	  } // end else
         } // end else if
         
@@ -578,9 +648,8 @@ public:
         else if ( currentToken.type == Type::LPAREN ) {
             match();
             
-            if ( arithExp(parsedResult) ) {
-                match();
-                currentToken = getCurrentToken();
+            if ( arithExp(parsedResult) ) { 
+	      currentToken = getCurrentToken();
                 
                 if ( currentToken.type == Type::RPAREN ) {
                     match();
@@ -588,26 +657,37 @@ public:
 	      } // end if
 	      
 	      else {
-	          throw runtime_error("Error: Unexpected token in factor.");	
+	          parsedResult.type = ERROR;
+                    parsedResult.error.type = syntacticalError;
+                    parsedResult.error.errorValue = currentToken.tokenName;
+                    match();
 	      	return false ;
 	      } // end else
-	  } // end if
+            } // end if 
             
             else {
-                throw runtime_error("Error: Unexpected token in factor.");
+                throw runtime_error("Error: arithExp，Unexpected token in factor. ");
+                match();
                 return false ;
 	  } // end else 
         } // end else if 
         
         else {
-            throw runtime_error("Error: Unexpected token in factor.");
+	  parsedResult.type = ERROR;
+            parsedResult.error.type = syntacticalError;
+            parsedResult.error.errorValue = currentToken.tokenName;
+            match();
             return false ;
         } // end else
     } // end factor()
     
     // 如果當前token符合文法，則往後移一位 
     void match() {
-        currentTokenIndex++;
+        if ( currentTokenIndex < tokens.size() ) {
+            currentTokenIndex++;
+        } // end if
+
+        else return  ;
     } // end match()
     
     // 獲取當前token的類型 
@@ -622,12 +702,17 @@ public:
     } // end currentTokenType
     
     Token getCurrentToken() {
-        Token none;
+        Token quit;
+        quit.type = Type::QUIT;
+
         if ( currentTokenIndex < tokens.size() ) {
             return tokens[currentTokenIndex];
         } // end if
          
-        else return none;
+        else {
+        	return quit;
+        }
+        
     } // end currentTokenValue()
     
 };
