@@ -1,6 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include <cstdlib> // 或 <stdlib.h> 如果您使用的是純C環境
 #include <vector>
 #include <string>
 #include <map>
@@ -34,7 +35,9 @@ public:
             } // end if
         
             else cout << "correct:" << parsedResult.tokenName << endl;
-            parsedResult = createToken( "", NONE, {lexicalError, 0, ""} ) ;
+            
+            Error err;
+            parsedResult = createToken( "", NONE, err ) ;
             command( parsedResult ) ;
         } // end while
     } // end parse
@@ -49,39 +52,39 @@ private:
         float floatB = atof( b.tokenName.c_str() );
         float floatAnswer ;
          
-        if ( op == Type::MULTIPLY ) {
+        if ( op == MULTIPLY ) {
             floatAnswer = floatA * floatB;
         } // end if
                     
-        else if ( op == Type::DIVIDE ) {
+        else if ( op == DIVIDE ) {
         	  floatAnswer = floatA / floatB;
         } // end else if
         
-        else if ( op == Type::PLUS ) {
+        else if ( op == PLUS ) {
         	  floatAnswer = floatA + floatB;
         } // end else if
         
-        else if ( op == Type::MINUS ) {
+        else if ( op == MINUS ) {
         	  floatAnswer = floatA - floatB;
         } // end else if
         
-        if ( a.type == Type::INT && b.type == Type::INT ) {
+        if ( a.type == INT && b.type == INT ) {
             int intAnswer = (int)floatAnswer; 
             answer.tokenName = anyToString( intAnswer ) ;
-            answer.type = Type::INT;
+            answer.type = INT;
             return answer;
         } // end if
     
         else {
             answer.tokenName = anyToString( floatAnswer ) ;
-            answer.type = Type::FLOAT; // Assuming FLOAT as the type for floating point numbers
+            answer.type = FLOAT; // Assuming FLOAT as the type for floating point numbers
             return answer;
         } // end else
     } // end evaluateOperation()
     
     Token compareOperation(const Token &left, const Token &right, Type op) {
         Token result;
-        result.type = Type::BOOL;  // 假設 Token 有一個 BOOL 類型用於表示布林值
+        result.type = BOOL;  // 假設 Token 有一個 BOOL 類型用於表示布林值
 
         // 將字面值轉換為數值進行比較
         double leftVal = atof(left.tokenName.c_str());
@@ -90,32 +93,32 @@ private:
 
         // 根據操作符進行比較，直接在 case 中返回結果，避免使用 break
         switch (op) {
-            case Type::EQUAL:
+            case EQUAL:
                 comparisonResult = leftVal == rightVal;
                 result.tokenName = comparisonResult ? "true" : "false";
                 return result;
                 
-            case Type::NOTEQUAL:
+            case NOTEQUAL:
                 comparisonResult = leftVal != rightVal;
                 result.tokenName = comparisonResult ? "true" : "false";
                 return result;
                 
-            case Type::GREATER:
+            case GREATER:
                 comparisonResult = leftVal > rightVal;
                 result.tokenName = comparisonResult ? "true" : "false";
                 return result;
                 
-            case Type::LESS:
+            case LESS:
                 comparisonResult = leftVal < rightVal;
                 result.tokenName = comparisonResult ? "true" : "false";
                 return result;
                 
-            case Type::GREATEREQUAL:
+            case GREATEREQUAL:
                 comparisonResult = leftVal >= rightVal;
                 result.tokenName = comparisonResult ? "true" : "false";
                 return result;
                 
-            case Type::LESSEQUAL:
+            case LESSEQUAL:
                 comparisonResult = leftVal <= rightVal;
                 result.tokenName = comparisonResult ? "true" : "false";
                 return result;
@@ -189,7 +192,7 @@ private:
         } // end else if
 
         else if ( NOT_IDStartArithExpOrBexp(parsedResult) ) {
-            if ( currentTokenType() == Type::SEMICOLON ) {
+            if ( currentTokenType() == SEMICOLON ) {
 	      match();
 	      return;
 	  } // end if
@@ -251,7 +254,7 @@ private:
     bool NOT_ID_StartArithExp(Token &parsedResult) {
         Token currentToken = getCurrentToken();
         
-        if ( currentToken.type == Type::ERROR || currentToken.type == Type::QUIT ) {
+        if ( currentToken.type == ERROR || currentToken.type == QUIT ) {
             parsedResult = currentToken;
         	  match();  // match ERROR || QUIT
             return false ;
@@ -266,7 +269,7 @@ private:
         // 保存當前解析到的 token，可能用於後續的加法或減法運算
         Token a = parsedResult;
         // 當當前 token 是加號或減號時，進行運算
-        while (currentTokenType() == Type::SIGN ) {
+        while (currentTokenType() == SIGN ) {
             // 保存運算符
             Type op;
             if ( getCurrentToken().tokenName.compare( "-" ) == 0 ) op = MINUS;
@@ -294,7 +297,7 @@ private:
     bool NOT_ID_StartTerm(Token &parsedResult) {
         Token currentToken = getCurrentToken();
         
-        if ( currentToken.type == Type::ERROR || currentToken.type == Type::QUIT ) {
+        if ( currentToken.type == ERROR || currentToken.type == QUIT ) {
             parsedResult = currentToken;
         	  match();  // match ERROR || QUIT
             return false ;
@@ -310,7 +313,7 @@ private:
         Token a = parsedResult;
 
         // 當當前 token 是乘法或除法運算符時，進行運算
-        while (currentTokenType() == Type::MULTIPLY || currentTokenType() == Type::DIVIDE) {
+        while (currentTokenType() == MULTIPLY || currentTokenType() == DIVIDE) {
             // 保存運算符
             Type op = currentTokenType();
             match();  // 移動到下一個 token
@@ -336,20 +339,20 @@ private:
     
     bool NOT_ID_StartFactor(Token &parsedResult) {        
         Token currentToken = getCurrentToken();
-        if ( currentToken.type == Type::ERROR || currentToken.type == Type::QUIT ) {
+        if ( currentToken.type == ERROR || currentToken.type == QUIT ) {
         	  parsedResult = currentToken;
         	  match();  // match ERROR || QUIT
             return false ;
         } // end if
 
-        else if ( currentToken.type == Type::SIGN ) {
+        else if ( currentToken.type == SIGN ) {
         	  if ( currentToken.tokenName.compare( "-" ) == 0 )
         	      parsedResult = currentToken ;
 
             match();
             currentToken = getCurrentToken(); // 更新 Token 類型
             
-            if ( currentToken.type == Type::INT || currentToken.type == Type::FLOAT ) {
+            if ( currentToken.type == INT || currentToken.type == FLOAT ) {
                 parsedResult.tokenName += currentToken.tokenName;
                 parsedResult.type = currentToken.type ;
                 match();
@@ -365,19 +368,19 @@ private:
 	  } // end else
         } // end else if
         
-        else if ( currentToken.type == Type::INT || currentToken.type == Type::FLOAT ) {
+        else if ( currentToken.type == INT || currentToken.type == FLOAT ) {
         	  parsedResult = currentToken ;
             match();
             return true ;
         } // end else if
         
-        else if ( currentToken.type == Type::LPAREN ) {
+        else if ( currentToken.type == LPAREN ) {
             match();
             
             if ( arithExp(parsedResult) ) { 
 	      currentToken = getCurrentToken();
                 
-                if ( currentToken.type == Type::RPAREN ) {
+                if ( currentToken.type == RPAREN ) {
                     match();
                     return true ;
 	      } // end if
@@ -421,7 +424,7 @@ private:
             return false;
         } // end else
         
-        while ( currentTokenType() == Type::SIGN || currentTokenType() == Type::MULTIPLY || currentTokenType() == Type::DIVIDE ) {
+        while ( currentTokenType() == SIGN || currentTokenType() == MULTIPLY || currentTokenType() == DIVIDE ) {
             Type op;
             if ( getCurrentToken().tokenName.compare( "+" ) == 0 ) op = PLUS;
             else if ( getCurrentToken().tokenName.compare( "-" ) == 0 ) op = MINUS;
@@ -468,8 +471,8 @@ private:
     } // end IDlessArithExpOrBexp
 
     bool BooleanOperator() {
-        if ( currentTokenType() == Type::EQUAL || currentTokenType() == Type::NOTEQUAL || currentTokenType() == Type::GREATER ||
-             currentTokenType() == Type::LESS || currentTokenType() == Type::GREATEREQUAL || currentTokenType() == Type::LESSEQUAL ) 
+        if ( currentTokenType() == EQUAL || currentTokenType() == NOTEQUAL || currentTokenType() == GREATER ||
+             currentTokenType() == LESS || currentTokenType() == GREATEREQUAL || currentTokenType() == LESSEQUAL ) 
 	   return true ;
         else return false ;	
     } // end BooleanOperator()
@@ -516,7 +519,7 @@ private:
     bool arithExp(Token &parsedResult) {
         Token currentToken = getCurrentToken();
         
-        if ( currentToken.type == Type::ERROR || currentToken.type == Type::QUIT ) {
+        if ( currentToken.type == ERROR || currentToken.type == QUIT ) {
             parsedResult = currentToken;
         	  match();  // match ERROR || QUIT
             return false ;
@@ -531,7 +534,7 @@ private:
         // 保存當前解析到的 token，可能用於後續的加法或減法運算
         Token a = parsedResult;
         // 當當前 token 是加號或減號時，進行運算
-        while (currentTokenType() == Type::SIGN ) {
+        while (currentTokenType() == SIGN ) {
             // 保存運算符
             Type op;
             if ( getCurrentToken().tokenName.compare( "-" ) == 0 ) op = MINUS;
@@ -560,7 +563,7 @@ private:
     bool term(Token &parsedResult) {
         Token currentToken = getCurrentToken();
         
-        if ( currentToken.type == Type::ERROR || currentToken.type == Type::QUIT ) {
+        if ( currentToken.type == ERROR || currentToken.type == QUIT ) {
             parsedResult = currentToken;
         	  match();  // match ERROR || QUIT
             return false ;
@@ -576,7 +579,7 @@ private:
         Token a = parsedResult;
 
         // 當當前 token 是乘法或除法運算符時，進行運算
-        while (currentTokenType() == Type::MULTIPLY || currentTokenType() == Type::DIVIDE) {
+        while (currentTokenType() == MULTIPLY || currentTokenType() == DIVIDE) {
             // 保存運算符
             Type op = currentTokenType();
             match();  // 移動到下一個 token
@@ -603,13 +606,13 @@ private:
     // <Factor> ::= [ SIGN ] NUM | IDENT | '(' <ArithExp> ')'  	
     bool factor( Token &parsedResult ) {
         Token currentToken = getCurrentToken();
-        if ( currentToken.type == Type::ERROR || currentToken.type == Type::QUIT ) {
+        if ( currentToken.type == ERROR || currentToken.type == QUIT ) {
         	  parsedResult = currentToken;
         	  match();  // match ERROR || QUIT
             return false ;
         } // end if
 
-        if ( currentToken.type == Type::IDENT ) {
+        if ( currentToken.type == IDENT ) {
         	 if ( symbolTable.find(currentToken.tokenName) != symbolTable.end() ) {
         	     parsedResult = symbolTable[currentToken.tokenName];
         	     match();  // factor
@@ -626,14 +629,14 @@ private:
 	 } // end else
         } // end if
 
-        else if ( currentToken.type == Type::SIGN ) {
+        else if ( currentToken.type == SIGN ) {
         	  if ( currentToken.tokenName.compare( "-" ) == 0 )
         	      parsedResult = currentToken ;
 
             match();
             currentToken = getCurrentToken(); // 更新 Token 類型
             
-            if ( currentToken.type == Type::INT || currentToken.type == Type::FLOAT ) {
+            if ( currentToken.type == INT || currentToken.type == FLOAT ) {
                 parsedResult.tokenName += currentToken.tokenName;
                 parsedResult.type = currentToken.type ;
                 match();
@@ -649,19 +652,19 @@ private:
 	  } // end else
         } // end else if
         
-        else if ( currentToken.type == Type::INT || currentToken.type == Type::FLOAT ) {
+        else if ( currentToken.type == INT || currentToken.type == FLOAT ) {
         	  parsedResult = currentToken ;
             match();
             return true ;
         } // end else if
         
-        else if ( currentToken.type == Type::LPAREN ) {
+        else if ( currentToken.type == LPAREN ) {
             match();
             
             if ( arithExp(parsedResult) ) { 
 	      currentToken = getCurrentToken();
                 
-                if ( currentToken.type == Type::RPAREN ) {
+                if ( currentToken.type == RPAREN ) {
                     match();
                     return true ;
 	      } // end if
@@ -707,13 +710,13 @@ private:
         } // end if
          
         else {
-            return Type::QUIT;
+            return QUIT;
         } // end else
     } // end currentTokenType
     
     Token getCurrentToken() {
         Token quit;
-        quit.type = Type::QUIT;
+        quit.type = QUIT;
 
         if ( currentTokenIndex < tokens.size() ) {
             return tokens[currentTokenIndex];

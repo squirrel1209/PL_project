@@ -11,7 +11,7 @@ using namespace std;
 // 函數用於從文件中讀取內容並返回一個存儲行的向量
 vector<string> read_lines_from_file( string filename ) {
     vector<string> input_lines ;
-    ifstream file(filename) ;                            // 打開文件
+    ifstream file(filename.c_str()) ;                            // 打開文件
     
     if ( file.is_open() ) {
         string line;         
@@ -28,30 +28,30 @@ vector<string> read_lines_from_file( string filename ) {
 
 void printTokenType(Type type) {
     switch (type) {
-        case Type::INT:
+        case INT:
             std::cout << "INT\n";
             break;
-        case Type::FLOAT:
+        case FLOAT:
             std::cout << "FLOAT\n";
             break;
 
-        case Type::IDENT:
+        case IDENT:
             std::cout << "Identifier\n";
             break;
             
-        case Type::SIGN:
+        case SIGN:
             std::cout << "Sign\n";
             break;
-        case Type::RPAREN:
+        case RPAREN:
             std::cout << "RPAREN\n";
             break;
-        case Type::LPAREN:
+        case LPAREN:
             std::cout << "LPAREN\n";
             break;
-        case Type::ERROR:
+        case ERROR:
         	  std::cout << "ERROR\n";
             break;
-        case Type::QUIT:
+        case QUIT:
             std::cout << "QUIT\n";
             break;
         default:
@@ -68,7 +68,7 @@ int main() {
     for ( int i = 0 ; i < tokenGroup.size() ; i++ ) {
         cout << "token:" << tokenGroup[i].tokenName << " type:" ;
         printTokenType( tokenGroup[i].type ) ;
-        if ( tokenGroup[i].type == Type::ERROR )
+        if ( tokenGroup[i].type == ERROR )
             cout << "ErrorName:"  << tokenGroup[i].error.errorValue << endl ;
         cout << endl ;
     } 

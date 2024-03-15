@@ -49,10 +49,15 @@ enum ErrorType {
     semanticError
 };
 
+
 struct Error {
     ErrorType type;
     int line;
     string errorValue;
+
+    // constructor
+    Error() : type(lexicalError), line(0), errorValue("") {}
+
 };
 
 struct Token {
@@ -61,7 +66,7 @@ struct Token {
     Error error;
 };
 
-Token createToken( string name, Type type, Error error = {lexicalError, 0, ""}) {
+Token createToken( string name, Type type, Error error = Error() ) {
     Token token;
     token.tokenName = name;
     token.type = type;
@@ -161,7 +166,8 @@ public:
             bool hasDigit = false; // 夹癘琌Τ计
 
             // 浪琩–才  
-            for ( char c : str ) {
+            for (size_t i = 0; i < str.length(); i++) {
+                char c = str[i];
                 if (c == '.' && !hasDot) {
                     hasDot = true;
                 } // end if
@@ -212,7 +218,7 @@ public:
         else if ( token.compare( ":=" ) == 0 ) return ASSIGN;
         else if ( token.compare( ";" ) == 0 ) return SEMICOLON;
         else if ( token.compare( "\0" ) == 0 ) return QUIT;
-        else return Type::ERROR;
+        else return ERROR;
     } // end getTokenType()
 
     void splitString( string str, string& left, string& right) {
@@ -246,7 +252,8 @@ public:
     bool isInt( string str ) {
         if ( str.empty() ) return false;
 
-        for ( char c : str ) {
+        for (size_t i = 0; i < str.length(); i++) {
+            char c = str[i];
             if ( !isdigit(c) ) {
                 return false;
             } // end if
@@ -263,7 +270,8 @@ public:
     bool hasDigit = false; // 夹癘琌Τ计
 
     // 浪琩–才
-    for ( char c : str ) {
+    for (size_t i = 0; i < str.length(); i++) {
+        char c = str[i];
         if ( c == '.' ) {
             if ( hasDot ) {
                 // 竒Τ计翴硂ぃ琌猭疊翴计
