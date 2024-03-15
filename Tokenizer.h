@@ -115,7 +115,6 @@ public:
 
             // 假設此函數返回token的型態
             token.type = analyzeToken( tokenName );
-            cout << token.type << endl ;
             if ( token.type == ERROR ) {
                 // 處理例外，尚未切完整的token 例如:floatfloat 1.23.23
 
