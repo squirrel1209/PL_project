@@ -115,7 +115,7 @@ public:
 
             // 假設此函數返回token的型態
             token.type = analyzeToken( tokenName );
-            
+            cout << token.type << endl ;
             if ( token.type == ERROR ) {
                 // 處理例外，尚未切完整的token 例如:floatfloat 1.23.23
 
@@ -190,28 +190,29 @@ public:
 
     // 函數：分析token的型態，並檢查是否有Error 
     Type analyzeToken( string token ) {
+    	
+        if ( isIDENT( token ) ) return IDENT;
         
-        if ( isIDENT( token ) ) Type::IDENT;
         else if ( isNUM( token ) ) {
-            if ( isInt( token ) ) return Type::INT;
-	  else return Type::FLOAT;
+            if ( isInt( token ) ) return INT;
+	  else return FLOAT;
         } // end else if
-        else if ( isSIGN( token ) ) return Type::SIGN;
-        else if ( token.compare( "(" ) == 0 ) return Type::LPAREN;
-        else if ( token.compare( ")" ) == 0 ) return Type::RPAREN;
-        else if ( token.compare( "*" ) == 0 ) return Type::MULTIPLY;
-        else if ( token.compare( "/" ) == 0 ) return Type::DIVIDE;
-        else if ( token.compare( "+" ) == 0 ) return Type::PLUS;
-        else if ( token.compare( "-" ) == 0 ) return Type::MINUS;
-        else if ( token.compare( "=" ) == 0 ) return Type::EQUAL;
-        else if ( token.compare( "<>" ) == 0 ) return Type::NOTEQUAL;
-        else if ( token.compare( ">" ) == 0 ) return Type::GREATER;
-        else if ( token.compare( "<" ) == 0 ) return Type::LESS;
-        else if ( token.compare( ">=" ) == 0 ) return Type::GREATEREQUAL;
-        else if ( token.compare( "<=" ) == 0 ) return Type::LESSEQUAL;
-        else if ( token.compare( ":=" ) == 0 ) return Type::ASSIGN;
-        else if ( token.compare( ";" ) == 0 ) return Type::SEMICOLON;
-        else if ( token.compare( "\0" ) == 0 ) return Type::QUIT;
+        else if ( isSIGN( token ) ) return SIGN;
+        else if ( token.compare( "(" ) == 0 ) return LPAREN;
+        else if ( token.compare( ")" ) == 0 ) return RPAREN;
+        else if ( token.compare( "*" ) == 0 ) return MULTIPLY;
+        else if ( token.compare( "/" ) == 0 ) return DIVIDE;
+        else if ( token.compare( "+" ) == 0 ) return PLUS;
+        else if ( token.compare( "-" ) == 0 ) return MINUS;
+        else if ( token.compare( "=" ) == 0 ) return EQUAL;
+        else if ( token.compare( "<>" ) == 0 ) return NOTEQUAL;
+        else if ( token.compare( ">" ) == 0 ) return GREATER;
+        else if ( token.compare( "<" ) == 0 ) return LESS;
+        else if ( token.compare( ">=" ) == 0 ) return GREATEREQUAL;
+        else if ( token.compare( "<=" ) == 0 ) return LESSEQUAL;
+        else if ( token.compare( ":=" ) == 0 ) return ASSIGN;
+        else if ( token.compare( ";" ) == 0 ) return SEMICOLON;
+        else if ( token.compare( "\0" ) == 0 ) return QUIT;
         else return Type::ERROR;
     } // end getTokenType()
 
@@ -316,29 +317,30 @@ public:
     } // end isMultiFloat
 
     bool isIDENT( string str ) {
-      if ( str.empty() ) // 空字串不是合法的標識符
-        return false;
-
-      if ( !isalpha( str[0] ) ) // 第一個字元必須是字母
-        return false;
-
-      for ( size_t i = 1; i < str.length(); i++ ) {
-        if ( !isalnum( str[i] ) && str[i] != '_' ) // 其餘字元必須是數字、字母或底線
+        if ( str.empty() )// 空字串不是合法的標識符
             return false;
-      } // end for
+
+        if ( !isalpha( str[0] ) )  // 第一個字元必須是字母
+            return false;
+
+        if ( str.compare( "quit" ) == 0 ) // 檢查是否為 "quit"
+            return false;
+
+        for ( size_t i = 1; i < str.length(); i++ ) {
+            if ( !isalnum( str[i] ) && str[i] != '_' )  // 其餘字元必須是數字、字母或底線
+                return false;
+        } // end for
 
         return true;
     } // end isIDENT
-    
+
     bool isDelimiter( char ch ) {
         if ( ch == '\0' || ch == '+' || ch == '-' || ch == '(' || ch == ')' || ch == '*' || ch == '/' ||
              ch == '=' || ch == '<' || ch == '>' || ch == ';' )
             return true ;
             
         else if ( ch == ':' ) {
-        	  char nextChar ;
-        	  
-        	  nextChar = getNextChar() ;
+        	  ch = getNextChar() ;
         	  if ( ch == '=' ) {
         	      columnIndex-- ;
         	      return true ;
@@ -354,14 +356,13 @@ public:
     } // end isDelimiter
     
     string getDelimiter( char ch ) {
-        char nextChar ;
         if ( ch == '\0' || ch == '+' || ch == '-' || ch == '(' || ch == ')' || ch == '*' || ch == '/' ||
              ch == '='  || ch == ';' ) {
             return string(1, ch);
         } // end if
         
         else if ( ch == '<' ) {
-            nextChar = getNextChar() ;
+            ch = getNextChar() ;
             if ( ch == '>' ) return "<>" ;
             else if ( ch == '=' ) return "<=" ;
             else {
@@ -371,7 +372,7 @@ public:
         } // end else if
         
         else if ( ch == '>' ) {
-            nextChar = getNextChar() ;
+            ch = getNextChar() ;
             if ( ch == '=' ) return ">=" ;
             else {
                 columnIndex-- ;
@@ -380,9 +381,12 @@ public:
         } // end else if
         
         else if ( ch == ':' ) {
-            nextChar = getNextChar() ;
+            ch = getNextChar() ;
             if ( ch == '=' ) return ":=" ;
+            else return "quit";
         } // end else if
+        
+        else return "quit";
     } // end getDelimiter()
 //---------------------------------------GetToken--------------------------------------- 
     string getNextToken() {
@@ -412,7 +416,7 @@ public:
 	  } // end else
         } // end else if 
         
-        else if ( isDelimiter( nextChar ) ) {
+        else if ( isDelimiter( nextChar ) ) {  // 待修 
            return getDelimiter( nextChar ) ;
         } // end else if
         

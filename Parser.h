@@ -15,7 +15,8 @@ public:
     Parser( vector<Token> inputTokens ): tokens(inputTokens), currentTokenIndex(0) {}
     void parse() {
         Token parsedResult ;
-        factor( parsedResult ) ;
+        command( parsedResult ) ;
+        
         while ( parsedResult.type != QUIT ) {
         
         if ( parsedResult.type == ERROR ) {
@@ -36,7 +37,7 @@ public:
         
         else cout << "correct:" << parsedResult.tokenName << endl;
         parsedResult = createToken( "", NONE, {lexicalError, 0, ""} ) ;
-        term( parsedResult ) ;
+        command( parsedResult ) ;
         }
     } // end parse
 
@@ -135,6 +136,7 @@ private:
         } // end if
 
         else if ( currentToken.type == IDENT ) {
+        	  
             Token ident = currentToken;
             match();  // 移動到下一個 token，即 ASSIGN
             
@@ -164,6 +166,14 @@ private:
                     return; 	
 	      } // end else
 	  } // end if
+	  
+	  else {
+	      parsedResult.type = ERROR;
+                parsedResult.error.type = syntacticalError;
+                parsedResult.error.errorValue = getCurrentToken().tokenName;
+                throw runtime_error("Error: Unexpected token in statement.");
+                return ;
+	  } // end else
         } // end else if
 	  /*
 	  else if ( IDlessArithExpOrBexp(ident) ) {
@@ -421,55 +431,12 @@ private:
 	   return true ;
         else return false ;	
     } // end BooleanOperator()
-/*
-    // <Statement> ::= IDENT ':=' <ArithExp>
-    bool statement ( Token &parsedResult ) {
-        Token identToken, resultToken;
-        
-        if ( currentTokenType() == Type::IDENT ) {
-            identToken = getCurrentToken();  // 獲取標識符 Token
-            match();  // 移過標識符
-            
-            if ( currentTokenType() == Type::ASSIGN ) {
-                match();  // 移過賦值運算符 ':='
-                
-                if ( arithExp(resultToken) ) { // 解析算術表達式並獲取結果
-                    // 將算術表達式的結果賦值給標識符
-                    symbolTable[identToken.tokenName] = stod(resultToken.tokenName);
-                    parsedResult = resultToken;
-                    match();
-                    return true ;    
-	      } // end if
-	      
-                else {
-                    throw runtime_error("Error: Invalid arithmetic expression in statement.");
-                    return false ;
-	      } // end else
-            } // end if
-            
-            else {
-                parsedResult.type = ERROR;
-                parsedResult.error.type = syntacticalError;
-                parsedResult.error.errorValue = resultToken.tokenName;
-                throw runtime_error("Error: Unexpected token in statement.");
-                return false ;
-	  } // end else 
-        } // end if
-        
-        else {
-        	  parsedResult.type = ERROR;
-            parsedResult.error.type = syntacticalError;
-            parsedResult.error.errorValue = resultToken.tokenName;
-            throw runtime_error("Error: Expected an identifier in statement.");
-	  return false ;   
-        } // end else
-    } // end statement()
-*/
+
     // <BooleanExp> ::= <ArithExp> ( '=' | '<>' | '>' | '<' | '>=' | '<=' ) <ArithExp>
     bool booleanExp( Token &parsedResult ) {
         if ( arithExp(parsedResult) ) {
-        	  match();
-        	  
+        	  //cout << parsedResult.tokenName;
+        	  cout << currentTokenType();
             if ( BooleanOperator() ) {
                 Type op = currentTokenType();  // 獲取比較運算符
                 match();
@@ -489,6 +456,9 @@ private:
             } // end if
             
             else {
+                parsedResult.type = ERROR;
+                parsedResult.error.type = syntacticalError;
+                parsedResult.error.errorValue = getCurrentToken().tokenName;
                 throw runtime_error("Error: Expected comparison operator in booleanExp.");
                 return false ;	
 	  } // end else
@@ -518,21 +488,21 @@ private:
 
         // 保存當前解析到的 token，可能用於後續的加法或減法運算
         Token a = parsedResult;
-        
         // 當當前 token 是加號或減號時，進行運算
-        while (currentTokenType() == Type::PLUS || currentTokenType() == Type::MINUS) {
+        while (currentTokenType() == Type::SIGN ) {
             // 保存運算符
-            Type op = currentTokenType();
+            Type op;
+            if ( getCurrentToken().tokenName.compare( "-" ) == 0 ) op = MINUS;
+            else op = PLUS ;
             match();  // 移動到下一個 token
 
             // 解析下一個 term
-            
             Token b;
+            
             if (!term(b)) {
                 throw runtime_error("Error: Unexpected token in arithExp, expecting a term.");
                 return false;
             } // end if
-
             // 根據運算符進行相應的運算，並更新 a 為運算結果
             a = evaluateOperation(a, b, op);
 
@@ -541,7 +511,6 @@ private:
         } // end while 
 
         // 返回 true 表示成功解析 arithExp
-        match();
         return true;
     } // end arithExp()
 
@@ -586,7 +555,6 @@ private:
         } // end while
 
         // 返回 true 表示成功解析 term
-        match();
         return true;
     } // end term()
     
