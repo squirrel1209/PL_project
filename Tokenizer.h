@@ -149,15 +149,14 @@ public:
         Error error ;
 
         int i = 0 ;
-        if ( isalpha( str[0] ) ) {  // 是IDENT的錯誤 
-            while ( i < str.length() && ( !isalnum( str[i] ) && str[i] != '_' ) ) {
-                if ( !isalnum( str[i] ) && str[i] != '_' )    // 其餘字元必須是數字、字母或底線
-                    error.errorValue = error.errorValue + str[i] ;
-
+        if ( isalpha( str[0] ) ) {  // 是IDENT的錯誤 	
+            while ( i < str.length() && ( isalnum( str[i] ) || str[i] == '_' ) ) {      
                 i++ ;
             } // end while
-            
-            error.type = syntacticalError;
+
+            error.errorValue = str[i] ;
+            error.type = lexicalError;
+            return error;
         } // end if
         
         else {
@@ -183,6 +182,12 @@ public:
 	      else if (isdigit(c)) {
                     hasDigit = true;
                 } // end else if
+	      
+	      else if ( !isalpha(c) ) {
+	          error.errorValue = str[i] ;
+                    error.type = lexicalError;
+                    return error;
+	      } // end else if
 	      
 	      else {
                     // 如果不是數字也不是小數點，返回 false

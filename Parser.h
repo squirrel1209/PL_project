@@ -143,7 +143,20 @@ private:
         else if ( currentToken.type == IDENT ) {
             Token ident = currentToken;
             match();  // 移動到下一個 token，即 ASSIGN
-            
+	              
+            if ( symbolTable.find(ident.tokenName) != symbolTable.end() ) {
+        	      parsedResult = symbolTable[currentToken.tokenName];
+	  } // end if
+
+            else if ( currentTokenType() != ASSIGN ) {
+                //undefined identifier
+                parsedResult.type = ERROR;
+                parsedResult.error.type = semanticError;
+                parsedResult.error.errorValue = currentToken.tokenName;
+                match();
+                return;
+	  } // end else if
+       	 
             if (currentTokenType() == ASSIGN) {
                 match();  // 移動到賦值表達式 
                 
