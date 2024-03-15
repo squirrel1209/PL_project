@@ -64,23 +64,19 @@ int main() {
     vector<string> input = read_lines_from_file("input.txt");
     Tokenizer tokenizer(input);
     vector<Token> tokenGroup = tokenizer.processTokens() ;
-    /*
+    
     for ( int i = 0 ; i < tokenGroup.size() ; i++ ) {
-        cout << "token:" << tokenGroup[i].tokenName << " type:" ;
-        printTokenType( tokenGroup[i].type ) ;
+        cout << "token:" << tokenGroup[i].tokenName << " type:" << tokenGroup[i].type;
         if ( tokenGroup[i].type == ERROR )
             cout << "ErrorName:"  << tokenGroup[i].error.errorValue << endl ;
         cout << endl ;
     } 
-*/
+
     
     Parser parse( tokenGroup ) ;
-    try {
+
          parse.parse() ;
-    } 
-    catch (runtime_error e) {
-        cerr << e.what() << endl;
-    }
+
     
     
 

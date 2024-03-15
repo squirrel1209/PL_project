@@ -36,6 +36,13 @@ public:
         
             else cout << "correct:" << parsedResult.tokenName << endl;
             
+            while ( parsedResult.type != SEMICOLON ) {
+                match();
+                parsedResult = getCurrentToken();
+                if ( parsedResult.type == QUIT ) return ;
+	  } // end while
+	  match();
+	  
             Error err;
             parsedResult = createToken( "", NONE, err ) ;
             command( parsedResult ) ;
@@ -122,8 +129,6 @@ private:
                 comparisonResult = leftVal <= rightVal;
                 result.tokenName = comparisonResult ? "true" : "false";
                 return result;
-            default:
-                throw runtime_error("Unsupported comparison operator.");
         }
     } //
 
@@ -155,13 +160,11 @@ private:
 		    parsedResult.type = ERROR;
                         parsedResult.error.type = syntacticalError;
                         parsedResult.error.errorValue = getCurrentToken().tokenName;
-	              throw runtime_error("Error: Missing ';' after assignment command.");
                         return ;	
 		} // end else
 	      }  // end if
 	      
 	      else {
-                    throw runtime_error("Error: Invalid arithmetic expression in assignment.");
                     return; 	
 	      } // end else
 	  } // end if
@@ -177,7 +180,6 @@ private:
 	          parsedResult.type = ERROR;
                     parsedResult.error.type = syntacticalError;
                     parsedResult.error.errorValue = getCurrentToken().tokenName;
-	          throw runtime_error("Error: Missing ';' after IDlessArithExpOrBexp.");
                     return;	
                 } // end else
 	  } // end else if
@@ -186,7 +188,6 @@ private:
 	      parsedResult.type = ERROR;
                 parsedResult.error.type = syntacticalError;
                 parsedResult.error.errorValue = parsedResult.tokenName;
-                throw runtime_error("Error: Unexpected token in statement.");
                 return ;
 	  } // end else
         } // end else if
@@ -201,18 +202,10 @@ private:
 	      parsedResult.type = ERROR;
                 parsedResult.error.type = syntacticalError;
                 parsedResult.error.errorValue = getCurrentToken().tokenName;
-	      throw runtime_error("Error: Missing ';' after NOT_IDStartArithExpOrBexp.");
                 return;	
             } // end else
         } // end else if 
 
-        else {
-        	  parsedResult.type = ERROR;
-            parsedResult.error.type = syntacticalError;
-            parsedResult.error.errorValue = getCurrentToken().tokenName;
-            throw runtime_error("Error: Unexpected token in command.");
-            return;
-        } // end else
         
     } // end command()
 
@@ -234,7 +227,6 @@ private:
                 } // end if
 	       
 	      else {
-                    throw runtime_error("Error: Invalid right-hand side expression in NOT_IDStartArithExpOrBexp.");
                     return false;
                 } // end else
             } // end if
@@ -246,7 +238,6 @@ private:
         }  // end if   
         
         else {
-            throw runtime_error("Error: Unexpected token in NOT_IDStartArithExpOrBexp.");
             return false;
         } // end else
     } // end NOT_IDStartArithExpOrBexp
@@ -262,7 +253,6 @@ private:
         
         // 解析第一個 term
         if (!NOT_ID_StartTerm(parsedResult)) {
-            throw runtime_error("Error: Unexpected token in arithExp, expecting a term.");
             return false;
         } // end if
 
@@ -280,14 +270,12 @@ private:
             Token b;
             
             if (!term(b)) {
-                throw runtime_error("Error: Unexpected token in arithExp, expecting a term.");
+                parsedResult = b; 
                 return false;
             } // end if
+            
             // 根據運算符進行相應的運算，並更新 a 為運算結果
-            a = evaluateOperation(a, b, op);
-
-            // 更新 parsedResult 為目前的結果
-            parsedResult = a;
+            parsedResult = evaluateOperation(a, b, op);
         } // end while 
 
         // 返回 true 表示成功解析 arithExp
@@ -305,7 +293,6 @@ private:
     	
         // 首先解析一個 factor
         if (!NOT_ID_StartFactor(parsedResult)) {
-            throw runtime_error("Error: Unexpected token in term, expecting a factor.");
             return false;
         } // end if
 
@@ -322,15 +309,11 @@ private:
             Token b;
             if (!factor(b)) {
                 parsedResult = b ;
-                throw runtime_error("Error: Unexpected token in term, expecting a factor.");
                 return false;
             } // end if
 
             // 根據運算符進行相應的運算，並更新 a 為運算結果
-            a = evaluateOperation(a, b, op);
-
-            // 更新 rule 為目前的結果
-            parsedResult = a;
+            parsedResult = evaluateOperation(a, b, op);
         } // end while
 
         // 返回 true 表示成功解析 term
@@ -339,6 +322,7 @@ private:
     
     bool NOT_ID_StartFactor(Token &parsedResult) {        
         Token currentToken = getCurrentToken();
+        
         if ( currentToken.type == ERROR || currentToken.type == QUIT ) {
         	  parsedResult = currentToken;
         	  match();  // match ERROR || QUIT
@@ -395,7 +379,6 @@ private:
             } // end if 
             
             else {
-                throw runtime_error("Error: arithExp，Unexpected token in factor. ");
                 match();
                 return false ;
 	  } // end else 
@@ -435,7 +418,6 @@ private:
 
             if (op == PLUS || op == MINUS) {
                 if (!term(parsedResult)) {
-                    throw runtime_error("Error: Unexpected token in IDlessArithExpOrBexp after PLUS or MINUS.");
                     return false;
                 } // end if
                 
@@ -444,7 +426,6 @@ private:
             
             else if (op == MULTIPLY || op == DIVIDE) {
                 if (!factor(parsedResult)) {
-                    throw runtime_error("Error: Unexpected token in IDlessArithExpOrBexp after MULTIPLY or DIVIDE.");
                     return false;
                 } // end if
                 
@@ -460,7 +441,6 @@ private:
             
             Token nextOperand;
             if (!arithExp(nextOperand)) {
-                throw runtime_error("Error: Unexpected token in IDlessArithExpOrBexp Boolean expression.");
                 return false;
             } // end if
             
@@ -480,8 +460,6 @@ private:
     // <BooleanExp> ::= <ArithExp> ( '=' | '<>' | '>' | '<' | '>=' | '<=' ) <ArithExp>
     bool booleanExp( Token &parsedResult ) {
         if ( arithExp(parsedResult) ) {
-        	  //cout << parsedResult.tokenName;
-        	  cout << currentTokenType();
             if ( BooleanOperator() ) {
                 Type op = currentTokenType();  // 獲取比較運算符
                 match();
@@ -495,7 +473,6 @@ private:
 	      } // end if
 	      
                 else {
-                	throw runtime_error("Error: Invalid right-hand side expression in booleanExp.");
                 	return false ;
 	      } // end else
             } // end if
@@ -504,13 +481,11 @@ private:
                 parsedResult.type = ERROR;
                 parsedResult.error.type = syntacticalError;
                 parsedResult.error.errorValue = getCurrentToken().tokenName;
-                throw runtime_error("Error: Expected comparison operator in booleanExp.");
                 return false ;	
 	  } // end else
         } // end if
         
         else {
-            throw runtime_error("Error: Invalid left-hand side expression in booleanExp.");
             return false ;
         } // end else
     } // end booleanExp()
@@ -527,7 +502,6 @@ private:
         
         // 解析第一個 term
         if (!term(parsedResult)) {
-            throw runtime_error("Error: Unexpected token in arithExp, expecting a term.");
             return false;
         } // end if
 
@@ -545,14 +519,13 @@ private:
             Token b;
             
             if (!term(b)) {
-                throw runtime_error("Error: Unexpected token in arithExp, expecting a term.");
+                parsedResult = b;
                 return false;
             } // end if
+            
             // 根據運算符進行相應的運算，並更新 a 為運算結果
-            a = evaluateOperation(a, b, op);
+            parsedResult = evaluateOperation(a, b, op);
 
-            // 更新 parsedResult 為目前的結果
-            parsedResult = a;
         } // end while 
 
         // 返回 true 表示成功解析 arithExp
@@ -562,7 +535,7 @@ private:
     // <Term> ::= <Factor> | <Term> '*' <Factor> | <Term> '/' <Factor>
     bool term(Token &parsedResult) {
         Token currentToken = getCurrentToken();
-        
+
         if ( currentToken.type == ERROR || currentToken.type == QUIT ) {
             parsedResult = currentToken;
         	  match();  // match ERROR || QUIT
@@ -571,7 +544,6 @@ private:
     	
         // 首先解析一個 factor
         if (!factor(parsedResult)) {
-            throw runtime_error("Error: Unexpected token in term, expecting a factor.");
             return false;
         } // end if
 
@@ -588,15 +560,12 @@ private:
             Token b;
             if (!factor(b)) {
                 parsedResult = b ;
-                throw runtime_error("Error: Unexpected token in term, expecting a factor.");
                 return false;
             } // end if
 
             // 根據運算符進行相應的運算，並更新 a 為運算結果
-            a = evaluateOperation(a, b, op);
+            parsedResult = evaluateOperation(a, b, op);
 
-            // 更新 rule 為目前的結果
-            parsedResult = a;
         } // end while
 
         // 返回 true 表示成功解析 term
@@ -661,7 +630,7 @@ private:
         else if ( currentToken.type == LPAREN ) {
             match();
             
-            if ( arithExp(parsedResult) ) { 
+            if ( arithExp(parsedResult) ) {
 	      currentToken = getCurrentToken();
                 
                 if ( currentToken.type == RPAREN ) {
@@ -679,7 +648,6 @@ private:
             } // end if 
             
             else {
-                throw runtime_error("Error: arithExp，Unexpected token in factor. ");
                 match();
                 return false ;
 	  } // end else 

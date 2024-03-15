@@ -49,7 +49,6 @@ enum ErrorType {
     semanticError
 };
 
-
 struct Error {
     ErrorType type;
     int line;
@@ -135,7 +134,7 @@ public:
 	       
 	      else {
 	          // 錯誤處理 
-                    token.error.errorValue = string( 1, checkError( tokenName ) );
+                    token.error = checkError( tokenName );
                 } // end else
 	  } // end if
 	  
@@ -146,19 +145,19 @@ public:
         return tokens;
     }  // end processTokens()
 
-    char checkError( string str ) {
+    Error checkError( string str ) {
         Error error ;
-        char c;
+
         int i = 0 ;
         if ( isalpha( str[0] ) ) {  // 是IDENT的錯誤 
-        
             while ( i < str.length() && ( !isalnum( str[i] ) && str[i] != '_' ) ) {
-                if ( !isalnum( str[i] ) && str[i] != '_' ) {   // 其餘字元必須是數字、字母或底線
-                    return str[i] ;
-                } // end if
-                
+                if ( !isalnum( str[i] ) && str[i] != '_' )    // 其餘字元必須是數字、字母或底線
+                    error.errorValue = error.errorValue + str[i] ;
+
                 i++ ;
             } // end while
+            
+            error.type = syntacticalError;
         } // end if
         
         else {
@@ -175,7 +174,9 @@ public:
 	      else if (c == '+' || c == '-') {
                 // 如果已經有數字出現過，且正負號不在第一位，則返回 false
                     if (hasDigit || &c != &str[0]) {
-                        return c ;
+                        error.errorValue = anyToString(c);
+                        error.type = lexicalError;
+                        return error;
                     } // end if
                 } // end else if
                 
@@ -185,11 +186,12 @@ public:
 	      
 	      else {
                     // 如果不是數字也不是小數點，返回 false
-                    return c ;
+                    error.errorValue = error.errorValue + str[i] ;
+                    error.type = syntacticalError;
                 } // end else
             } // end for
             
-            if ( hasDot == true && str.size() == 1 ) return '.';
+	  return error;
         } // end else
     } // end checkError()
 
