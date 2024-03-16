@@ -419,9 +419,7 @@ public:
             
             if ( nextChar == '/' ) {
                 while ( nextChar != '\n' ) nextChar = getNextChar() ;
-                nextChar = getNextNonWhiteSpaceChar();
-                string tokenValue = readRemainingToken();
-                return nextChar + tokenValue;
+	      return getNextToken();
             } // end if
             
 	  else {
@@ -430,7 +428,7 @@ public:
 	  } // end else
         } // end else if 
         
-        else if ( isDelimiter( nextChar ) ) {  // 待修 
+        else if ( isDelimiter( nextChar ) ) {   
            return getDelimiter( nextChar ) ;
         } // end else if
         
@@ -445,7 +443,7 @@ public:
     //讀下一個token
     //如果下一個token並非whitespace或者delimiter，則把char接成token 
 
-        string tokenValue;
+        string tokenValue = "";
         char nextChar = getNextChar();
         bool hasDot = false;
         while ( !isspace( nextChar ) && !isDelimiter( nextChar ) ) { // 如果不是writespace 和 delimiter 
@@ -463,7 +461,7 @@ public:
             } // end else
         } // end while
         
-        if ( isDelimiter( nextChar ) ) columnIndex-- ; // delimiter不算此token，往前一個column 
+        if ( isDelimiter( nextChar ) ) columnIndex-- ; // delimiter不算此token，往前一個column
         return tokenValue;
     } // readRemainingToken() 
 

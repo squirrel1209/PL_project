@@ -32,16 +32,18 @@ public:
 	          cout << "undefined identifier : '" << parsedResult.error.errorValue << "'" << endl;
 
 	      else cout << "unknowed Error" << endl ;
+	      
+	      
+	      while ( parsedResult.type != SEMICOLON ) {
+                    match();
+                    parsedResult = getCurrentToken();
+                    if ( parsedResult.type == QUIT ) return ;
+	      } // end while
+	  
+	      match();
             } // end if
         
             else cout << "correct:" << parsedResult.tokenName << endl;
-            
-            while ( parsedResult.type != SEMICOLON ) {
-                match();
-                parsedResult = getCurrentToken();
-                if ( parsedResult.type == QUIT ) return ;
-	  } // end while
-	  match();
 	  
             Error err;
             parsedResult = createToken( "", NONE, err ) ;
