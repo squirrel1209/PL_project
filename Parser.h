@@ -113,6 +113,7 @@ private:
         switch (op) {
             case EQUAL:
                 comparisonResult = fabs(leftVal - rightVal) < 0.0001;
+                cout << fabs(leftVal - rightVal) << endl ;
                 result.tokenName = comparisonResult ? "true" : "false";
                 return result;
                 
