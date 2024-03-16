@@ -424,7 +424,7 @@ public:
             
 	  else {
 	    columnIndex-- ;
-	    return "/" + readRemainingToken() ;
+	    return "/" ;
 	  } // end else
         } // end else if 
         
