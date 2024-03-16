@@ -46,7 +46,8 @@ enum Type {
 enum ErrorType {
     lexicalError,
     syntacticalError,
-    semanticError
+    semanticError,
+    noneError
 };
 
 struct Error {

@@ -7,6 +7,7 @@
 #include <map>
 #include "Tokenizer.h"
 #include <stdexcept>
+#include <cmath>
 
 using namespace std;
 map<string, Token> symbolTable;
@@ -31,7 +32,7 @@ public:
 	      else if ( parsedResult.error.type == semanticError ) 
 	          cout << "undefined identifier : '" << parsedResult.error.errorValue << "'" << endl;
 
-	      else cout << "unknowed Error" << endl ;
+	      else cout << "Error" << endl ;
 	      
 	      
 	      while ( parsedResult.type != SEMICOLON ) {
@@ -43,12 +44,14 @@ public:
 	      match();
             } // end if
         
-            else cout << "correct:" << parsedResult.tokenName << endl;
+            else cout << "> " << parsedResult.tokenName << endl;
 	  
             Error err;
             parsedResult = createToken( "", NONE, err ) ;
             command( parsedResult ) ;
         } // end while
+        
+        cout << "Program exits..." << endl ;
     } // end parse
 
 private:
@@ -60,6 +63,12 @@ private:
         float floatA = atof( a.tokenName.c_str() );
         float floatB = atof( b.tokenName.c_str() );
         float floatAnswer ;
+        
+        if ( b.tokenName.compare( "0" ) == 0 && op == DIVIDE ) {
+            answer.type = ERROR;
+            answer.error.type = noneError;
+            return answer;
+        } // end if
          
         if ( op == MULTIPLY ) {
             floatAnswer = floatA * floatB;
@@ -103,7 +112,7 @@ private:
         // 根據操作符進行比較，直接在 case 中返回結果，避免使用 break
         switch (op) {
             case EQUAL:
-                comparisonResult = leftVal == rightVal;
+                comparisonResult = fabs(leftVal - rightVal) < 0.0001;
                 result.tokenName = comparisonResult ? "true" : "false";
                 return result;
                 
@@ -271,8 +280,6 @@ private:
             return false;
         } // end if
 
-        // 保存當前解析到的 token，可能用於後續的加法或減法運算
-        Token a = parsedResult;
         // 當當前 token 是加號或減號時，進行運算
         while (currentTokenType() == SIGN ) {
             // 保存運算符
@@ -290,7 +297,7 @@ private:
             } // end if
             
             // 根據運算符進行相應的運算，並更新 a 為運算結果
-            parsedResult = evaluateOperation(a, b, op);
+            parsedResult = evaluateOperation(parsedResult, b, op);
         } // end while 
 
         // 返回 true 表示成功解析 arithExp
@@ -311,9 +318,6 @@ private:
             return false;
         } // end if
 
-        // 保存當前解析到的 token，可能用於後續的乘法或除法運算
-        Token a = parsedResult;
-
         // 當當前 token 是乘法或除法運算符時，進行運算
         while (currentTokenType() == MULTIPLY || currentTokenType() == DIVIDE) {
             // 保存運算符
@@ -328,7 +332,7 @@ private:
             } // end if
 
             // 根據運算符進行相應的運算，並更新 a 為運算結果
-            parsedResult = evaluateOperation(a, b, op);
+            parsedResult = evaluateOperation(parsedResult, b, op);
         } // end while
 
         // 返回 true 表示成功解析 term
@@ -520,8 +524,6 @@ private:
             return false;
         } // end if
 
-        // 保存當前解析到的 token，可能用於後續的加法或減法運算
-        Token a = parsedResult;
         // 當當前 token 是加號或減號時，進行運算
         while (currentTokenType() == SIGN ) {
             // 保存運算符
@@ -539,7 +541,7 @@ private:
             } // end if
             
             // 根據運算符進行相應的運算，並更新 a 為運算結果
-            parsedResult = evaluateOperation(a, b, op);
+            parsedResult = evaluateOperation(parsedResult, b, op);
 
         } // end while 
 
@@ -562,9 +564,6 @@ private:
             return false;
         } // end if
 
-        // 保存當前解析到的 token，可能用於後續的乘法或除法運算
-        Token a = parsedResult;
-
         // 當當前 token 是乘法或除法運算符時，進行運算
         while (currentTokenType() == MULTIPLY || currentTokenType() == DIVIDE) {
             // 保存運算符
@@ -579,7 +578,7 @@ private:
             } // end if
 
             // 根據運算符進行相應的運算，並更新 a 為運算結果
-            parsedResult = evaluateOperation(a, b, op);
+            parsedResult = evaluateOperation(parsedResult, b, op);
 
         } // end while
 
