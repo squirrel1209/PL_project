@@ -35,14 +35,12 @@ public:
 
 	      else cout << "Error" << endl ;
 	      
-	      
-	      while ( parsedResult.type != SEMICOLON ) {
+	      int temp = parsedResult.line;
+	      while ( parsedResult.line <= temp ) {
                     match();
                     parsedResult = getCurrentToken();
                     if ( parsedResult.type == QUIT ) return ;
 	      } // end while
-	  
-	      match();
             } // end if
         
             else if ( parsedResult.type == FLOAT ) {
@@ -194,6 +192,7 @@ private:
                 parsedResult.type = ERROR;
                 parsedResult.error.type = semanticError;
                 parsedResult.error.errorValue = currentToken.tokenName;
+                parsedResult.line = currentToken.line;
                 match();
                 return;
 	  } // end else if
@@ -214,13 +213,10 @@ private:
 		    parsedResult.type = ERROR;
                         parsedResult.error.type = syntacticalError;
                         parsedResult.error.errorValue = getCurrentToken().tokenName;
+                        parsedResult.line = getCurrentToken().line;
                         return ;	
 		} // end else
 	      }  // end if
-	      
-	      else {
-                    return; 	
-	      } // end else
 	  } // end if
 	  
 	  else if ( IDlessArithExpOrBexp( ident, parsedResult) ) {
@@ -234,16 +230,11 @@ private:
 	          parsedResult.type = ERROR;
                     parsedResult.error.type = syntacticalError;
                     parsedResult.error.errorValue = getCurrentToken().tokenName;
+                    parsedResult.line = getCurrentToken().line;
                     return;	
                 } // end else
 	  } // end else if
 	  
-	  else {
-	      parsedResult.type = ERROR;
-                parsedResult.error.type = syntacticalError;
-                parsedResult.error.errorValue = parsedResult.tokenName;
-                return ;
-	  } // end else
         } // end else if
 
         else if ( NOT_IDStartArithExpOrBexp(parsedResult) ) {
@@ -256,11 +247,11 @@ private:
 	      parsedResult.type = ERROR;
                 parsedResult.error.type = syntacticalError;
                 parsedResult.error.errorValue = getCurrentToken().tokenName;
+                parsedResult.line = getCurrentToken().line;
                 return;	
             } // end else
         } // end else if 
 
-        
     } // end command()
 
     bool NOT_IDStartArithExpOrBexp(Token &parsedResult) {
@@ -396,6 +387,7 @@ private:
                parsedResult.type = ERROR;
                parsedResult.error.type = syntacticalError;
                parsedResult.error.errorValue = currentToken.tokenName;
+               parsedResult.line = currentToken.line;
                match();
 	     return false ;	
 	  } // end else
@@ -421,6 +413,7 @@ private:
 	          parsedResult.type = ERROR;
                     parsedResult.error.type = syntacticalError;
                     parsedResult.error.errorValue = currentToken.tokenName;
+                    parsedResult.line = currentToken.line;
                     match();
 	      	return false ;
 	      } // end else
@@ -436,6 +429,7 @@ private:
 	  parsedResult.type = ERROR;
             parsedResult.error.type = syntacticalError;
             parsedResult.error.errorValue = currentToken.tokenName;
+            parsedResult.line = currentToken.line;
             match();
             return false ;
         } // end else
@@ -452,6 +446,7 @@ private:
             parsedResult.type = ERROR;
             parsedResult.error.type = semanticError;
             parsedResult.error.errorValue = ident.tokenName;
+            parsedResult.line = ident.line;
             return false;
         } // end else
         
@@ -529,6 +524,7 @@ private:
                 parsedResult.type = ERROR;
                 parsedResult.error.type = syntacticalError;
                 parsedResult.error.errorValue = getCurrentToken().tokenName;
+                parsedResult.line = getCurrentToken().line;
                 return false ;	
 	  } // end else
         } // end if
@@ -634,6 +630,7 @@ private:
                //undefined identifier
                parsedResult.type = ERROR;
                parsedResult.error.type = semanticError;
+               parsedResult.line = currentToken.line;
                parsedResult.error.errorValue = currentToken.tokenName;
                match();
                return false;
@@ -657,6 +654,7 @@ private:
             else {
                parsedResult.type = ERROR;
                parsedResult.error.type = syntacticalError;
+               parsedResult.line = currentToken.line;
                parsedResult.error.errorValue = currentToken.tokenName;
                match();
 	     return false ;	
@@ -683,6 +681,7 @@ private:
 	      else {
 	          parsedResult.type = ERROR;
                     parsedResult.error.type = syntacticalError;
+                    parsedResult.line = currentToken.line;
                     parsedResult.error.errorValue = currentToken.tokenName;
                     match();
 	      	return false ;
@@ -699,6 +698,7 @@ private:
 	  parsedResult.type = ERROR;
             parsedResult.error.type = syntacticalError;
             parsedResult.error.errorValue = currentToken.tokenName;
+            parsedResult.line = currentToken.line;
             match();
             return false ;
         } // end else

@@ -52,17 +52,17 @@ enum ErrorType {
 
 struct Error {
     ErrorType type;
-    int line;
     string errorValue;
 
     // constructor
-    Error() : type(lexicalError), line(0), errorValue("") {}
+    Error() : type(lexicalError), errorValue("") {}
 
 };
 
 struct Token {
     string tokenName;
     Type type;
+    int line;
     Error error;
 };
 
@@ -104,7 +104,7 @@ private:
     vector<string> input;
     int lineIndex;
     int columnIndex;
-    
+    int lastlineIndex;
 public:
     Tokenizer( vector<string> input) : input(input), lineIndex(0), columnIndex(0) {}
 
@@ -117,7 +117,7 @@ public:
         while ( tokenName != "quit" ) {
             Token token;
             token.tokenName = tokenName;
-
+            token.line = lastlineIndex ;
             // 假設此函數返回token的型態
             token.type = analyzeToken( tokenName );
             if ( token.type == ERROR ) {
@@ -185,6 +185,7 @@ public:
                 } // end else if
 	      
 	      else if ( !isalpha(c) ) {
+	      	cout << "a" ;
 	          error.errorValue = str[i] ;
                     error.type = lexicalError;
                     return error;
@@ -473,14 +474,7 @@ public:
     //2.#，則把跳過註解到行末
     
         char nextChar = getNextChar();
-        while ( isspace( nextChar ) || nextChar == '#' ) {
-            if ( nextChar == '#' ) {    
-	  // 跳過註解直到行末
-                while ( nextChar != '\n' && nextChar != '\0' ) {
-                    nextChar = getNextChar();
-                } // end while
-            } // end if
-            
+        while ( isspace( nextChar ) ) {
             nextChar = getNextChar();
         } // end while
         
@@ -491,7 +485,8 @@ public:
     //char getNextChar():取得下一個字符並追蹤行號和列號
     //如果沒有超出input的大小，則讀取下一個char，並且記錄row和col 
     //超過col大小則換行 
-        //cout << "lineIndex:" << lineIndex << " columnIndex" << columnIndex << endl ;
+        lastlineIndex = lineIndex;
+         
         if ( lineIndex < input.size() ) {
             if ( columnIndex < input[lineIndex].size() ) {
                 char nextChar = input[lineIndex][columnIndex++];

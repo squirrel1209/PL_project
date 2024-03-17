@@ -33,7 +33,7 @@ int main() {
     vector<Token> tokenGroup = tokenizer.processTokens() ;
     /*
     for ( int i = 0 ; i < tokenGroup.size() ; i++ ) {
-        cout << "token:" << tokenGroup[i].tokenName << " type:" << tokenGroup[i].type;
+        cout << "line:" << tokenGroup[i].line << " token:" << tokenGroup[i].tokenName << " type:" << tokenGroup[i].type;
         if ( tokenGroup[i].type == ERROR )
             cout << "ErrorName:"  << tokenGroup[i].error.errorValue << endl ;
         cout << endl ;
@@ -41,11 +41,7 @@ int main() {
      */
     cout << "Program starts..." << endl ;
     Parser parse( tokenGroup ) ;
-
-         parse.parse() ;
-
-    
-    
+    parse.parse() ;
 
     
 } // end main()
