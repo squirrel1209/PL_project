@@ -82,13 +82,13 @@ string anyToString(int num) {
 
 string anyToString(float num) {
     string200 buffer; // Assuming a maximum of 200 characters for the string
-    sprintf(buffer, "%.3f", num);
+    sprintf(buffer, "%.4f", num);
     return string(buffer);
 }
 
 string anyToString(double num) {
     string200 buffer; // Assuming a maximum of 200 characters for the string
-    sprintf(buffer, "%.3f", num);
+    sprintf(buffer, "%.4f", num);
     return string(buffer);
 }
 

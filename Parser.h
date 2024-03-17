@@ -1,6 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include <iostream>
 #include <cstdlib> // 或 <stdlib.h> 如果您使用的是純C環境
 #include <vector>
 #include <string>
@@ -44,6 +45,13 @@ public:
 	      match();
             } // end if
         
+            else if ( parsedResult.type == FLOAT ) {
+                float answer = atof( parsedResult.tokenName.c_str() ) ;
+                string200 buffer;
+                sprintf(buffer, "%.3f", answer);
+                cout << "> " << buffer << endl;
+	  } // end else if
+	  
             else cout << "> " << parsedResult.tokenName << endl;
 	  
             Error err;
@@ -57,6 +65,12 @@ public:
 private:
     vector<Token> tokens;
     int currentTokenIndex;
+    
+    bool isNearlyDivisible(float a, float b, float epsilon ) {
+        float result = a / b;
+        float fractionalPart = result - floor(result); // 獲取小數部分
+        return fabs(fractionalPart) < epsilon || fabs(fractionalPart - 1) < epsilon;
+    } // isNearlyDivisible
     
     Token evaluateOperation( Token a, Token b, Type op ) {
         Token answer ;
@@ -86,7 +100,7 @@ private:
         	  floatAnswer = floatA - floatB;
         } // end else if
         
-        if ( a.type == INT && b.type == INT ) {
+        if ( ( op == DIVIDE && isNearlyDivisible( floatA, floatB, 1e-4 ) ) && a.type == INT && b.type == INT ) {
             int intAnswer = (int)floatAnswer; 
             answer.tokenName = anyToString( intAnswer ) ;
             answer.type = INT;
@@ -100,7 +114,7 @@ private:
         } // end else
     } // end evaluateOperation()
     
-    Token compareOperation(const Token &left, const Token &right, Type op) {
+    Token compareOperation(Token left, Token right, Type op) {
         Token result;
         result.type = BOOL;  // 假設 Token 有一個 BOOL 類型用於表示布林值
 
@@ -113,7 +127,6 @@ private:
         switch (op) {
             case EQUAL:
                 comparisonResult = fabs(leftVal - rightVal) < 0.0001;
-                cout << fabs(leftVal - rightVal) << endl ;
                 result.tokenName = comparisonResult ? "true" : "false";
                 return result;
                 
@@ -383,7 +396,6 @@ private:
             
             if ( arithExp(parsedResult) ) { 
 	      currentToken = getCurrentToken();
-                
                 if ( currentToken.type == RPAREN ) {
                     match();
                     return true ;
@@ -580,7 +592,6 @@ private:
 
             // 根據運算符進行相應的運算，並更新 a 為運算結果
             parsedResult = evaluateOperation(parsedResult, b, op);
-
         } // end while
 
         // 返回 true 表示成功解析 term
