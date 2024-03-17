@@ -100,12 +100,28 @@ private:
         	  floatAnswer = floatA - floatB;
         } // end else if
         
-        if ( ( op == DIVIDE && isNearlyDivisible( floatA, floatB, 1e-4 ) ) && a.type == INT && b.type == INT ) {
+        if ( op != DIVIDE && a.type == INT && b.type == INT ) {
             int intAnswer = (int)floatAnswer; 
             answer.tokenName = anyToString( intAnswer ) ;
             answer.type = INT;
             return answer;
         } // end if
+    
+    
+        else if ( op == DIVIDE ) {
+            if ( isNearlyDivisible( floatA, floatB, 1e-4 ) ) {  // ¾ã°£ 
+                int intAnswer = (int)floatAnswer; 
+                answer.tokenName = anyToString( intAnswer ) ;
+                answer.type = INT;
+                return answer;
+            } // end if
+	  
+	  else {
+                answer.tokenName = anyToString( floatAnswer ) ;
+                answer.type = FLOAT; // Assuming FLOAT as the type for floating point numbers
+                return answer;	
+	  } // end else
+        } // end else if
     
         else {
             answer.tokenName = anyToString( floatAnswer ) ;
