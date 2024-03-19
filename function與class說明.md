@@ -60,9 +60,35 @@
 
 一組 `AnyToString` 函數用於將不同類型的數據轉換為字符串。
 
+### NOT_ID_StartTerm 函數
+
+`NOT_ID_StartTerm` 函數用於解析不以標識符開頭的 term。這涉及到處理算術運算中的乘法和除法運算。
+
+### NOT_ID_StartArithExp 函數
+
+`NOT_ID_StartArithExp` 函數用於解析不以標識符開頭的算術表達式，確定表達式的結構並計算其值。
+
+
+### NOT_IDStartArithExpOrBexp 函數
+
+`NOT_IDStartArithExpOrBexp` 函數用於解析非標識符開頭的算術或布爾表達式，並根據解析結果更新 `parsedResult`。
+
+
+### command 函數
+
+`command` 函數負責解析並處理當前命令，根據命令的內容更新 `parsedResult` 變數。
+
+### parse 函數
+
+`parse` 函數負責執行整個解析過程，讀取並處理輸入的 token，直到遇到終止指令為止。
+
 ### processTokens 函數
 
 `processTokens` 函數用於處理和分析輸入中的 tokens，給每個 token 賦予適當的類型。
+
+### checkError 函數
+
+`checkError` 函數用於檢查給定的字符串，判斷其是否包含任何語法錯誤，並返回一個包含錯誤信息的 `Error` 結構體。
 
 ### analyzeToken 函數
 
@@ -120,3 +146,5 @@
 ## Tokenizer 類
 
 `Tokenizer` 類封裝了詞法分析的邏輯，提供字符讀取和處理的功能。
+
+
