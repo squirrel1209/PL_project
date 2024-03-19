@@ -1,3 +1,4 @@
+/*
 #ifndef PARSER_H
 #define PARSER_H
 
@@ -426,12 +427,15 @@ private:
         } // end else if 
         
         else {
-	  parsedResult.type = ERROR;
-            parsedResult.error.type = syntacticalError;
-            parsedResult.error.errorValue = currentToken.tokenName;
-            parsedResult.line = currentToken.line;
-            match();
-            return false ;
+        	  if ( parsedResult.type == ERROR ) return false;
+        	  else {	
+	      parsedResult.type = ERROR;
+                parsedResult.error.type = syntacticalError;
+                parsedResult.error.errorValue = currentToken.tokenName;
+                parsedResult.line = currentToken.line;
+                match();
+                return false ;
+            } // end else
         } // end else
     } // end NOT_ID_StartFactor()
     
@@ -652,12 +656,15 @@ private:
             } // end if
             
             else {
-               parsedResult.type = ERROR;
-               parsedResult.error.type = syntacticalError;
-               parsedResult.line = currentToken.line;
-               parsedResult.error.errorValue = currentToken.tokenName;
-               match();
-	     return false ;	
+        	      if ( parsedResult.type == ERROR ) return false;
+        	      else {
+	          parsedResult.type = ERROR;
+                    parsedResult.error.type = syntacticalError;
+                    parsedResult.error.errorValue = currentToken.tokenName;
+                    parsedResult.line = currentToken.line;
+                    match();
+                    return false ;
+                } // end else
 	  } // end else
         } // end else if
         
@@ -679,12 +686,15 @@ private:
 	      } // end if
 	      
 	      else {
-	          parsedResult.type = ERROR;
-                    parsedResult.error.type = syntacticalError;
-                    parsedResult.line = currentToken.line;
-                    parsedResult.error.errorValue = currentToken.tokenName;
-                    match();
-	      	return false ;
+        	          if ( parsedResult.type == ERROR ) return false;
+        	          else {
+	              parsedResult.type = ERROR;
+                        parsedResult.error.type = syntacticalError;
+                        parsedResult.error.errorValue = currentToken.tokenName;
+                        parsedResult.line = currentToken.line;
+                        match();
+                        return false ;
+                    } // end else
 	      } // end else
             } // end if 
             
@@ -695,12 +705,15 @@ private:
         } // end else if 
         
         else {
-	  parsedResult.type = ERROR;
-            parsedResult.error.type = syntacticalError;
-            parsedResult.error.errorValue = currentToken.tokenName;
-            parsedResult.line = currentToken.line;
-            match();
-            return false ;
+        	  if ( parsedResult.type == ERROR ) return false;
+        	  else {
+	      parsedResult.type = ERROR;
+                parsedResult.error.type = syntacticalError;
+                parsedResult.error.errorValue = currentToken.tokenName;
+                parsedResult.line = currentToken.line;
+                match();
+                return false ;
+            } // end else
         } // end else
     } // end factor()
     
@@ -741,3 +754,4 @@ private:
 };
 
 #endif // PARSER_H
+*/
