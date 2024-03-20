@@ -60,6 +60,18 @@
 
 一組 `AnyToString` 函數用於將不同類型的數據轉換為字符串。
 
+### booleanExp 函數
+
+`booleanExp` 函數用於解析布林表達式，這類表達式通常涉及至少一個算術表達式和一個布林運算符來進行比較。
+
+### IDlessArithExpOrBexp 函數
+
+`IDlessArithExpOrBexp` 函數用於處理不包含標識符開頭的算術或布林表達式，透過運算符將表達式分成左右操作數進行運算。
+
+### NOT_ID_StartFactor 函數
+
+`NOT_ID_StartFactor` 函數用於解析不以標識符開頭的因子。這包括處理數字、括號內的表達式，以及負數等情況。
+
 ### NOT_ID_StartTerm 函數
 
 `NOT_ID_StartTerm` 函數用於解析不以標識符開頭的 term。這涉及到處理算術運算中的乘法和除法運算。

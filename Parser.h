@@ -3,6 +3,7 @@
 #define PARSER_H
 
 #include <iostream>
+#include <stdio.h>
 #include <cstdlib> // 或 <stdlib.h> 如果您使用的是純C環境
 #include <vector>
 #include <string>
@@ -26,13 +27,13 @@ public:
     while ( parsedResult.type != QUIT ) {
 
       if ( parsedResult.type == ERROR ) {
-        if ( parsedResult.error.type == lexicalError ) 
+        if ( parsedResult.error.type == LEXICALERROR ) 
           cout << "unrecognized token with first char : '" << parsedResult.error.errorValue << "'" << endl;
 	  
-        else if ( parsedResult.error.type == syntacticalError ) 
+        else if ( parsedResult.error.type == SYNTACTICALERROR ) 
           cout << "unexpected token : '" << parsedResult.error.errorValue << "'" << endl;
 
-        else if ( parsedResult.error.type == semanticError ) 
+        else if ( parsedResult.error.type == SEMANTICERROR ) 
           cout << "undefined identifier : '" << parsedResult.error.errorValue << "'" << endl;
 
         else cout << "Error" << endl ;
@@ -47,131 +48,127 @@ public:
         
       else if ( parsedResult.type == FLOAT ) {
         float answer = atof( parsedResult.tokenName.c_str() ) ;
-        string200 buffer;
-        sprintf( buffer, "%.3f", answer );
-        cout << "> " << buffer << endl;
+        float roundedAnswer = round( answer * 1000 ) / 1000;
+        printf( "> %.3f\n", roundedAnswer ) ;
       } // end else if
 	  
       else cout << "> " << parsedResult.tokenName << endl;
 	  
       Error err;
-      parsedResult = createToken( "", OTHERERROR, err ) ;
+      parsedResult = CreateToken( "", ERROR, err ) ;
       command( parsedResult ) ;
     } // end while
-        
-    cout << "Program exits..." << endl ;
   } // end parse() 
 
 private:
-    vector<Token> tokens;
-    int currentTokenIndex;
+  vector<Token> tokens;
+  int currentTokenIndex;
     
-    bool isNearlyDivisible(float a, float b, float epsilon ) {
-        float result = a / b;
-        float fractionalPart = result - floor(result); // 獲取小數部分
-        return fabs(fractionalPart) < epsilon || fabs(fractionalPart - 1) < epsilon;
-    } // isNearlyDivisible
+  bool isNearlyDivisible( float a, float b, float epsilon ) {
+    float result = a / b;
+    float fractionalPart = result - floor(result); // 獲取小數部分
+    return fabs(fractionalPart) < epsilon || fabs(fractionalPart - 1) < epsilon;
+  } // isNearlyDivisible
     
-    Token evaluateOperation( Token a, Token b, Type op ) {
-        Token answer ;
-        float floatA = atof( a.tokenName.c_str() );
-        float floatB = atof( b.tokenName.c_str() );
-        float floatAnswer ;
+  Token evaluateOperation( Token a, Token b, Type op ) {
+    Token answer ;
+    float floatA = atof( a.tokenName.c_str() );
+    float floatB = atof( b.tokenName.c_str() );
+    float floatAnswer ;
         
-        if ( b.tokenName.compare( "0" ) == 0 && op == DIVIDE ) {
-            answer.type = ERROR;
-            answer.error.type = noneError;
-            return answer;
-        } // end if
+    if ( b.tokenName.compare( "0" ) == 0 && op == DIVIDE ) {
+      answer.type = ERROR;
+      answer.error.type = OTHERERROR;
+      return answer;
+    } // end if
          
-        if ( op == MULTIPLY ) {
-            floatAnswer = floatA * floatB;
-        } // end if
+    if ( op == MULTIPLY ) {
+      floatAnswer = floatA * floatB;
+    } // end if
                     
-        else if ( op == DIVIDE ) {
-        	  floatAnswer = floatA / floatB;
-        } // end else if
+    else if ( op == DIVIDE ) {
+      floatAnswer = floatA / floatB;
+    } // end else if
         
-        else if ( op == PLUS ) {
-        	  floatAnswer = floatA + floatB;
-        } // end else if
+    else if ( op == PLUS ) {
+      floatAnswer = floatA + floatB;
+    } // end else if
         
-        else if ( op == MINUS ) {
-        	  floatAnswer = floatA - floatB;
-        } // end else if
+    else if ( op == MINUS ) {
+      floatAnswer = floatA - floatB;
+    } // end else if
         
-        if ( op != DIVIDE && a.type == INT && b.type == INT ) {
-            int intAnswer = (int)floatAnswer; 
-            answer.tokenName = anyToString( intAnswer ) ;
-            answer.type = INT;
-            return answer;
-        } // end if
+    if ( op != DIVIDE && a.type == INT && b.type == INT ) {
+      int intAnswer = (int)floatAnswer; 
+      answer.tokenName = AnyToString( intAnswer ) ;
+      answer.type = INT;
+      return answer;
+    } // end if
     
-    
-        else if ( op == DIVIDE ) {
-            if ( isNearlyDivisible( floatA, floatB, 1e-4 ) ) {  // 整除 
-                int intAnswer = (int)floatAnswer; 
-                answer.tokenName = anyToString( intAnswer ) ;
-                answer.type = INT;
-                return answer;
-            } // end if
+    else if ( op == DIVIDE ) {
+      if ( isNearlyDivisible( floatA, floatB, 1e-4 ) ) {  // 整除 
+        int intAnswer = (int)floatAnswer; 
+        answer.tokenName = AnyToString( intAnswer ) ;
+        answer.type = INT;
+        return answer;
+      } // end if
 	  
-	  else {
-                answer.tokenName = anyToString( floatAnswer ) ;
-                answer.type = FLOAT; // Assuming FLOAT as the type for floating point numbers
-                return answer;	
-	  } // end else
-        } // end else if
+      else {
+        answer.tokenName = AnyToString( floatAnswer ) ;
+        answer.type = FLOAT; // Assuming FLOAT as the type for floating point numbers
+        return answer;	
+      } // end else
+    } // end else if
     
-        else {
-            answer.tokenName = anyToString( floatAnswer ) ;
-            answer.type = FLOAT; // Assuming FLOAT as the type for floating point numbers
-            return answer;
-        } // end else
-    } // end evaluateOperation()
+    else {
+      answer.tokenName = AnyToString( floatAnswer ) ;
+      answer.type = FLOAT; // Assuming FLOAT as the type for floating point numbers
+      return answer;
+    } // end else
+  } // end evaluateOperation()
     
-    Token compareOperation(Token left, Token right, Type op) {
-        Token result;
-        result.type = BOOL;  // 假設 Token 有一個 BOOL 類型用於表示布林值
+  Token compareOperation( Token left, Token right, Type op ) {
+    Token result;
+    result.type = BOOL;  // 假設 Token 有一個 BOOL 類型用於表示布林值
 
-        // 將字面值轉換為數值進行比較
-        double leftVal = atof(left.tokenName.c_str());
-        double rightVal = atof(right.tokenName.c_str());
-        bool comparisonResult;
+    // 將字面值轉換為數值進行比較
+    double leftVal = atof( left.tokenName.c_str() );
+    double rightVal = atof( right.tokenName.c_str() );
+    bool comparisonResult;
 
-        // 根據操作符進行比較，直接在 case 中返回結果，避免使用 break
-        switch (op) {
-            case EQUAL:
-                comparisonResult = fabs(leftVal - rightVal) < 0.0001;
-                result.tokenName = comparisonResult ? "true" : "false";
-                return result;
+    // 根據操作符進行比較，直接在 case 中返回結果，避免使用 break
+    switch (op) {
+      case EQUAL:
+        comparisonResult = fabs(leftVal - rightVal) < 0.0001;
+        result.tokenName = comparisonResult ? "true" : "false";
+        return result;
                 
-            case NOTEQUAL:
-                comparisonResult = leftVal != rightVal;
-                result.tokenName = comparisonResult ? "true" : "false";
-                return result;
+      case NOTEQUAL:
+        comparisonResult = leftVal != rightVal;
+        result.tokenName = comparisonResult ? "true" : "false";
+        return result;
                 
-            case GREATER:
-                comparisonResult = leftVal > rightVal;
-                result.tokenName = comparisonResult ? "true" : "false";
-                return result;
+      case GREATER:
+        comparisonResult = leftVal > rightVal;
+        result.tokenName = comparisonResult ? "true" : "false";
+        return result;
                 
-            case LESS:
-                comparisonResult = leftVal < rightVal;
-                result.tokenName = comparisonResult ? "true" : "false";
-                return result;
+      case LESS:
+        comparisonResult = leftVal < rightVal;
+        result.tokenName = comparisonResult ? "true" : "false";
+        return result;
                 
-            case GREATEREQUAL:
-                comparisonResult = leftVal >= rightVal;
-                result.tokenName = comparisonResult ? "true" : "false";
-                return result;
+      case GREATEREQUAL:
+        comparisonResult = leftVal >= rightVal;
+        result.tokenName = comparisonResult ? "true" : "false";
+        return result;
                 
-            case LESSEQUAL:
-                comparisonResult = leftVal <= rightVal;
-                result.tokenName = comparisonResult ? "true" : "false";
-                return result;
-        }
-    } //
+      case LESSEQUAL:
+        comparisonResult = leftVal <= rightVal;
+        result.tokenName = comparisonResult ? "true" : "false";
+        return result;
+    } // end switch
+  } // end compareOperation()
 
   // 解析當前命令並更新 parsedResult 參數以反映命令的結果。
   void command( Token &parsedResult ) {
@@ -193,18 +190,26 @@ private:
         return;
       } // end if
 		    
-      if ( symbolTable.find(ident.tokenName) != symbolTable.end() ) {  //有define 
+      if ( symbolTable.find( ident.tokenName ) != symbolTable.end() ) {  //有define 
         parsedResult = symbolTable[currentToken.tokenName];
       } // end if
 
       else if ( currentTokenType() != ASSIGN ) {
         //undefined identifier
-        parsedResult.type = ERROR;
-        parsedResult.error.type = SEMANTICERROR;
-        parsedResult.error.errorValue = currentToken.tokenName;
-        parsedResult.line = currentToken.line;
-        match();
-        return;
+        if ( currentTokenType() == ERROR ) {
+            parsedResult = getCurrentToken();
+            match();
+            return;
+        } // end if
+        
+        else {
+        	parsedResult.type = ERROR;
+          parsedResult.error.type = SEMANTICERROR;
+          parsedResult.error.errorValue = currentToken.tokenName;
+          parsedResult.line = currentToken.line;
+          match();
+          return;
+        } // end else
       } // end else if
        	 
       if ( currentTokenType() == ASSIGN ) {
@@ -385,8 +390,13 @@ private:
     // 返回 true 表示成功解析 term
     return true;
   } // end NOT_ID_StartTerm()
-    
-  bool NOT_ID_StartFactor( Token &parsedResult ) {        
+
+  // 解析不以標識符開頭的因子(factor)。 
+  bool NOT_ID_StartFactor( Token &parsedResult ) {
+  // - **直接數值：** 能夠解析直接給出的整數或浮點數。
+  // - **符號處理：** 能夠識別並處理數值前的正負符號。
+  // - **括號表達式：** 能夠處理括號內的算術表達式。
+  // - **錯誤處理：** 當遇到語法錯誤時，會設置相應的錯誤信息並返回 false。    
     Token currentToken = getCurrentToken();
         
     if ( currentToken.type == ERROR || currentToken.type == QUIT ) {
@@ -487,316 +497,334 @@ private:
     
     // <IDlessArithExpOrBexp>  ::= {   '+' <Term>   | '-' <Term> | '*' <Factor> | '/' <Factor> }
     //                             [ <BooleanOperator> <ArithExp> ]
-    bool IDlessArithExpOrBexp( Token ident, Token &parsedResult ) {
-        if ( symbolTable.find( ident.tokenName ) != symbolTable.end() ) {   // IDENT有定義 
-            ident = symbolTable[ident.tokenName];
-        } // end if
-        
-        else {                                                              // IDENT無定義
-            parsedResult.type = ERROR;
-            parsedResult.error.type = semanticError;
-            parsedResult.error.errorValue = ident.tokenName;
-            parsedResult.line = ident.line;
-            return false;
-        } // end else
-        
-        while ( currentTokenType() == SIGN || currentTokenType() == MULTIPLY || currentTokenType() == DIVIDE ) {
-            Type op;
-            if ( getCurrentToken().tokenName.compare( "+" ) == 0 ) op = PLUS;
-            else if ( getCurrentToken().tokenName.compare( "-" ) == 0 ) op = MINUS;
-            else op = currentTokenType();
+  bool IDlessArithExpOrBexp( Token ident, Token &parsedResult ) {
+    while ( currentTokenType() == SIGN || currentTokenType() == MULTIPLY || currentTokenType() == DIVIDE ) {
+      Type op;
+      if ( getCurrentToken().tokenName.compare( "+" ) == 0 ) op = PLUS;
+      else if ( getCurrentToken().tokenName.compare( "-" ) == 0 ) op = MINUS;
+      else op = currentTokenType();
             
-            match();  // 移動到下一個 token，即 Term 或 Factor 的開始
+      match();  // 移動到下一個 token，即 Term 或 Factor 的開始
             
 
-            if (op == PLUS || op == MINUS) {
-                if (!term(parsedResult)) {
-                    return false;
-                } // end if
-                
-                parsedResult = evaluateOperation(ident, parsedResult, op); // 執行運算
-            } // end if
-            
-            else if (op == MULTIPLY || op == DIVIDE) {
-                if (!factor(parsedResult)) {
-                    return false;
-                } // end if
-                
-                parsedResult = evaluateOperation(ident, parsedResult, op); // 執行運算
-            } // end else if
-            
-            ident = parsedResult ;
-        } // end while
-        
-        if (BooleanOperator()) {
-        	  Type op = currentTokenType();
-            match();  // 移動到 Boolean 表達式的開始
-            
-            Token nextOperand;
-            if (!arithExp(nextOperand)) {
-                return false;
-            } // end if
-            
-            parsedResult = compareOperation(parsedResult, nextOperand, op); // 執行布林運算
+      if ( op == PLUS || op == MINUS ) {
+        if ( !term( parsedResult ) ) {
+          return false;
         } // end if
+                
+        parsedResult = evaluateOperation( ident, parsedResult, op ); // 執行運算
+      } // end if
+            
+      else if ( op == MULTIPLY || op == DIVIDE ) {
+        if ( !factor( parsedResult ) ) {
+          return false;
+        } // end if
+                
+        parsedResult = evaluateOperation( ident, parsedResult, op ); // 執行運算
+      } // end else if
+            
+      ident = parsedResult ;
+    } // end while
+        
+    if ( BooleanOperator() ) {
+      Type op = currentTokenType();
+      match();  // 移動到 Boolean 表達式的開始
+            
+      Token nextOperand;
+      if ( !arithExp( nextOperand ) ) {
+        return false;
+      } // end if
+            
+      parsedResult = compareOperation( parsedResult, nextOperand, op ); // 執行布林運算
+    } // end if
     
-        return true;
-    } // end IDlessArithExpOrBexp
+    return true;
+  } // end IDlessArithExpOrBexp()
 
-    bool BooleanOperator() {
-        if ( currentTokenType() == EQUAL || currentTokenType() == NOTEQUAL || currentTokenType() == GREATER ||
-             currentTokenType() == LESS || currentTokenType() == GREATEREQUAL || currentTokenType() == LESSEQUAL ) 
-	   return true ;
-        else return false ;	
-    } // end BooleanOperator()
+  bool BooleanOperator() {
+    if ( currentTokenType() == EQUAL || currentTokenType() == NOTEQUAL || currentTokenType() == GREATER ||
+         currentTokenType() == LESS || currentTokenType() == GREATEREQUAL || currentTokenType() == LESSEQUAL ) 
+      return true ;
+    else return false ;	
+  } // end BooleanOperator()
 
-    // <BooleanExp> ::= <ArithExp> ( '=' | '<>' | '>' | '<' | '>=' | '<=' ) <ArithExp>
-    bool booleanExp( Token &parsedResult ) {
-        if ( arithExp(parsedResult) ) {
-            if ( BooleanOperator() ) {
-                Type op = currentTokenType();  // 獲取比較運算符
-                match();
+  // <BooleanExp> ::= <ArithExp> ( '=' | '<>' | '>' | '<' | '>=' | '<=' ) <ArithExp>
+  bool booleanExp( Token &parsedResult ) {
+    if ( arithExp( parsedResult ) ) {
+      if ( BooleanOperator() ) {
+        Type op = currentTokenType();  // 獲取比較運算符
+        match();
                 
-                Token rightExpr;
-                if (arithExp(rightExpr)) {
-                    // 比較兩個算術表達式的結果
-                    // 此處應該有比較邏輯的實現，這裡僅示範結構
-                    parsedResult = compareOperation(parsedResult, rightExpr, op);
-                    return true;
-	      } // end if
+        Token rightExpr;
+        if ( arithExp( rightExpr ) ) {
+          // 比較兩個算術表達式的結果
+          // 此處應該有比較邏輯的實現，這裡僅示範結構
+          parsedResult = compareOperation(parsedResult, rightExpr, op);
+          return true;
+        } // end if
 	      
-                else {
-                	return false ;
-	      } // end else
-            } // end if
-            
-            else {
-                parsedResult.type = ERROR;
-                parsedResult.error.type = syntacticalError;
-                parsedResult.error.errorValue = getCurrentToken().tokenName;
-                parsedResult.line = getCurrentToken().line;
-                return false ;	
-	  } // end else
-        } // end if
-        
         else {
-            return false ;
+          return false ;
         } // end else
-    } // end booleanExp()
-
-    // <ArithExp> ::= <Term> | <ArithExp> '+' <Term> | <ArithExp> '-' <Term>
-    bool arithExp(Token &parsedResult) {
-        Token currentToken = getCurrentToken();
-        
-        if ( currentToken.type == ERROR || currentToken.type == QUIT ) {
-            parsedResult = currentToken;
-        	  match();  // match ERROR || QUIT
-            return false ;
-        } // end if
-        
-        // 解析第一個 term
-        if (!term(parsedResult)) {
-            return false;
-        } // end if
-
-        // 當當前 token 是加號或減號時，進行運算
-        while (currentTokenType() == SIGN ) {
-            // 保存運算符
-            Type op;
-            if ( getCurrentToken().tokenName.compare( "-" ) == 0 ) op = MINUS;
-            else op = PLUS ;
-            match();  // 移動到下一個 token
-
-            // 解析下一個 term
-            Token b;
+      } // end if
             
-            if (!term(b)) {
-                parsedResult = b;
-                return false;
-            } // end if
-            
-            // 根據運算符進行相應的運算，並更新 a 為運算結果
-            parsedResult = evaluateOperation(parsedResult, b, op);
-
-        } // end while 
-
-        // 返回 true 表示成功解析 arithExp
-        return true;
-    } // end arithExp()
-
-    // <Term> ::= <Factor> | <Term> '*' <Factor> | <Term> '/' <Factor>
-    bool term(Token &parsedResult) {
-        Token currentToken = getCurrentToken();
-
-        if ( currentToken.type == ERROR || currentToken.type == QUIT ) {
-            parsedResult = currentToken;
-        	  match();  // match ERROR || QUIT
-            return false ;
+      else {
+        if ( currentTokenType() == ERROR ) {
+          parsedResult = getCurrentToken();
+          match();
+          return false;
         } // end if
+	  
+        else {
+	parsedResult.type = ERROR;
+          parsedResult.error.type = SYNTACTICALERROR;
+          parsedResult.error.errorValue = getCurrentToken().tokenName;
+          parsedResult.line = getCurrentToken().line;
+          match();
+          return false;	  	
+        } // end else	
+      } // end else
+    } // end if
+        
+    else {
+      return false ;
+    } // end else
+  } // end booleanExp()
+
+  // <ArithExp> ::= <Term> | <ArithExp> '+' <Term> | <ArithExp> '-' <Term>
+  bool arithExp( Token &parsedResult ) {
+    Token currentToken = getCurrentToken();
+        
+    if ( currentToken.type == ERROR || currentToken.type == QUIT ) {
+      parsedResult = currentToken;
+      match();  // match ERROR || QUIT
+      return false ;
+    } // end if
+        
+    // 解析第一個 term
+    if ( !term( parsedResult ) ) {
+      return false;
+    } // end if
+
+    // 當當前 token 是加號或減號時，進行運算
+    while ( currentTokenType() == SIGN ) {
+      // 保存運算符
+      Type op;
+      if ( getCurrentToken().tokenName.compare( "-" ) == 0 ) op = MINUS;
+      else op = PLUS ;
+      match();  // 移動到下一個 token
+
+      // 解析下一個 term
+      Token b;
+            
+      if ( !term( b ) ) {
+        parsedResult = b;
+        return false;
+      } // end if
+            
+      // 根據運算符進行相應的運算，並更新 a 為運算結果
+      parsedResult = evaluateOperation( parsedResult, b, op );
+    } // end while 
+
+    // 返回 true 表示成功解析 arithExp
+    return true;
+  } // end arithExp()
+
+  // <Term> ::= <Factor> | <Term> '*' <Factor> | <Term> '/' <Factor>
+  bool term( Token &parsedResult ) {
+    Token currentToken = getCurrentToken();
+
+    if ( currentToken.type == ERROR || currentToken.type == QUIT ) {
+      parsedResult = currentToken;
+      match();  // match ERROR || QUIT
+      return false ;
+    } // end if
     	
-        // 首先解析一個 factor
-        if (!factor(parsedResult)) {
+    // 首先解析一個 factor
+    if ( !factor( parsedResult ) ) {
+            return false;
+    } // end if
+
+    // 當當前 token 是乘法或除法運算符時，進行運算
+    while ( currentTokenType() == MULTIPLY || currentTokenType() == DIVIDE ) {
+      // 保存運算符
+      Type op = currentTokenType();
+      match();  // 移動到下一個 token
+
+      // 解析下一個 factor
+      Token b;
+      if ( !factor( b ) ) {
+        parsedResult = b ;
+        return false;
+      } // end if
+
+      // 根據運算符進行相應的運算，並更新 a 為運算結果
+      parsedResult = evaluateOperation( parsedResult, b, op );
+    } // end while
+
+    // 返回 true 表示成功解析 term
+    return true;
+  } // end term()
+    
+  // <Factor> ::= [ SIGN ] NUM | IDENT | '(' <ArithExp> ')'  	
+  bool factor( Token &parsedResult ) {
+    Token currentToken = getCurrentToken();
+    if ( currentToken.type == ERROR || currentToken.type == QUIT ) {
+      parsedResult = currentToken;
+      match();  // match ERROR || QUIT
+      return false ;
+    } // end if
+
+    if ( currentToken.type == IDENT ) {
+      if ( symbolTable.find(currentToken.tokenName) != symbolTable.end() ) {
+        parsedResult = symbolTable[currentToken.tokenName];
+        match();  // factor
+        return true ;
+      } // end if
+
+      else {
+        //undefined identifier
+        if ( currentTokenType() == ERROR ) {
+            parsedResult = getCurrentToken();
+            match();
             return false;
         } // end if
-
-        // 當當前 token 是乘法或除法運算符時，進行運算
-        while (currentTokenType() == MULTIPLY || currentTokenType() == DIVIDE) {
-            // 保存運算符
-            Type op = currentTokenType();
-            match();  // 移動到下一個 token
-
-            // 解析下一個 factor
-            Token b;
-            if (!factor(b)) {
-                parsedResult = b ;
-                return false;
-            } // end if
-
-            // 根據運算符進行相應的運算，並更新 a 為運算結果
-            parsedResult = evaluateOperation(parsedResult, b, op);
-        } // end while
-
-        // 返回 true 表示成功解析 term
-        return true;
-    } // end term()
-    
-    // <Factor> ::= [ SIGN ] NUM | IDENT | '(' <ArithExp> ')'  	
-    bool factor( Token &parsedResult ) {
-        Token currentToken = getCurrentToken();
-        if ( currentToken.type == ERROR || currentToken.type == QUIT ) {
-        	  parsedResult = currentToken;
-        	  match();  // match ERROR || QUIT
-            return false ;
-        } // end if
-
-        if ( currentToken.type == IDENT ) {
-        	 if ( symbolTable.find(currentToken.tokenName) != symbolTable.end() ) {
-        	     parsedResult = symbolTable[currentToken.tokenName];
-        	     match();  // factor
-        	     return true ;
-	 } // end if
-
-           else {
-               //undefined identifier
-               parsedResult.type = ERROR;
-               parsedResult.error.type = semanticError;
-               parsedResult.line = currentToken.line;
-               parsedResult.error.errorValue = currentToken.tokenName;
-               match();
-               return false;
-	 } // end else
-        } // end if
-
-        else if ( currentToken.type == SIGN ) {
-        	  if ( currentToken.tokenName.compare( "-" ) == 0 )
-        	      parsedResult = currentToken ;
-
-            match();
-            currentToken = getCurrentToken(); // 更新 Token 類型
-            
-            if ( currentToken.type == INT || currentToken.type == FLOAT ) {
-                parsedResult.tokenName += currentToken.tokenName;
-                parsedResult.type = currentToken.type ;
-                match();
-                return true ;
-            } // end if
-            
-            else {
-        	      if ( parsedResult.type == ERROR ) return false;
-        	      else {
-	          parsedResult.type = ERROR;
-                    parsedResult.error.type = syntacticalError;
-                    parsedResult.error.errorValue = currentToken.tokenName;
-                    parsedResult.line = currentToken.line;
-                    match();
-                    return false ;
-                } // end else
-	  } // end else
-        } // end else if
         
-        else if ( currentToken.type == INT || currentToken.type == FLOAT ) {
-        	  parsedResult = currentToken ;
-            match();
-            return true ;
-        } // end else if
-        
-        else if ( currentToken.type == LPAREN ) {
-            match();
+        else {
+        	parsedResult.type = ERROR;
+          parsedResult.error.type = SEMANTICERROR;
+          parsedResult.error.errorValue = currentToken.tokenName;
+          parsedResult.line = currentToken.line;
+          match();
+          return false;
+        } // end else
+      } // end else
+    } // end if
+
+    else if ( currentToken.type == SIGN ) {
+      if ( currentToken.tokenName.compare( "-" ) == 0 )
+        parsedResult = currentToken ;
+
+      match();
+      currentToken = getCurrentToken(); // 更新 Token 類型
             
-            if ( arithExp(parsedResult) ) {
-	      currentToken = getCurrentToken();
+      if ( currentToken.type == INT || currentToken.type == FLOAT ) {
+        parsedResult.tokenName += currentToken.tokenName;
+        parsedResult.type = currentToken.type ;
+        match();
+        return true ;
+      } // end if
+            
+      else {
+        if ( currentToken.type == ERROR ) {
+          parsedResult = currentToken;
+          match();
+          return false;
+        } // end if
+        
+        else {
+          parsedResult.type = ERROR;
+          parsedResult.error.type = SYNTACTICALERROR;
+          parsedResult.error.errorValue = currentToken.tokenName;
+          parsedResult.line = currentToken.line;
+          match();
+          return false ;
+        } // end else
+      } // end else
+    } // end else if
+        
+    else if ( currentToken.type == INT || currentToken.type == FLOAT ) {
+      parsedResult = currentToken ;
+      match();
+      return true ;
+    } // end else if
+        
+    else if ( currentToken.type == LPAREN ) {
+      match();
+            
+      if ( arithExp( parsedResult ) ) {
+        currentToken = getCurrentToken();
                 
-                if ( currentToken.type == RPAREN ) {
-                    match();
-                    return true ;
-	      } // end if
+        if ( currentToken.type == RPAREN ) {
+          match();
+          return true ;
+        } // end if
 	      
-	      else {
-        	          if ( parsedResult.type == ERROR ) return false;
-        	          else {
-	              parsedResult.type = ERROR;
-                        parsedResult.error.type = syntacticalError;
-                        parsedResult.error.errorValue = currentToken.tokenName;
-                        parsedResult.line = currentToken.line;
-                        match();
-                        return false ;
-                    } // end else
-	      } // end else
-            } // end if 
+        else {
+        	if ( currentTokenType() == ERROR ) {
+            parsedResult = getCurrentToken();
+            match();
+            return false;
+          } // end if
+          
+        	else {
+	  parsedResult.type = ERROR;
+            parsedResult.error.type = SYNTACTICALERROR;
+            parsedResult.error.errorValue = currentToken.tokenName;
+            parsedResult.line = currentToken.line;
+            match();
+            return false ;
+          } // end else
+        } // end else
+      } // end if 
             
-            else {
-                match();
-                return false ;
-	  } // end else 
-        } // end else if 
+      else {
+        match();
+        return false ;
+      } // end else 
+    } // end else if 
         
-        else {
-        	  if ( parsedResult.type == ERROR ) return false;
-        	  else {
-	      parsedResult.type = ERROR;
-                parsedResult.error.type = syntacticalError;
-                parsedResult.error.errorValue = currentToken.tokenName;
-                parsedResult.line = currentToken.line;
-                match();
-                return false ;
-            } // end else
-        } // end else
-    } // end factor()
+    else {
+      if ( currentTokenType() == ERROR ) {
+        parsedResult = getCurrentToken();
+        match();
+        return false;
+      } // end if
+      
+      else {
+        parsedResult.type = ERROR;
+        parsedResult.error.type = SYNTACTICALERROR;
+        parsedResult.error.errorValue = currentToken.tokenName;
+        parsedResult.line = currentToken.line;
+        match();
+        return false ;
+      } // end else
+    } // end else
+  } // end factor()
     
-    // 如果當前token符合文法，則往後移一位 
-    void match() {
-        if ( currentTokenIndex < tokens.size() ) {
-            currentTokenIndex++;
-        } // end if
+  // 如果當前token符合文法，則往後移一位 
+  void match() {
+    if ( currentTokenIndex < tokens.size() ) {
+      currentTokenIndex++;
+    } // end if
 
-        else return  ;
-    } // end match()
+    else return;
+  } // end match()
     
-    // 獲取當前token的類型 
-    Type currentTokenType() {
-        if ( currentTokenIndex < tokens.size() ) {
-            return tokens[currentTokenIndex].type;
-        } // end if
+  // 獲取當前token的類型 
+  Type currentTokenType() {
+    if ( currentTokenIndex < tokens.size() ) {
+      return tokens[currentTokenIndex].type;
+    } // end if
          
-        else {
-            return QUIT;
-        } // end else
-    } // end currentTokenType
+    else {
+      return QUIT;
+    } // end else
+  } // end currentTokenType
     
-    Token getCurrentToken() {
-        Token quit;
-        quit.type = QUIT;
+  Token getCurrentToken() {
+    Token quit;
+    quit.type = QUIT;
 
-        if ( currentTokenIndex < tokens.size() ) {
-            return tokens[currentTokenIndex];
-        } // end if
+    if ( currentTokenIndex < tokens.size() ) {
+      return tokens[currentTokenIndex];
+    } // end if
          
-        else {
-        	return quit;
-        }
+    else {
+      return quit;
+    } // end else
         
     } // end currentTokenValue()
-    
 };
 
 #endif // PARSER_H
