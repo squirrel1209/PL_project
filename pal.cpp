@@ -295,7 +295,6 @@ private:
     else return result;
   } // end CompareOperation()
 
-
   // 解析當前命令並更新 parsedResult 參數以反映命令的結果。
   void Command( Token &parsedResult ) {
   // - **QUIT 和 ERROR 處理：** 如果當前 token 為 QUIT 或 ERROR，則直接更新 `parsedResult`。
@@ -455,9 +454,14 @@ private:
       else {
         if ( CurrentTokenType() == ERROR ) {
           parsedResult = GetCurrentToken();
-          return;
           Match();
+          return;
         } // end if
+
+        else if ( parsedResult.error.type == OTHERERROR ) {
+          Match();
+          return;
+        } // end else if
 
         else {
           parsedResult.type = ERROR;
