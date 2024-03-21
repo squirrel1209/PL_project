@@ -41,10 +41,9 @@ public:
         else cout << "> Error" << endl ;
 
         int temp = parsedResult.line;
-        while ( parsedResult.line <= temp ) {
+        while ( GetCurrentToken().line <= temp ) {
           Match();
-          parsedResult = GetCurrentToken();
-          if ( parsedResult.type == QUIT ) return ;
+          if ( GetCurrentToken().type == QUIT ) return ;
         } // end while
       } // end if
 
@@ -190,17 +189,18 @@ private:
     } // end if
 
     else if ( currentToken.type == IDENT ) {
-      Token ident = currentToken;
+      Token notDefineIdent = currentToken;
+      Token defineIdent;
       Match();  // 移動到下一個 token，即 ASSIGN
 
-      if ( ident.tokenName.compare( "quit" ) == 0 ) {
-        parsedResult = currentToken;
+      if ( notDefineIdent.tokenName.compare( "quit" ) == 0 ) {
+        parsedResult = notDefineIdent;
         parsedResult.type = QUIT;
         return;
       } // end if
 
-      if ( gsymbolTable.find( ident.tokenName ) != gsymbolTable.end() ) {  // 有define
-        parsedResult = gsymbolTable[currentToken.tokenName];
+      if ( gsymbolTable.find( notDefineIdent.tokenName ) != gsymbolTable.end() ) {  // 有define
+        defineIdent = gsymbolTable[notDefineIdent.tokenName];
       } // end if
 
       else if ( CurrentTokenType() != ASSIGN ) {
@@ -225,11 +225,10 @@ private:
         Match();  // 移動到賦值表達式 
 
         if ( ArithExp( parsedResult ) ) {
-
-          // 將算術表達式的結果賦值給標識符
-          gsymbolTable[ident.tokenName] = parsedResult ;
-
+            
           if ( CurrentTokenType() == SEMICOLON ) {
+            // 將算術表達式的結果賦值給標識符
+            gsymbolTable[notDefineIdent.tokenName] = parsedResult ;
             Match();  // 消耗掉分號
             return ;
           } // end if
@@ -253,7 +252,7 @@ private:
         }  // end if
       } // end if
 
-      else if ( IDlessArithExpOrBexp( ident, parsedResult ) ) {
+      else if ( IDlessArithExpOrBexp( defineIdent, parsedResult ) ) {
 
         if ( CurrentTokenType() == SEMICOLON ) {
           Match();
@@ -313,10 +312,10 @@ private:
 
     if ( NOT_ID_StartArithExp( parsedResult ) ) {
       // 解析成功後，檢查是否跟隨了布爾運算符
+
       if ( BooleanOperator() ) {
         Token operatorToken = GetCurrentToken();
         Match(); // 消耗布爾運算符
-
         Token rightOperand;
         if ( ArithExp( rightOperand ) ) {
           parsedResult = CompareOperation( parsedResult, rightOperand, operatorToken.type );
@@ -529,7 +528,7 @@ private:
         if ( !Factor( parsedResult ) ) {
           return false;
         } // end if
-
+        
         parsedResult = EvaluateOperation( ident, parsedResult, op ); // 執行運算
       } // end else if
 

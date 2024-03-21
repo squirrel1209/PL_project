@@ -118,7 +118,6 @@ public:
   // - **多浮點數處理：** 特殊情況下，如 token 為多個浮點數，則使用 `SplitString` 進行分割。
     vector<Token> tokens;
     string tokenName = GetNextToken() ;
-        
     // 迴圈處理每個token，並給予型態 
     while ( tokenName != "\0" ) {
       Token token;
@@ -130,7 +129,12 @@ public:
       if ( token.type == ERROR ) {
       // 處理例外，尚未切完整的token 例如:floatfloat 1.23.23
 
-        if ( IsMultiFloat( tokenName ) ) {
+        if ( tokenName.substr( 0, 4 ) == "quit" ) {
+          token.type = IDENT;
+          token.tokenName = "quit";
+        } // end if
+        
+        else if ( IsMultiFloat( tokenName ) ) {
           string left = "";
           string right = "";
           SplitString( tokenName, left, right ) ;
@@ -161,8 +165,8 @@ public:
     Error error ;
     int i = 0 ;
 
-    if ( isalpha( str[0] ) ) {  // 是IDENT的錯誤 	
-      while ( i < str.length() && ( isalnum( str[i] ) || str[i] == '_' ) ) {      
+    if ( isalpha( str[0] ) ) {  // 是IDENT的錯誤
+      while ( i < str.length() && ( isalnum( str[i] ) || str[i] == '_' ) ) {
         i++ ;
       } // end while
 
@@ -390,12 +394,12 @@ public:
     else if ( ch == ':' ) {
       ch = GetNextChar() ;
       if ( ch == '=' ) {
-        mcolumnIndex-- ;
+        LastChar() ;
         return true ;
       } // end if
 
       else {
-        mcolumnIndex-- ;
+        LastChar() ;
         return false ;
       } // end else
     } // end else if
@@ -419,7 +423,7 @@ public:
       if ( ch == '>' ) return "<>" ;
       else if ( ch == '=' ) return "<=" ;
       else {
-        mcolumnIndex-- ;
+        LastChar() ;
         return "<" ;
       } // end else
     } // end else if
@@ -428,7 +432,7 @@ public:
       ch = GetNextChar() ;
       if ( ch == '=' ) return ">=" ;
       else {
-        mcolumnIndex-- ;
+        LastChar() ;
         return ">" ;
       } // end else
     } // end else if
@@ -463,12 +467,12 @@ public:
       } // end if
             
       else {
-        mcolumnIndex-- ;
+        LastChar() ;
         return "/" ;
       } // end else
     } // end else if 
         
-    else if ( IsDelimiter( nextChar ) ) {   
+    else if ( IsDelimiter( nextChar ) ) {
       return GetDelimiter( nextChar ) ;
     } // end else if
         
@@ -488,23 +492,24 @@ public:
     char nextChar = GetNextChar();
     bool hasDot = false;
     
-    while ( !isspace( nextChar ) && !IsDelimiter( nextChar ) ) { 
+    while ( !isspace( nextChar ) && !IsDelimiter( nextChar ) ) {
     
       if ( nextChar == '/' ) {       // 處理連續的註解 
         nextChar = GetNextChar() ;
         
         if ( nextChar == '/' ) 
           while ( nextChar != '\n' ) nextChar = GetNextChar() ;
-        else mcolumnIndex-- ;
+        else LastChar() ;
       } // end if
 
       else {
         tokenValue += nextChar;
         nextChar = GetNextChar();
       } // end else
+      
     } // end while
         
-    if ( IsDelimiter( nextChar ) ) mcolumnIndex-- ; // delimiter不算此token，往前一個column
+    if ( IsDelimiter( nextChar ) ) LastChar() ; // delimiter不算此token，往前一個column
     return tokenValue;
   } // ReadRemainingToken() 
 
@@ -521,6 +526,15 @@ public:
 
     return nextChar; 
   } // end GetNextNonWhiteSpaceChar()
+
+  void LastChar() {
+    if ( mcolumnIndex == 0 && mlineIndex >= 1 ) {
+      mlineIndex-- ;
+      mcolumnIndex = minput[mlineIndex].size() ;
+    } // end if
+    
+    else mcolumnIndex-- ;
+  } // end LastChar()
 
   // 定義一個函數來獲取下一個字符從輸入文本中。
   char GetNextChar() {

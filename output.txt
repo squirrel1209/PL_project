@@ -1,19 +1,33 @@
-> 5
-> 5
-> 5
-> 5
-> 3
-> Unrecognized token with first char : '$'
-> Unexpected token : '*'
-> 5
-> 101
-> 202
-> Undefined identifier : 'bcd'
-> 1
-> 2
-> 11
-> 11
-> 14
+Program starts...
+> 3000
+> Unexpected token : ':='
+> Undefined identifier : 'this_is_a_name123'
+> Unexpected token : ';'
+> 500
+> 12
+> 36000
+> 360000
 > true
 > false
-> Program exits...
+> 30000
+> true
+> false
+> true
+> Program exits...<<
+
+你的程式的輸出是>>Program starts...
+> 3000
+> Unexpected token : ':='
+> 5.000
+> 500
+> 12
+> 36000
+> 0.000
+> false
+> false
+> 30000
+> true
+> false
+> true
+> Unrecognized token with first char : '$'
+> Program exits...<<

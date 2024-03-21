@@ -131,21 +131,6 @@ string AnyToString( char ch ) {
 } // end AnyToString()
 
 
-#ifndef ParseR_H
-#define ParseR_H
-
-#include <iostream>
-#include <stdio.h>
-#include <cstdlib>
-#include <vector>
-#include <string>
-#include <map>
-#include "Tokenizer.h"
-#include <cmath>
-
-using namespace std;
-map<string, Token> gsymbolTable;
-
 class Parser {
 public:
   Parser( vector<Token> inputmtokens ) {
@@ -173,10 +158,9 @@ public:
         else cout << "> Error" << endl ;
 
         int temp = parsedResult.line;
-        while ( parsedResult.line <= temp ) {
+        while ( GetCurrentToken().line <= temp ) {
           Match();
-          parsedResult = GetCurrentToken();
-          if ( parsedResult.type == QUIT ) return ;
+          if ( GetCurrentToken().type == QUIT ) return ;
         } // end while
       } // end if
 
@@ -322,17 +306,18 @@ private:
     } // end if
 
     else if ( currentToken.type == IDENT ) {
-      Token ident = currentToken;
+      Token notDefineIdent = currentToken;
+      Token defineIdent;
       Match();  // 移動到下一個 token，即 ASSIGN
 
-      if ( ident.tokenName.compare( "quit" ) == 0 ) {
-        parsedResult = currentToken;
+      if ( notDefineIdent.tokenName.compare( "quit" ) == 0 ) {
+        parsedResult = notDefineIdent;
         parsedResult.type = QUIT;
         return;
       } // end if
 
-      if ( gsymbolTable.find( ident.tokenName ) != gsymbolTable.end() ) {  // 有define
-        parsedResult = gsymbolTable[currentToken.tokenName];
+      if ( gsymbolTable.find( notDefineIdent.tokenName ) != gsymbolTable.end() ) {  // 有define
+        defineIdent = gsymbolTable[notDefineIdent.tokenName];
       } // end if
 
       else if ( CurrentTokenType() != ASSIGN ) {
@@ -357,11 +342,10 @@ private:
         Match();  // 移動到賦值表達式 
 
         if ( ArithExp( parsedResult ) ) {
-
-          // 將算術表達式的結果賦值給標識符
-          gsymbolTable[ident.tokenName] = parsedResult ;
-
+            
           if ( CurrentTokenType() == SEMICOLON ) {
+            // 將算術表達式的結果賦值給標識符
+            gsymbolTable[notDefineIdent.tokenName] = parsedResult ;
             Match();  // 消耗掉分號
             return ;
           } // end if
@@ -385,7 +369,7 @@ private:
         }  // end if
       } // end if
 
-      else if ( IDlessArithExpOrBexp( ident, parsedResult ) ) {
+      else if ( IDlessArithExpOrBexp( defineIdent, parsedResult ) ) {
 
         if ( CurrentTokenType() == SEMICOLON ) {
           Match();
@@ -445,10 +429,10 @@ private:
 
     if ( NOT_ID_StartArithExp( parsedResult ) ) {
       // 解析成功後，檢查是否跟隨了布爾運算符
+
       if ( BooleanOperator() ) {
         Token operatorToken = GetCurrentToken();
         Match(); // 消耗布爾運算符
-
         Token rightOperand;
         if ( ArithExp( rightOperand ) ) {
           parsedResult = CompareOperation( parsedResult, rightOperand, operatorToken.type );
@@ -661,7 +645,7 @@ private:
         if ( !Factor( parsedResult ) ) {
           return false;
         } // end if
-
+        
         parsedResult = EvaluateOperation( ident, parsedResult, op ); // 執行運算
       } // end else if
 
@@ -972,9 +956,6 @@ private:
   } // end GetCurrentToken()
 };
 
-#endif // ParseR_H
-
-
 class Tokenizer {
 private:
   vector<string> minput;
@@ -996,7 +977,6 @@ public:
   // - **多浮點數處理：** 特殊情況下，如 token 為多個浮點數，則使用 `SplitString` 進行分割。
     vector<Token> tokens;
     string tokenName = GetNextToken() ;
-        
     // 迴圈處理每個token，並給予型態 
     while ( tokenName != "\0" ) {
       Token token;
@@ -1008,7 +988,12 @@ public:
       if ( token.type == ERROR ) {
       // 處理例外，尚未切完整的token 例如:floatfloat 1.23.23
 
-        if ( IsMultiFloat( tokenName ) ) {
+        if ( tokenName.substr( 0, 4 ) == "quit" ) {
+          token.type = IDENT;
+          token.tokenName = "quit";
+        } // end if
+        
+        else if ( IsMultiFloat( tokenName ) ) {
           string left = "";
           string right = "";
           SplitString( tokenName, left, right ) ;
@@ -1038,9 +1023,9 @@ public:
   // - **錯誤信息：** 當發現非法字符時，將該字符和錯誤類型存儲在 `Error` 結構體中。
     Error error ;
     int i = 0 ;
-    
-    if ( isalpha( str[0] ) ) {  // 是IDENT的錯誤 	
-      while ( i < str.length() && ( isalnum( str[i] ) || str[i] == '_' ) ) {      
+
+    if ( isalpha( str[0] ) ) {  // 是IDENT的錯誤
+      while ( i < str.length() && ( isalnum( str[i] ) || str[i] == '_' ) ) {
         i++ ;
       } // end while
 
@@ -1048,7 +1033,7 @@ public:
       error.type = LEXICALERROR;
       return error;
     } // end if
-        
+
     else {
       bool hasDot = false; // 標記是否有小數點
       bool hasDigit = false; // 標記是否有數字
@@ -1268,19 +1253,19 @@ public:
     else if ( ch == ':' ) {
       ch = GetNextChar() ;
       if ( ch == '=' ) {
-        mcolumnIndex-- ;
+        LastChar() ;
         return true ;
       } // end if
 
       else {
-        mcolumnIndex-- ;
+        LastChar() ;
         return false ;
       } // end else
     } // end else if
     
     else return false ;
-  } // end IsDelimiter() 
-    
+  } // end IsDelimiter()
+
   // 根據給定的字符識別並返回對應的分隔符或操作符。 
   string GetDelimiter( char ch ) {
   // - **單字符處理：** 直接返回單字符分隔符或操作符。
@@ -1297,7 +1282,7 @@ public:
       if ( ch == '>' ) return "<>" ;
       else if ( ch == '=' ) return "<=" ;
       else {
-        mcolumnIndex-- ;
+        LastChar() ;
         return "<" ;
       } // end else
     } // end else if
@@ -1306,7 +1291,7 @@ public:
       ch = GetNextChar() ;
       if ( ch == '=' ) return ">=" ;
       else {
-        mcolumnIndex-- ;
+        LastChar() ;
         return ">" ;
       } // end else
     } // end else if
@@ -1341,12 +1326,12 @@ public:
       } // end if
             
       else {
-        mcolumnIndex-- ;
+        LastChar() ;
         return "/" ;
       } // end else
     } // end else if 
         
-    else if ( IsDelimiter( nextChar ) ) {   
+    else if ( IsDelimiter( nextChar ) ) {
       return GetDelimiter( nextChar ) ;
     } // end else if
         
@@ -1366,23 +1351,24 @@ public:
     char nextChar = GetNextChar();
     bool hasDot = false;
     
-    while ( !isspace( nextChar ) && !IsDelimiter( nextChar ) ) { 
+    while ( !isspace( nextChar ) && !IsDelimiter( nextChar ) ) {
     
       if ( nextChar == '/' ) {       // 處理連續的註解 
         nextChar = GetNextChar() ;
         
         if ( nextChar == '/' ) 
           while ( nextChar != '\n' ) nextChar = GetNextChar() ;
-        else mcolumnIndex-- ;
+        else LastChar() ;
       } // end if
 
       else {
         tokenValue += nextChar;
         nextChar = GetNextChar();
       } // end else
+      
     } // end while
         
-    if ( IsDelimiter( nextChar ) ) mcolumnIndex-- ; // delimiter不算此token，往前一個column
+    if ( IsDelimiter( nextChar ) ) LastChar() ; // delimiter不算此token，往前一個column
     return tokenValue;
   } // ReadRemainingToken() 
 
@@ -1399,6 +1385,15 @@ public:
 
     return nextChar; 
   } // end GetNextNonWhiteSpaceChar()
+
+  void LastChar() {
+    if ( mcolumnIndex == 0 && mlineIndex >= 1 ) {
+      mlineIndex-- ;
+      mcolumnIndex = minput[mlineIndex].size() ;
+    } // end if
+    
+    else mcolumnIndex-- ;
+  } // end LastChar()
 
   // 定義一個函數來獲取下一個字符從輸入文本中。
   char GetNextChar() {
