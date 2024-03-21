@@ -41,6 +41,7 @@ public:
         else cout << "> Error" << endl ;
 
         int temp = parsedResult.line;
+        while ( GetCurrentToken().line > temp ) mcurrentTokenIndex-- ;
         while ( GetCurrentToken().line <= temp ) {
           Match();
           if ( GetCurrentToken().type == QUIT ) return ;
@@ -177,64 +178,74 @@ private:
     else return result;
   } // end CompareOperation()
 
+
   // 解析當前命令並更新 parsedResult 參數以反映命令的結果。
   void Command( Token &parsedResult ) {
   // - **QUIT 和 ERROR 處理：** 如果當前 token 為 QUIT 或 ERROR，則直接更新 `parsedResult`。
   // - **標識符和賦值：** 處理標識符和其後的賦
     Token currentToken = GetCurrentToken();
-
     if ( currentToken.type == QUIT || currentToken.type == ERROR ) {
       parsedResult = currentToken;
       Match();
     } // end if
 
     else if ( currentToken.type == IDENT ) {
-      Token notDefineIdent = currentToken;
-      Token defineIdent;
+      Token ident = currentToken;
       Match();  // 移動到下一個 token，即 ASSIGN
 
-      if ( notDefineIdent.tokenName.compare( "quit" ) == 0 ) {
-        parsedResult = notDefineIdent;
+      if ( ident.tokenName.compare( "quit" ) == 0 ) {
+        parsedResult = ident;
         parsedResult.type = QUIT;
         return;
       } // end if
 
-      if ( gsymbolTable.find( notDefineIdent.tokenName ) != gsymbolTable.end() ) {  // 有define
-        defineIdent = gsymbolTable[notDefineIdent.tokenName];
-      } // end if
-
-      else if ( CurrentTokenType() != ASSIGN ) {
-        // undefined identifier
-        if ( CurrentTokenType() == ERROR ) {
-          parsedResult = GetCurrentToken();
+      if ( gsymbolTable.find( ident.tokenName ) != gsymbolTable.end() ) {  // 有define
+        Token deFineident = gsymbolTable[ident.tokenName];
+        
+        if ( CurrentTokenType() == SEMICOLON ) {    // IDENT ;
+          parsedResult = deFineident;
           Match();
           return;
         } // end if
+        
+        else if ( CurrentTokenType() == ASSIGN ) {  // IDENT ':=' <ArithExp>
+          Match();  // 移動到賦值表達式 
 
-        else {
-          parsedResult.type = ERROR;
-          parsedResult.error.type = SEMANTICERROR;
-          parsedResult.error.errorValue = currentToken.tokenName;
-          parsedResult.line = currentToken.line;
-          Match();
-          return;
-        } // end else
-      } // end else if
+          if ( ArithExp( parsedResult ) ) {
+            if ( CurrentTokenType() == SEMICOLON ) {
+              // 將算術表達式的結果賦值給標識符
+              gsymbolTable[ident.tokenName] = parsedResult ;
+              Match();  // 消耗掉分號
+              return ;
+            } // end if
 
-      if ( CurrentTokenType() == ASSIGN ) {
-        Match();  // 移動到賦值表達式 
+            else {
+              if ( GetCurrentToken().type == ERROR ) {
+                parsedResult = GetCurrentToken();
+                Match();
+                return;
+              } // end if
 
-        if ( ArithExp( parsedResult ) ) {
-            
+              else {
+                parsedResult.type = ERROR;
+                parsedResult.error.type = SYNTACTICALERROR;
+                parsedResult.error.errorValue = GetCurrentToken().tokenName;
+                parsedResult.line = GetCurrentToken().line;
+                Match();
+                return ;
+              } // end else
+            } // end else
+          }  // end if
+        } // end else if
+        
+        else if ( IDlessArithExpOrBexp( deFineident, parsedResult ) ) {
           if ( CurrentTokenType() == SEMICOLON ) {
-            // 將算術表達式的結果賦值給標識符
-            gsymbolTable[notDefineIdent.tokenName] = parsedResult ;
-            Match();  // 消耗掉分號
-            return ;
+            Match();
+            return;
           } // end if
 
           else {
-            if ( GetCurrentToken().type == ERROR ) {
+            if ( CurrentTokenType() == ERROR ) {
               parsedResult = GetCurrentToken();
               Match();
               return;
@@ -248,34 +259,74 @@ private:
               Match();
               return ;
             } // end else
-          } // end else
-        }  // end if
+          }  // end else
+        } // end else if
       } // end if
+      
+      else {          // 沒有define
+        if ( CurrentTokenType() == ASSIGN ) {  // IDENT ':=' <ArithExp>
+          Match();  // 移動到賦值表達式 
 
-      else if ( IDlessArithExpOrBexp( defineIdent, parsedResult ) ) {
+          if ( ArithExp( parsedResult ) ) {
+            if ( CurrentTokenType() == SEMICOLON ) {
+              // 將算術表達式的結果賦值給標識符
+              gsymbolTable[ident.tokenName] = parsedResult ;
+              Match();  // 消耗掉分號
+              return ;
+            } // end if
 
-        if ( CurrentTokenType() == SEMICOLON ) {
+            else {
+              if ( GetCurrentToken().type == ERROR ) {
+                parsedResult = GetCurrentToken();
+                Match();
+                return;
+              } // end if
+
+              else {
+                parsedResult.type = ERROR;
+                parsedResult.error.type = SYNTACTICALERROR;
+                parsedResult.error.errorValue = GetCurrentToken().tokenName;
+                parsedResult.line = GetCurrentToken().line;
+                Match();
+                return ;
+              } // end else
+            } // end else
+          }  // end if
+        } // end else if
+        
+        else if ( CurrentTokenType() == SEMICOLON || CurrentTokenType() == SIGN ||
+                  CurrentTokenType() == MULTIPLY || CurrentTokenType() == MULTIPLY ||
+                  BooleanOperator() ) {
+
+          parsedResult = ident;
+          parsedResult.type = ERROR;
+          parsedResult.error.type = SEMANTICERROR;
+          parsedResult.error.errorValue = ident.tokenName;
+          parsedResult.line = ident.line;
           Match();
           return;
-        } // end if
-
-        else {
+        } // end else if
+        
+        else {    // 文法錯誤 
           if ( CurrentTokenType() == ERROR ) {
             parsedResult = GetCurrentToken();
             Match();
-            return;
+            return ;
           } // end if
 
           else {
             parsedResult.type = ERROR;
             parsedResult.error.type = SYNTACTICALERROR;
             parsedResult.error.errorValue = GetCurrentToken().tokenName;
-            parsedResult.line = GetCurrentToken().line;
+            parsedResult.line = currentToken.line;
             Match();
             return ;
           } // end else
+          
         } // end else
-      } // end else if
+        
+      } // end else
+      
     } // end else if
 
     else if ( NOT_IDStartArithExpOrBexp( parsedResult ) ) {

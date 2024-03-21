@@ -1,22 +1,7 @@
-salary:=3000; // Comment here
-//
-this_is_a_name123:=500:=5;
-this_is_a_name123+5
-;
-this_is_a_name:=500//-30+5
-//;
-;
-monthsPerYear:=12;
-income:=salary*monthsPerYear;
-income*10;
-income*10>50000-100+50*2;
-income*10>500000+income-2*income+income;
-salary:=30000;
-(salary*monthsPerYear*10)>500000;
-(salary*(monthsPerYear-10)+20000)*10>
-(30000*2)*10+2*10000*10
-;
-(20000+salary*(monthsPerYear-10))*10
-=
-2*10000*10+(30000*2)*10
-;quit$
+;quit // since ';' is unexpected, the whole line is discarded
+salary:=2900+quit; // Comment here
+(())
+Quit quit
+2+3.4.5+6;
+quit@#$//
+3+5;

@@ -1,33 +1,7 @@
 Program starts...
-> 3000
-> Unexpected token : ':='
-> Undefined identifier : 'this_is_a_name123'
 > Unexpected token : ';'
-> 500
-> 12
-> 36000
-> 360000
-> true
-> false
-> 30000
-> true
-> false
-> true
-> Program exits...<<
-
-你的程式的輸出是>>Program starts...
-> 3000
-> Unexpected token : ':='
-> 5.000
-> 500
-> 12
-> 36000
-> 0.000
-> false
-> false
-> 30000
-> true
-> false
-> true
-> Unrecognized token with first char : '$'
+> Undefined identifier : 'quit'
+> Unexpected token : ')'
+> Unexpected token : 'quit'
+> Unexpected token : '.5'
 > Program exits...<<
