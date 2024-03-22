@@ -78,14 +78,14 @@ string AnyToString( int num ) {
 // ﹚竡ㄧ计盢疊翴计float锣传才﹃
 string AnyToString( float num ) {
   String200 buffer;        
-  sprintf( buffer, "%.4f", num );
+  sprintf( buffer, "%f", num );
   return string( buffer );     
 } // end AnyToString()
 
 // ﹚竡ㄧ计盢蛮弘疊翴计double锣传才﹃
 string AnyToString( double num ) {
   String200 buffer;        
-  sprintf( buffer, "%.4f", num );
+  sprintf( buffer, "%f", num );
   return string( buffer );     
 } // end AnyToString()
 
@@ -207,7 +207,7 @@ public:
 
         else {
           error.errorValue = error.errorValue + str[i] ;
-          error.type = LEXICALERROR;
+          error.type = SYNTACTICALERROR;
         } // end else
       } // end for
 

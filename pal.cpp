@@ -9,11 +9,13 @@
 
 using namespace std;
 typedef char String200[200];
+string gtestnum ;
 
 // ㄧ计ノ眖ゅンい弄ず甧纗︽秖
 vector<string> Read_lines() {
   vector<string> minput_lines ;
     
+  
   string line;   
   char ch;
   bool isFirstLine = true;
@@ -23,6 +25,7 @@ vector<string> Read_lines() {
     if ( ch == '\n' ) {
       if ( isFirstLine ) {
         // 狦琌材︽玥竚lineэ夹粁篈ぃ盢ㄤ睰minput_lines
+        gtestnum = line ;
         line.clear();
         isFirstLine = false;
       } // end if
@@ -111,14 +114,14 @@ string AnyToString( int num ) {
 // ﹚竡ㄧ计盢疊翴计float锣传才﹃
 string AnyToString( float num ) {
   String200 buffer;        
-  sprintf( buffer, "%.4f", num );
+  sprintf( buffer, "%f", num );
   return string( buffer );     
 } // end AnyToString()
 
 // ﹚竡ㄧ计盢蛮弘疊翴计double锣传才﹃
 string AnyToString( double num ) {
   String200 buffer;        
-  sprintf( buffer, "%.4f", num );
+  sprintf( buffer, "%f", num );
   return string( buffer );     
 } // end AnyToString()
 
@@ -191,9 +194,9 @@ private:
 
   Token EvaluateOperation( Token a, Token b, Type op ) {
     Token answer ;
-    float floatA = atof( a.tokenName.c_str() );
-    float floatB = atof( b.tokenName.c_str() );
-    float floatAnswer ;
+    double floatA = atof( a.tokenName.c_str() );
+    double floatB = atof( b.tokenName.c_str() );
+    double floatAnswer ;
 
     if ( b.tokenName.compare( "0" ) == 0 && op == DIVIDE ) {
       answer.type = ERROR;
@@ -1121,7 +1124,7 @@ public:
 
         else {
           error.errorValue = error.errorValue + str[i] ;
-          error.type = LEXICALERROR;
+          error.type = SYNTACTICALERROR;
         } // end else
       } // end for
 
@@ -1479,10 +1482,10 @@ int main() {
   vector<string> minput = Read_lines();
   Tokenizer tokenizer( minput );
   vector<Token> tokenGroup = tokenizer.ProcessTokens() ;
-  cout << "Program starts..." << endl ;
-  
 
+  cout << "Program starts..." << endl ;
   Parser parse( tokenGroup ) ;
   parse.Parse() ;
-  cout << "> Program exits..." << endl ;  
+  cout << "> Program exits..." << endl ;
+  
 } // end main()

@@ -74,9 +74,9 @@ private:
 
   Token EvaluateOperation( Token a, Token b, Type op ) {
     Token answer ;
-    float floatA = atof( a.tokenName.c_str() );
-    float floatB = atof( b.tokenName.c_str() );
-    float floatAnswer ;
+    double floatA = atof( a.tokenName.c_str() );
+    double floatB = atof( b.tokenName.c_str() );
+    double floatAnswer ;
 
     if ( b.tokenName.compare( "0" ) == 0 && op == DIVIDE ) {
       answer.type = ERROR;

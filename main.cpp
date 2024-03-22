@@ -10,6 +10,7 @@ using namespace std;
 
 // 函數用於從文件中讀取內容並返回一個存儲行的向量
 vector<string> read_lines_from_file( string filename ) {
+
   vector<string> input_lines ;
   ifstream file(filename.c_str()) ;                            // 打開文件
     
@@ -31,14 +32,14 @@ int main() {
   vector<string> input = read_lines_from_file("input.txt");
   Tokenizer tokenizer(input);
   vector<Token> tokenGroup = tokenizer.ProcessTokens() ;
-    
+  /*
     for ( int i = 0 ; i < tokenGroup.size() ; i++ ) {
         cout << "line:" << tokenGroup[i].line << " token:" << tokenGroup[i].tokenName << " type:" << tokenGroup[i].type;
         if ( tokenGroup[i].type == ERROR )
             cout << "ErrorName:"  << tokenGroup[i].error.errorValue << endl ;
         cout << endl ;
     }
-    
+    */
   cout << "Program starts..." << endl ;
   Parser parse( tokenGroup ) ;
   parse.Parse() ;
