@@ -82,6 +82,34 @@ struct Token {
   ErrorType error;       // 闽羛岿粇獺
 };
 
+string AnyToString( int num ) {
+  String200 buffer;        
+  sprintf( buffer, "%d", num );  
+  return string( buffer );     
+} // end AnyToString()
+
+// ﹚竡ㄧ计盢疊翴计float锣传才﹃
+string AnyToString( float num ) {
+  String200 buffer;        
+  sprintf( buffer, "%f", num );
+  return string( buffer );     
+} // end AnyToString()
+
+// ﹚竡ㄧ计盢蛮弘疊翴计double锣传才﹃
+string AnyToString( double num ) {
+  String200 buffer;        
+  sprintf( buffer, "%f", num );
+  return string( buffer );     
+} // end AnyToString()
+
+// ﹚竡ㄧ计盢才锣传才﹃
+string AnyToString( char ch ) {
+  String200 buffer;        
+  buffer[0] = ch;          
+  buffer[1] = '\0';        
+  return string( buffer );     
+} // end AnyToString()
+
 class Tokenizer {
 private:
   vector<string> minput;
@@ -113,6 +141,79 @@ public:
     tokens.push_back( token );
     return tokens;
   }  // end ProcessTokens()
+
+  Type GetKeywordType( string keyword ) {
+    if ( keyword == "int" ) {
+      return INT;
+    } // end if
+
+    else if ( keyword == "float" ) {
+      return FLOAT;
+    } // end else if
+
+    else if ( keyword == "char" ) {
+      return CHAR;
+    } // end else if
+
+    else if ( keyword == "bool" ) {
+      return BOOL;
+    } // end else if
+
+    else if ( keyword == "string" ) {
+      return STRING;
+    } // end else if
+
+    else if ( keyword == "void" ) {
+      return VOID;
+    } // end else if
+
+    else if ( keyword == "if" ) {
+      return IF;
+    } // end else if
+
+    else if ( keyword == "else" ) {
+      return ELSE;
+    } // end else if
+
+    else if ( keyword == "while" ) {
+      return WHILE;
+    } // end else if
+
+    else if ( keyword == "do" ) {
+      return DO;
+    } // end else if
+
+    else if ( keyword == "return" ) {
+      return RETURN;
+    } // end else if
+
+    return ERROR;
+  } // end GetKeywordType
+
+
+  Token GetIdentOrKeyword( char nextChar ) {
+    string id = "";
+    
+    while ( ( isalnum( nextChar ) || nextChar == '_' ) && nextChar != '\0' ) {
+      id += AnyToString( nextChar );
+      nextChar = GetNextChar();
+    } // end while
+    
+    // 盢獶醚才才
+    PreviousChar();
+    
+    // 浪琩琌闽龄
+    if ( id == "INT" || id == "FLOAT" || id == "CHAR" || 
+      id == "BOOL" || id == "string" || id == "VOID" || 
+      id == "IF" || id == "ELSE" || id == "WHILE" || 
+      id == "DO" || id == "RETURN") {
+      return CreatToken( id, mlineIndex, GetKeywordType( id ), LEXICALERROR );
+    } // end if
+    
+    else {
+      return CreatToken( id, mlineIndex, IDENTIFIER, LEXICALERROR );
+    } // end else 
+  } // end GetIdentOrKeyword
 
   // 浪琩倒﹚才﹃琌琌Τ计俱计┪疊翴计
   Token GetNUM( char nextChar ) {
@@ -181,16 +282,36 @@ public:
     } // end if 
     
     
-    
     if ( mlineIndex == minput.size() ) {
       return CreatToken( "\0", mlineIndex, QUIT, LEXICALERROR );
     } // end if 
         
-    else if ( nextChar == '.' || isdigit( nextChar ) )
+    else if ( nextChar == '.' || isdigit( nextChar ) ) // NUM
       return GetNUM( nextChar ) ;
     
-    else if ( isalpha( nextChar ) ) {  // IDENT
+    else if ( nextChar == '\'' ) {  // char
+      int charline = mlineIndex;
+      string ch = AnyToString( GetNextChar() );
+
+      nextChar = GetNextChar();
+      if ( nextChar == '\'' ) return CreatToken( ch, charline, CONSTANT, LEXICALERROR );
+      else return CreatToken( "'", charline, ERROR, LEXICALERROR );
+    } // end else if 
+    
+    else if ( nextChar == '\"' ) {  // string
+      string str = "";
+      nextChar = GetNextChar();  
+      while ( nextChar != '\"' && nextChar != '\0' ) {
+        str += AnyToString( nextChar );
+        nextChar = GetNextChar();
+      } // end while
       
+      //if ( nextChar == '\0' ) // error
+      return CreatToken( str, mlineIndex, CONSTANT, LEXICALERROR );
+    } // end else if
+    
+    else if ( isalpha( nextChar ) ) {  // IDENT
+      return GetIdentOrKeyword( nextChar );
     } // end else if
     
     /*
