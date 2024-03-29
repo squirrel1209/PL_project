@@ -190,7 +190,6 @@ public:
     return ERROR;
   } // end GetKeywordType
 
-
   Token GetIdentOrKeyword( char nextChar ) {
     string id = "";
     
@@ -203,10 +202,11 @@ public:
     PreviousChar();
     
     // 檢查是否為關鍵字
-    if ( id == "INT" || id == "FLOAT" || id == "CHAR" || 
-      id == "BOOL" || id == "string" || id == "VOID" || 
-      id == "IF" || id == "ELSE" || id == "WHILE" || 
-      id == "DO" || id == "RETURN") {
+    if ( id.compare( "int" ) == 0 || id.compare( "float" ) == 0 || id.compare( "char" ) == 0 || 
+      id.compare( "bool" ) == 0 || id.compare( "string" ) == 0 || id.compare( "void" ) == 0 || 
+      id.compare( "if" ) == 0 || id.compare( "else" ) == 0 || id.compare( "while" ) == 0 || 
+      id.compare( "do" ) == 0 || id.compare( "return" ) == 0) {
+
       return CreatToken( id, mlineIndex, GetKeywordType( id ), LEXICALERROR );
     } // end if
     
@@ -248,6 +248,200 @@ public:
     else return CreatToken( tokenName, mlineIndex, CONSTANT, LEXICALERROR );
   } // end GetNUM() 
 
+  bool IsDelimiter( char ch ) {
+    // 檢查是否為單字符分隔符或可能成為多字符操作符的第一個字符
+    return ch == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}' ||
+         ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%' || ch == '^' ||
+         ch == '>' || ch == '<' || ch == '=' || ch == '!' || ch == '&' || ch == '|' ||
+         ch == ';' || ch == ',' || ch == '?' || ch == ':';
+  } // end IsDelimiter() 
+
+  Token GetDelimiter( char ch ) {
+    Type tokenType = ERROR;  // 預設為ERROR，在下面的條件語句中會被覆蓋
+    
+    string tokenValue = string( 1, ch );  // 初始設置token值為當前字符
+    char nextChar;
+
+    if ( ch == '(' ) tokenType = LPAREN;
+    else if ( ch == ')' ) tokenType = RPAREN;
+    else if ( ch == '[' ) tokenType = LBRACKET;
+    else if ( ch == ']' ) tokenType = RBRACKET;
+    else if ( ch == '{' ) tokenType = LBRACE;
+    else if ( ch == '}' ) tokenType = RBRACE;
+    
+    else if ( ch == '+' ) {
+      nextChar = GetNextChar();
+    
+      if ( nextChar == '=' ) {
+        tokenType = PE;
+        tokenValue += "=";
+      } // end if 
+      
+      else if ( nextChar == '+' ) {
+        tokenType = PP;
+        tokenValue += "+";
+      } // end else if
+      
+      else {
+        PreviousChar();
+        tokenType = PLUS;
+      } // end else
+    } // end else if
+    
+    else if ( ch == '-' ) {
+      nextChar = GetNextChar();
+      if ( nextChar == '=' ) {
+        tokenType = ME;
+        tokenValue += "=";
+      } // end if
+      
+      else if ( nextChar == '-' ) {
+        tokenType = MM;
+        tokenValue += "-";
+      } // end if
+      
+      else {
+        PreviousChar();
+        tokenType = MINUS;
+      } // end else
+    } // end else if
+    
+    else if ( ch == '*' ) {
+      nextChar = GetNextChar();
+      if ( nextChar == '=' ) {
+        tokenType = TE;
+        tokenValue += "=";
+      } // end if 
+      
+      else {
+        PreviousChar();
+        tokenType = ASTERISK;
+      } // end else
+    } // end else if
+    
+    else if ( ch == '/' ) {
+      nextChar = GetNextChar();
+      if ( nextChar == '=' ) {
+        tokenType = DE;
+        tokenValue += "=";
+      } // end if 
+      
+      else {
+        PreviousChar();
+        tokenType = SLASH;
+      } // end else
+    } // end else if
+    
+    else if ( ch == '%' ) {
+      nextChar = GetNextChar();
+      if ( nextChar == '=' ) {
+        tokenType = RE;
+        tokenValue += "=";
+      } // end if 
+      
+      else {
+        PreviousChar();
+        tokenType = PERCENT;
+      } // end else
+    } // end else if
+    
+    else if ( ch == '=' ) {
+      nextChar = GetNextChar();
+      if ( nextChar == '=' ) {
+        tokenType = EQ;
+        tokenValue += "=";
+      } // end if 
+      
+      else {
+        PreviousChar();
+        tokenType = ASSIGN;
+      } // end else
+    } // end else if
+    
+    else if ( ch == '!' ) {
+      nextChar = GetNextChar();
+      if ( nextChar == '=' ) {
+        tokenType = NEQ;
+        tokenValue += "=";
+      } // end if
+      
+      else {
+        PreviousChar();
+        tokenType = EXCLAMATION;
+      } // end else
+    } // end else if
+    
+    else if ( ch == '<' ) {
+      nextChar = GetNextChar();
+      if ( nextChar == '=' ) {
+        tokenType = LE;
+        tokenValue += "=";
+      } // end if
+      
+      else if ( nextChar == '<' ) {
+        tokenType = LS;
+        tokenValue += "<";
+      } // end else if 
+      
+      else {
+        PreviousChar();
+        tokenType = LT;
+      } // end else
+    } // end else if
+    
+    else if ( ch == '>' ) {
+      nextChar = GetNextChar();
+      if ( nextChar == '=' ) {
+        tokenType = GE;
+        tokenValue += "=";
+      } // end if 
+      
+      else if ( nextChar == '>' ) {
+        tokenType = RS;
+        tokenValue += ">";
+      } // end else if
+      
+      else {
+        PreviousChar();
+        tokenType = GT;
+      } // end else
+    } // end else if
+    
+    else if ( ch == '&' ) {
+      nextChar = GetNextChar();
+      if ( nextChar == '&' ) {
+        tokenType = AND;
+        tokenValue += "&";
+      } // end if 
+      
+      else {
+        PreviousChar();
+        tokenType = AMPERSAND;
+      } // end else
+    } // end else if
+    
+    else if ( ch == '|' ) {
+      nextChar = GetNextChar();
+      if ( nextChar == '|' ) {
+        tokenType = OR;
+        tokenValue += "|";
+      } // end if 
+      
+      else {
+        PreviousChar();
+        tokenType = PIPE;
+      } // end else
+    } // end else if
+    
+    else if ( ch == ';' ) tokenType = SEMICOLON;
+    else if ( ch == ',' ) tokenType = COMMA;
+    else if ( ch == '?' ) tokenType = QUESTION;
+    else if ( ch == ':' ) tokenType = COLON;
+
+    // 返回創建的Token
+    return CreatToken( tokenValue, mlineIndex, tokenType, OTHERERROR );
+  } // end GetDelimiter()
+
   // ---------------------------------------GetToken--------------------------------------- 
   // 獲取下一個 token，忽略空白，處理註釋，並識別分隔符和普通字符。 
   Token CreatToken( string TokenName, int line, Type type, ErrorType error ) {
@@ -259,6 +453,7 @@ public:
     
     return token;
   } // end CreatToken()
+  
   Token GetNextToken() {
   // - **跳過空白：** 自動跳過非有效字符，如空格和換行符。
   // - **處理註釋：** 檢測到註釋符號時，忽略其後的字符直至行尾。
@@ -278,9 +473,8 @@ public:
         PreviousChar() ;
       } // end else
       
-      PreviousChar();
+      return GetDelimiter( '/' ) ;
     } // end if 
-    
     
     if ( mlineIndex == minput.size() ) {
       return CreatToken( "\0", mlineIndex, QUIT, LEXICALERROR );
@@ -306,7 +500,7 @@ public:
         nextChar = GetNextChar();
       } // end while
       
-      //if ( nextChar == '\0' ) // error
+      if ( nextChar == '\0' ) return CreatToken( "string missing terminating '\"", mlineIndex, ERROR, SYNTACTICALERROR );
       return CreatToken( str, mlineIndex, CONSTANT, LEXICALERROR );
     } // end else if
     
@@ -314,16 +508,16 @@ public:
       return GetIdentOrKeyword( nextChar );
     } // end else if
     
-    /*
+    
     else if ( IsDelimiter( nextChar ) ) {
       return GetDelimiter( nextChar ) ;
     } // end else if
         
     else {
-      string tokenValue = ReadRemainingToken();
-      return nextChar + tokenValue;
+      string temp = string( 1, nextChar ) ;
+      return CreatToken( temp, mlineIndex, ERROR, LEXICALERROR );
     } // end else 
-    */
+    
   } // end GetNextToken()
 
   char GetNextNonWhiteSpaceChar() {
