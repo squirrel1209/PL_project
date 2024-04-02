@@ -513,6 +513,7 @@ public:
       return GetDelimiter( nextChar ) ;
     } // end else if
         
+    
     else {
       string temp = string( 1, nextChar ) ;
       return CreatToken( temp, mlineIndex, ERROR, LEXICALERROR );
