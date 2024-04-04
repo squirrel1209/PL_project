@@ -1,1 +1,1 @@
-"\"";dasdsdc
+int a ;
