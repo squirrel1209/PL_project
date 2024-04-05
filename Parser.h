@@ -24,8 +24,6 @@ private:
     Tokenizer& tokenizer;
     Token nextToken;
 
-  
-
   void user_input() {
     Token parsedResult ;
     
@@ -42,7 +40,6 @@ private:
       else 
         printf( "Line %d : unrecognized token with first char : '%s'\n", nextToken.line, nextToken.tokenName.c_str() );
 
-      nextToken = tokenizer.GetNextToken();
     } // end while
   } // end user_input()
   
