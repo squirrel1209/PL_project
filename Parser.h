@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <cctype>
+#include <map>
 #include "Tokenizer.h"
 
 map<string, Type> gsymbolTable;
@@ -13,15 +14,17 @@ vector<string> gIdToeknName;
 
 class Parser {
 public:
-  explicit Parser( Tokenizer tokenizer ) : tokenizer( tokenizer ), nextToken( tokenizer.GetNextToken() ) {}
+  explicit Parser( Tokenizer& tokenizer ) : tokenizer( tokenizer ), nextToken( tokenizer.GetNextToken() ) {}
 
-  void parse() {
+  void Parse() {
     user_input();
   } // end parse() 
 
 private:
-    Tokenizer tokenizer;
+    Tokenizer& tokenizer;
     Token nextToken;
+
+  
 
   void user_input() {
     Token parsedResult ;
@@ -36,13 +39,9 @@ private:
       } // end else if
       */
       
-      else {
-        if ( nextToken.type != ERROR )
-          parsedResult = tokenizer.CreatToken( nextToken.tokenName, nextToken.line, ERROR, SYNTACTICALERROR );
-        
-        else parsedResult = nextToken;
-      } // end else
-      
+      else 
+        printf( "Line %d : unrecognized token with first char : '%s'\n", nextToken.line, nextToken.tokenName.c_str() );
+
       nextToken = tokenizer.GetNextToken();
     } // end while
   } // end user_input()
@@ -55,8 +54,8 @@ private:
       Match( VOID, parsedResult );
       tokenName = nextToken.tokenName;
       
-      if ( Match( IDENTIFIER, parsedResult ) ) 
-        function_definition_without_ID();
+      //if ( Match( IDENTIFIER, parsedResult ) ) 
+        //function_definition_without_ID();
     } // end if
     
     else {
@@ -64,8 +63,14 @@ private:
       tokenName = nextToken.tokenName;
       
       if ( Match( IDENTIFIER, parsedResult ) )
-        if ( function_definition_or_declarators( parsedResult ) ) 
+        if ( function_definition_or_declarators( parsedResult ) ) {
+        	
+        	if ( gsymbolTable.find( tokenName ) == gsymbolTable.end() ) 
+        	  printf( "Definition of %s entered ...\n", tokenName.c_str() );
+        	else printf( "New definition of %s entered\n", tokenName.c_str() );
+        	
           gsymbolTable[tokenName] = type;
+        } // end if
     } // end else
   } // end definition()
   
@@ -77,7 +82,7 @@ private:
   bool function_definition_or_declarators( Token &parsedResult ) {
     // 檢查下一個符號是否是左括號，如果是，則處理為函數定義
     if ( nextToken.type == LPAREN ) {
-      return function_definition_without_ID();
+      //return function_definition_without_ID();
     } // end if
     
     else {
@@ -130,7 +135,7 @@ private:
 
     return Match( SEMICOLON, parsedResult );   // 結束分號
   } // end rest_of_declarators()
-
+/* 
   void function_definition_without_ID() {
     Match(LPAREN); 
 
@@ -239,7 +244,7 @@ private:
     
   } // end startStatement()
   void statement();
-  /*
+  
   bool startExpression() {
     nextToken.type == SEMICOLON || expression() || nextToken.type == RETURN || 
                   nextToken.type == LBRACE || nextToken.type == IF || nextToken.type == WHILE ||
@@ -250,7 +255,7 @@ private:
   void basic_expression();
     
   bool Match( Type expected, Token &parsedResult ) {
-    if ( lookahead.type == expected ) {
+    if ( nextToken.type == expected ) {
       nextToken = tokenizer.GetNextToken();
       return true;
     } // end if 

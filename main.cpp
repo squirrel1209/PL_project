@@ -4,7 +4,7 @@
 # include <string>
 # include <fstream>
 # include "Tokenizer.h"
-//# include "Parser.h"
+# include "Parser.h"
  
 using namespace std;
 
@@ -90,18 +90,18 @@ string TypeToString(Type type) {
 int main() {
   vector<string> input = read_lines_from_file("input.txt");
   Tokenizer tokenizer(input);
+  /*
   vector<Token> tokenGroup = tokenizer.ProcessTokens() ;
-  
     for ( int i = 0 ; i < tokenGroup.size() ; i++ ) {
         cout << "line:" << tokenGroup[i].line << " token:" << tokenGroup[i].tokenName << " type:" << TypeToString(tokenGroup[i].type);
         if ( tokenGroup[i].type == ERROR )
             cout << "ErrorName:"  << tokenGroup[i].tokenName << endl ;
         cout << endl ;
     }
-  /*
+  */
   cout << "Program starts..." << endl ;
-  Parser parse( tokenGroup ) ;
+  Parser parse( tokenizer ) ;
   parse.Parse() ;
   cout << "Program exits..." << endl ;  
-  */
+  
 } // end main()
