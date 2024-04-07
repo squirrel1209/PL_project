@@ -476,7 +476,7 @@ public:
       return GetDelimiter( '/' ) ;
     } // end if 
     
-    if ( mlineIndex == minput.size() ) {
+    if ( mlineIndex >= minput.size() ) {
       return CreatToken( "\0", mlineIndex, QUIT, LEXICALERROR );
     } // end if 
         

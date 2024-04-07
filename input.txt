@@ -1,2 +1,1 @@
-int a ;
-float a ;
+int a[10], b[20], r!50;

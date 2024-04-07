@@ -26,8 +26,10 @@ private:
 
   void user_input() {
     Token parsedResult ;
-    
+
+     
     while ( nextToken.type != QUIT ) {
+
       if ( nextToken.type == VOID || type_specifier() ) {
         definition( parsedResult );
       } // end if
@@ -36,20 +38,36 @@ private:
         statement( parsedResult );
       } // end else if
       */
-      
-      else 
-        printf( "Line %d : unrecognized token with first char : '%s'\n", nextToken.line, nextToken.tokenName.c_str() );
 
+      else 
+        //printf( "Line %d : unrecognized token with first char : '%s'\n", nextToken.line, nextToken.tokenName.c_str() );
+        parsedResult = nextToken;
+
+      if ( parsedResult.type == ERROR ) {
+        if ( parsedResult.error == LEXICALERROR )
+          cout << "> Unrecognized token with first char : '" << parsedResult.tokenName << "'" << endl;
+
+        else if ( parsedResult.error == SYNTACTICALERROR )
+          cout << "> Unexpected token : '" << parsedResult.tokenName << "'" << endl;
+
+        else if ( parsedResult.error == SEMANTICERROR )
+          cout << "> Undefined identifier : '" << parsedResult.tokenName << "'" << endl;
+
+        else cout << "> Error" << endl ;
+        
+        while ( parsedResult.line >= nextToken.line ) nextToken = tokenizer.GetNextToken();
+      } // end if
+      
     } // end while
+    
+    gsymbolTable.clear();
   } // end user_input()
   
   void definition( Token &parsedResult ) {
     Type type = nextToken.type;
-    string tokenName;
     
     if ( nextToken.type == VOID ) {
       Match( VOID, parsedResult );
-      tokenName = nextToken.tokenName;
       
       //if ( Match( IDENTIFIER, parsedResult ) ) 
         //function_definition_without_ID();
@@ -57,17 +75,21 @@ private:
     
     else {
       Match( nextToken.type, parsedResult );
-      tokenName = nextToken.tokenName;
+      gIdToeknName.push_back( nextToken.tokenName );
       
-      if ( Match( IDENTIFIER, parsedResult ) )
+      if ( Match( IDENTIFIER, parsedResult ) ) {
         if ( function_definition_or_declarators( parsedResult ) ) {
-        	
-        	if ( gsymbolTable.find( tokenName ) == gsymbolTable.end() ) 
-        	  printf( "Definition of %s entered ...\n", tokenName.c_str() );
-        	else printf( "New definition of %s entered\n", tokenName.c_str() );
-        	
-          gsymbolTable[tokenName] = type;
+        	for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
+        	  if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) 
+        	    printf( "Definition of %s entered ...\n", gIdToeknName[i].c_str() );
+        	  else printf( "New definition of %s entered\n", gIdToeknName[i].c_str() );
+        	  
+        	  gsymbolTable[gIdToeknName[i]] = type;
+          } // end for
+          
+          gIdToeknName.clear();
         } // end if
+      }  // end if
     } // end else
   } // end definition()
   
@@ -108,13 +130,13 @@ private:
         Match( IDENTIFIER, parsedResult ); // 匹配標識符
         
         // 檢查是否存在 '[' Constant ']' 結構
-        if ( nextToken.type == LBRACKET ) {
-          Match( LBRACKET, parsedResult );   // 匹配 '['
+        if ( Match( LBRACKET, parsedResult ) ) {
           
           if ( Match( CONSTANT, parsedResult) ) 
-            return Match( RBRACKET, parsedResult );
+            Match( RBRACKET, parsedResult );
           else return false ;
         } // end if
+        else return false;
       } // end if 
       
       else {
@@ -265,6 +287,7 @@ private:
       } // end if
         
       else parsedResult = nextToken;
+      nextToken = tokenizer.GetNextToken();
       return false;
     } // end else
   } // end Match()
