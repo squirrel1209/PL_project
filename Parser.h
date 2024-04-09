@@ -40,19 +40,17 @@ private:
       */
 
       else 
-        //printf( "Line %d : unrecognized token with first char : '%s'\n", nextToken.line, nextToken.tokenName.c_str() );
         parsedResult = nextToken;
 
       if ( parsedResult.type == ERROR ) {
         if ( parsedResult.error == LEXICALERROR )
-          cout << "> Unrecognized token with first char : '" << parsedResult.tokenName << "'" << endl;
+          printf( "Line %d : unrecognized token with first char : '%s'\n", parsedResult.line, parsedResult.tokenName.c_str() );
 
         else if ( parsedResult.error == SYNTACTICALERROR )
-          cout << "> Unexpected token : '" << parsedResult.tokenName << "'" << endl;
-
+          printf( "Line %d : Unexpected token : '%s'\n", parsedResult.line, parsedResult.tokenName.c_str() );
+	 
         else if ( parsedResult.error == SEMANTICERROR )
-          cout << "> Undefined identifier : '" << parsedResult.tokenName << "'" << endl;
-
+          printf( "Line %d : Undefined identifier : '%s'\n", parsedResult.line, parsedResult.tokenName.c_str() ); 
         else cout << "> Error" << endl ;
         
         while ( parsedResult.line >= nextToken.line ) nextToken = tokenizer.GetNextToken();
@@ -63,14 +61,14 @@ private:
     gsymbolTable.clear();
   } // end user_input()
   
-  void definition( Token &parsedResult ) {
+  bool definition( Token &parsedResult ) {
     Type type = nextToken.type;
     
     if ( nextToken.type == VOID ) {
       Match( VOID, parsedResult );
       
-      //if ( Match( IDENTIFIER, parsedResult ) ) 
-        //function_definition_without_ID();
+      if ( Match( IDENTIFIER, parsedResult ) ) 
+        return function_definition_without_ID( parsedResult );
     } // end if
     
     else {
@@ -88,9 +86,12 @@ private:
           } // end for
           
           gIdToeknName.clear();
+          return true;
         } // end if
       }  // end if
     } // end else
+    
+    return false;
   } // end definition()
   
   bool type_specifier() {
@@ -154,92 +155,73 @@ private:
 
     return Match( SEMICOLON, parsedResult );   // 結束分號
   } // end rest_of_declarators()
-/* 
-  void function_definition_without_ID() {
-    Match(LPAREN); 
 
-   
-    if (nextToken.type == VOID) {
-      Match(VOID); // 匹配 VOID
-    } else if (type_specifier()) {
-      formal_parameter_list(); // 解析 formal_parameter_list
-    }
+  void function_definition_without_ID( Token &parsedResult ) {
+    if ( Match( LPAREN, parsedResult ) ) {
+      if ( nextToken.type == VOID ) {
+        Match( VOID, parsedResult ); // 匹配 VOID
+      } // end if
+      
+      else if ( type_specifier() ) {
+        formal_parameter_list( parsedResult ); // 解析 formal_parameter_list
+      } // end else if
+      
+      else return;
+      if ( !Match( RPAREN, parsedResult ) ) return;
+    } // end if
 
-    Match(RPAREN); // 匹配右括? ')'
-    compound_statement(); // 解析 compound_statement
-  }
+    else return;
+    compound_statement( parsedResult ); // 解析 compound_statement
+  } // end function_definition_without_ID()
  
-  void formal_parameter_list() {
-    // ?理第一???
-    type_specifier();
-    if (nextToken.type == AMPERSAND) {
-      Match(AMPERSAND); // 匹配 '&'
-    }
-    if (nextToken.type == IDENTIFIER) {
-      Match(IDENTIFIER); // 匹配??符
-    } else {
-      // ???理
-      std::cerr << "Syntax error: Expected IDENTIFIER but found " << nextToken.tokenName << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    if (nextToken.type == LBRACKET) {
-      Match(LBRACKET); // 匹配 '['
-      if (nextToken.type == CONSTANT) {
-        Match(CONSTANT); // 匹配常量
-        Match(RBRACKET); // 匹配 ']'
-      } else {
-        // ???理
-        std::cerr << "Syntax error: Expected CONSTANT but found " << nextToken.tokenName << std::endl;
-        exit(EXIT_FAILURE);
-      }
-    }
+  bool formal_parameter_list( Token &parsedResult ) {
+    Match( nextToken.type, parsedResult ) ;
+    
+    if ( nextToken.type == AMPERSAND ) {
+      Match( AMPERSAND, parsedResult ); // 匹配 '&'
+    } // end if
+    
+    if ( nextToken.type == IDENTIFIER ) {
+      Match( IDENTIFIER, parsedResult ); 
+    } // end if 
+    else return false;
+    
+    if ( nextToken.type == LBRACKET ) {
+      Match( LBRACKET, parsedResult ); // 匹配 '['
+      
+      if ( Match( CONSTANT, parsedResult ) ) {
+        if ( !Match( RBRACKET, parsedResult ) ) return false;
+      } // end if 
+      
+      else return false;
+    } // end if
 
-    // ?理后???
-    while (nextToken.type == COMMA) {
-      Match(COMMA); // 匹配 ','
-      type_specifier();
-      if (nextToken.type == AMPERSAND) {
-        Match(AMPERSAND); // 匹配 '&'
-      }
-      if (nextToken.type == IDENTIFIER) {
-        Match(IDENTIFIER); // 匹配??符
-      } else {
-        // ???理
-        std::cerr << "Syntax error: Expected IDENTIFIER but found " << nextToken.tokenName << std::endl;
-        exit(EXIT_FAILURE);
-      }
-      if (nextToken.type == LBRACKET) {
-        Match(LBRACKET); // 匹配 '['
-        if (nextToken.type == CONSTANT) {
-          Match(CONSTANT); // 匹配常量
-          Match(RBRACKET); // 匹配 ']'
-        } else {
-          // ???理
-          std::cerr << "Syntax error: Expected CONSTANT but found " << nextToken.tokenName << std::endl;
-          exit(EXIT_FAILURE);
-        }
-      }
-    }
-  }
+    while ( nextToken.type == COMMA ) {
+      Match( COMMA, parsedResult ); // 匹配 ','
+      if ( type_specifier() ) {
+        formal_parameter_list( parsedResult );
+      } // end if
 
+      else Match( ERROR, parsedResult );
+    } // end while
+  } // end formal_parameter_list()
+  /*
   void compound_statement() {
-    Match(LBRACE); // 匹配 '{'
-
-    while (nextToken.type != RBRACE) {
-      if (type_specifier()) {
-        declaration(); // 解析?明
-      } else if (isStatementStart(nextToken.type)) {
-        statement(); // 解析?句
-      } else {
-        // ???理：既不是?明也不是?句的?始
-        std::cerr << "Syntax error: Unexpected token " << nextToken.tokenName << " in compound statement" << std::endl;
-        exit(EXIT_FAILURE);
-      }
-    }
+    bool iscompound_statement = true;
+    if ( Match(LBRACE) ) {
+      if ( ! ( type_specifier() )  ) iscompound_statement = false;
+      while ( iscompound_statement ) {
+        if ( type_specifier() ) {
+        	
+        } // end if
+        
+      } // end while 
+    } // end if
+   */
 
     Match(RBRACE); // 匹配 '}'
   }
-
+/*
   bool isStatementStart(Type type) {
     // 根据??的文法??判?是否??句的?始
     // ?需要根据你的文法中statement的定????
@@ -269,10 +251,10 @@ private:
                   nextToken.type == LBRACE || nextToken.type == IF || nextToken.type == WHILE ||
 	        nextToken.type == DO
   } // end isExpression()
-  */
+  
   void expression();
   void basic_expression();
-    
+    */
   bool Match( Type expected, Token &parsedResult ) {
     if ( nextToken.type == expected ) {
       nextToken = tokenizer.GetNextToken();
