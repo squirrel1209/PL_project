@@ -217,44 +217,10 @@ private:
         
       } // end while 
     } // end if
-   */
 
     Match(RBRACE); // 匹配 '}'
-  }
-/*
-  bool isStatementStart(Type type) {
-    // 根据??的文法??判?是否??句的?始
-    // ?需要根据你的文法中statement的定????
-    // 例如，?里??地假?某些特定的token?型?志??句的?始
-    return type == IF || type == WHILE || type == RETURN || type == IDENTIFIER; // 根据需要添加更多
-  }
-
-  void declaration() {
-    // 解析?型?明符
-    if (type_specifier()) {
-      Match(IDENTIFIER); // 匹配??符
-      rest_of_declarators(); // 解析后??明
-    } else {
-      // ???理：?期是?型?明符
-      std::cerr << "Syntax error: Expected type specifier but found " << nextToken.tokenName << std::endl;
-      exit(EXIT_FAILURE);
-    }
-  }
-
-  bool startStatement() {
-    
-  } // end startStatement()
-  void statement();
-  
-  bool startExpression() {
-    nextToken.type == SEMICOLON || expression() || nextToken.type == RETURN || 
-                  nextToken.type == LBRACE || nextToken.type == IF || nextToken.type == WHILE ||
-	        nextToken.type == DO
-  } // end isExpression()
-  
-  void expression();
-  void basic_expression();
-    */
+  } // end  compound_statement()
+  */
   bool Match( Type expected, Token &parsedResult ) {
     if ( nextToken.type == expected ) {
       nextToken = tokenizer.GetNextToken();
