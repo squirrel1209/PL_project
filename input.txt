@@ -1,3 +1,2 @@
 // definition
-void  a () {}
-void  a () {}
+int a( int & a, in & b ) {}

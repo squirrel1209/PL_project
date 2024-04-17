@@ -174,7 +174,7 @@ private:
       Match( VOID, parsedResult ); // 匹配 VOID
       
     else if ( type_specifier() ) 
-      formal_parameter_list( parsedResult ); // 解析 formal_parameter_list
+      if ( !formal_parameter_list( parsedResult ) ) return false;// 解析 formal_parameter_list
 
     if ( !Match( RPAREN, parsedResult ) ) return false;
 
@@ -203,14 +203,17 @@ private:
       else return false;
     } // end if
 
-    while ( nextToken.type == COMMA ) {
+    bool isformal_parameter_list = true;
+    while ( nextToken.type == COMMA && isformal_parameter_list ) {
       Match( COMMA, parsedResult ); // 匹配 ','
       if ( type_specifier() ) {
-        formal_parameter_list( parsedResult );
+        isformal_parameter_list = formal_parameter_list( parsedResult );
       } // end if
 
       else Match( ERROR, parsedResult );
     } // end while
+    
+    return isformal_parameter_list;
   } // end formal_parameter_list()
 
   bool compound_statement( Token &parsedResult ) {
