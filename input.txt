@@ -1,1 +1,3 @@
-void a( int & a[10]
+// definition
+void  a () {}
+void  a () {}

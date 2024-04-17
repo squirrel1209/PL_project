@@ -27,7 +27,6 @@ private:
   void user_input() {
     Token parsedResult ;
 
-     
     while ( nextToken.type != QUIT ) {
 
       if ( nextToken.type == VOID || type_specifier() ) {
@@ -63,12 +62,24 @@ private:
   
   bool definition( Token &parsedResult ) {
     Type type = nextToken.type;
-    
+
     if ( nextToken.type == VOID ) {
       Match( VOID, parsedResult );
+      gIdToeknName.push_back( nextToken.tokenName );
       
-      if ( Match( IDENTIFIER, parsedResult ) ) 
-        return function_definition_without_ID( parsedResult );
+      if ( Match( IDENTIFIER, parsedResult ) ) {
+        if ( function_definition_without_ID( parsedResult ) ) {
+        	for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
+        	  if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) 
+        	    printf( "Definition of %s entered ...\n", gIdToeknName[i].c_str() );
+        	  else printf( "New definition of %s entered...\n", gIdToeknName[i].c_str() );
+        	  
+        	  gsymbolTable[gIdToeknName[i]] = type;
+          } // end for
+          
+          gIdToeknName.clear();
+        } // end if
+      } // end if
     } // end if
     
     else {
@@ -80,7 +91,7 @@ private:
         	for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
         	  if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) 
         	    printf( "Definition of %s entered ...\n", gIdToeknName[i].c_str() );
-        	  else printf( "New definition of %s entered\n", gIdToeknName[i].c_str() );
+        	  else printf( "New definition of %s entered...\n", gIdToeknName[i].c_str() );
         	  
         	  gsymbolTable[gIdToeknName[i]] = type;
           } // end for
@@ -102,7 +113,7 @@ private:
   bool function_definition_or_declarators( Token &parsedResult ) {
     // 檢查下一個符號是否是左括號，如果是，則處理為函數定義
     if ( nextToken.type == LPAREN ) {
-      //return function_definition_without_ID();
+      return function_definition_without_ID( parsedResult  );
     } // end if
     
     else {
@@ -156,22 +167,18 @@ private:
     return Match( SEMICOLON, parsedResult );   // 結束分號
   } // end rest_of_declarators()
 
-  void function_definition_without_ID( Token &parsedResult ) {
-    if ( Match( LPAREN, parsedResult ) ) {
-      if ( nextToken.type == VOID ) {
-        Match( VOID, parsedResult ); // 匹配 VOID
-      } // end if
-      
-      else if ( type_specifier() ) {
-        formal_parameter_list( parsedResult ); // 解析 formal_parameter_list
-      } // end else if
-      
-      else return;
-      if ( !Match( RPAREN, parsedResult ) ) return;
-    } // end if
+  bool function_definition_without_ID( Token &parsedResult ) {
+    if ( !Match( LPAREN, parsedResult ) ) return false; 
 
-    else return;
-    compound_statement( parsedResult ); // 解析 compound_statement
+    if ( nextToken.type == VOID ) 
+      Match( VOID, parsedResult ); // 匹配 VOID
+      
+    else if ( type_specifier() ) 
+      formal_parameter_list( parsedResult ); // 解析 formal_parameter_list
+
+    if ( !Match( RPAREN, parsedResult ) ) return false;
+
+    return compound_statement( parsedResult ); // 解析 compound_statement
   } // end function_definition_without_ID()
  
   bool formal_parameter_list( Token &parsedResult ) {
@@ -205,22 +212,14 @@ private:
       else Match( ERROR, parsedResult );
     } // end while
   } // end formal_parameter_list()
-  /*
-  void compound_statement() {
-    bool iscompound_statement = true;
-    if ( Match(LBRACE) ) {
-      if ( ! ( type_specifier() )  ) iscompound_statement = false;
-      while ( iscompound_statement ) {
-        if ( type_specifier() ) {
-        	
-        } // end if
-        
-      } // end while 
-    } // end if
 
-    Match(RBRACE); // 匹配 '}'
+  bool compound_statement( Token &parsedResult ) {
+    if ( !Match( LBRACE, parsedResult ) ) return false; 
+
+    if ( !Match( RBRACE, parsedResult ) ) return false;
+    return true;
   } // end  compound_statement()
-  */
+
   bool Match( Type expected, Token &parsedResult ) {
     if ( nextToken.type == expected ) {
       nextToken = tokenizer.GetNextToken();
