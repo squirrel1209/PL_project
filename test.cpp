@@ -128,8 +128,6 @@
         if ( !romce_and_romloe( parsedResult ) ) return false;
     } // end else if
     
-    
-    
     if ( nextToken.type == LPAREN ) {
       Match( LPAREN, parsedResult );
       if ( !actual_parameter_list( parsedResult ) ) return false;
@@ -180,7 +178,7 @@
     } // end if
 
     return true;
-  } // end romce_and_romloe(
+  } // end romce_and_romloe()
   
   bool rest_of_maybe_logical_OR_exp( Token &parsedResult ) {
     if ( !rest_of_maybe_logical_AND_exp( parsedResult ) ) return false;  // ?²z??ÉOªí?¦¡
@@ -226,7 +224,7 @@
     return true;
   } // end maybe_bit_OR_exp()
 
-bool Parser::rest_of_maybe_bit_OR_exp(Token &parsedResult) {
+bool rest_of_maybe_bit_OR_exp(Token &parsedResult) {
     if (!rest_of_maybe_bit_ex_OR_exp(parsedResult)) return false;
 
     while (nextToken.type == BIT_OR) {

@@ -26,6 +26,14 @@ private:
 
   void user_input() {
     Token parsedResult ;
+    bool test = true;
+    if ( test ) {
+      while ( nextToken.type != QUIT ) {
+        
+      } // end while
+      return;
+    } // end if
+
 
     while ( nextToken.type != QUIT ) {
       if ( nextToken.type == VOID || type_specifier() ) {
@@ -222,14 +230,14 @@ private:
   } // end  compound_statement()
 
   bool statement( Token &parsedResult ) {
-    if ( nextToken.type == ';' ) {
-      if ( Match( ';', parsedResult ) ) 
-        return true;
+    if ( nextToken.type == SEMICOLON ) {
+      Match( SEMICOLON, parsedResult );
+      return true;
     } // end if 
 
     else if ( StartExpression() ) {
-      if ( !expression() ) return false;
-      if ( !Match( ';', parsedResult ) ) return false;
+      if ( !expression( parsedResult ) ) return false;
+      if ( !Match( SEMICOLON, parsedResult ) ) return false;
       return true; 
     } // end else if
 /*
@@ -303,8 +311,8 @@ private:
 
   bool StartExpression() {
     if ( nextToken.type == IDENTIFIER || nextToken.type == CONSTANT ||
-         nextToken.type == PP || nextToken.type == MM ||
-         nextToken.type == SIGN )
+         nextToken.type == PP || nextToken.type == MM 
+         /*nextToken.type == SIGN*/ )
       return true;
     else return false;
   } // end StartExpression()
@@ -319,9 +327,196 @@ private:
       } // end while
       return expression;
     } // end if
-    
+
     return false;
   } // end if
+
+  bool rest_of_Identifier_started_basic_exp( Token &parsedResult ) {
+    if ( nextToken.type == LBRACKET ) {
+        Match( LBRACKET, parsedResult );
+        if ( !expression( parsedResult ) ) return false;
+        if ( !Match( RBRACKET, parsedResult ) ) return false;
+    } // end if
+
+    if ( assignment_operator( parsedResult ) ) {
+        if ( !basic_expression( parsedResult ) ) return false;
+    } // end if 
+    
+    else if ( nextToken.type == PP || nextToken.type == MM ) {
+        Match( nextToken.type, parsedResult );
+        if ( !romce_and_romloe( parsedResult ) ) return false;
+    } // end else if
+    
+    if ( nextToken.type == LPAREN ) {
+      Match( LPAREN, parsedResult );
+      if ( !actual_parameter_list( parsedResult ) ) return false;
+        
+      if ( !Match( RPAREN, parsedResult ) ) return false;
+      return romce_and_romloe( parsedResult );
+    } // end if
+    
+    return false;
+  } // end rest_of_Identifier_started_basic_exp()
+
+  bool assignment_operator( Token &parsedResult ) {
+    if ( nextToken.type == ASSIGN || nextToken.type == TE || nextToken.type == DE || 
+        nextToken.type == RE || nextToken.type == PE || nextToken.type == ME) {
+      return Match( nextToken.type, parsedResult );
+    } // end if
+    
+    return false;
+  } // end assignment_operator()
+
+  bool romce_and_romloe( Token &parsedResult ) {
+    if ( !rest_of_maybe_logical_OR_exp( parsedResult ) ) return false;  // ?瞶??┪?Α
+
+    if ( nextToken.type == QUESTION ) {
+        Match( QUESTION, parsedResult );  //  '?'
+        if ( !basic_expression( parsedResult ) ) return false;  // 秆猂?ン?痷??Α
+        if ( !Match( COLON, parsedResult ) ) return false;  //  ':'
+        if ( !basic_expression( parsedResult ) ) return false;  // 秆猂?ン?安??Α
+    } // end if
+
+    return true;
+  } // end romce_and_romloe()
+
+  bool rest_of_maybe_logical_OR_exp( Token &parsedResult ) {
+    if ( !rest_of_maybe_logical_AND_exp( parsedResult ) ) return false;  // ?瞶??蒓?Α
+
+    while ( nextToken.type == OR ) {
+      Match( OR, parsedResult );  //  '||'
+      if ( !maybe_logical_AND_exp( parsedResult ) ) return false;  // 秆猂??蒓?Α
+    } // end while
+
+    return true;
+  } // end rest_of_maybe_logical_OR_exp()
+
+  bool rest_of_maybe_logical_AND_exp( Token &parsedResult ) {
+    if ( !rest_of_maybe_bit_OR_exp( parsedResult ) ) return false;  // ?瞶┪?Α逞场だ
+
+    while ( nextToken.type == AND ) {
+        Match( AND, parsedResult );  //  '&&'
+        if ( !maybe_bit_OR_exp( parsedResult ) ) return false;  // ?瞶?┪?Α
+    } // end while
+
+    return true;
+  } // end rest_of_maybe_logical_AND_exp()
+
+  bool rest_of_maybe_bit_OR_exp(Token &parsedResult) {
+    if (!rest_of_maybe_bit_ex_OR_exp(parsedResult)) return false;
+
+    while (nextToken.type == BIT_OR) {
+        Match(BIT_OR, parsedResult);
+        if (!maybe_bit_ex_OR_exp(parsedResult)) return false;
+    }
+
+    return true;
+  } // end rest_of_maybe_bit_OR_exp()
+
+  bool rest_of_maybe_bit_ex_OR_exp(Token &parsedResult) {
+    if (!rest_of_maybe_bit_AND_exp(parsedResult)) return false;
+
+    while (nextToken.type == BIT_XOR) {
+        Match(BIT_XOR, parsedResult);
+        if (!maybe_bit_AND_exp(parsedResult)) return false;
+    }
+
+    return true;
+  } // end rest_of_maybe_bit_ex_OR_exp()
+  
+  bool rest_of_maybe_bit_AND_exp(Token &parsedResult) {
+    if (!rest_of_maybe_equality_exp(parsedResult)) return false;
+
+    while (nextToken.type == BIT_AND) {
+        Match(BIT_AND, parsedResult);
+        if (!maybe_equality_exp(parsedResult)) return false;
+    }
+
+    return true;
+  } // end rest_of_maybe_bit_AND_exp()
+  
+  bool rest_of_maybe_equality_exp(Token &parsedResult) {
+  	
+    if (!rest_of_maybe_relational_exp(parsedResult)) return false;
+
+    while (nextToken.type == EQ || nextToken.type == NEQ) {
+        Match(nextToken.type, parsedResult);  //  EQ ┪ NEQ
+        if (!maybe_relational_exp(parsedResult)) return false;
+    }
+
+    return true;
+  } // end rest_of_maybe_equality_exp()
+
+  bool rest_of_maybe_relational_exp(Token &parsedResult) {
+    if (!rest_of_maybe_shift_exp(parsedResult)) return false;
+
+    while (nextToken.type == LESS || nextToken.type == GREATER || 
+           nextToken.type == LE || nextToken.type == GE) {
+        Match(nextToken.type, parsedResult);  //  <, >, <=, ┪ >=
+        if (!maybe_shift_exp(parsedResult)) return false;
+    }
+
+    return true;
+  } // end rest_of_maybe_relational_exp()
+
+  bool rest_of_maybe_shift_exp(Token &parsedResult) {
+    if (!rest_of_maybe_additive_exp(parsedResult)) return false;
+
+    while (nextToken.type == LS || nextToken.type == RS) {
+        Match(nextToken.type, parsedResult);  //  LS ┪ RS
+        if (!maybe_additive_exp(parsedResult)) return false;
+    }
+
+    return true;
+  } // end rest_of_maybe_shift_exp()
+
+  bool rest_of_maybe_additive_exp(Token &parsedResult) {
+    if (!rest_of_maybe_mult_exp(parsedResult)) return false;
+
+    while (nextToken.type == PLUS || nextToken.type == MINUS) {
+        Match(nextToken.type, parsedResult);  //  '+' ┪ '-'
+        if (!maybe_mult_exp(parsedResult)) return false;
+    }
+
+    return true;
+  } // end rest_of_maybe_additive_exp()
+
+  bool rest_of_maybe_mult_exp(Token &parsedResult) {
+    while (nextToken.type == MUL || nextToken.type == DIV || nextToken.type == MOD) {
+        Match(nextToken.type, parsedResult);  //  '*', '/', ┪ '%'
+        if (!unary_exp(parsedResult)) return false;
+    }
+    return true;  // ?场だ?纐? true
+  }
+
+  bool unary_exp( Token &parsedResult ) {
+    if ( nextToken.type == PLUS || nextToken.type == MINUS || nextToken.type == NOT ) {
+      while ( nextToken.type == PLUS || nextToken.type == MINUS || nextToken.type == NOT ) {
+        sign( parsedResult );  // ?瞶┮Τ玡竚才?
+      } // end while
+        
+      return signed_unary_exp(parsedResult);
+    } // end of
+     
+    else if ( nextToken.type == IDENTIFIER || nextToken.type == CONSTANT || nextToken.type == LPAREN ) {
+      return unsigned_unary_exp(parsedResult);
+    } // end else if 
+    
+    else if ( nextToken.type == PP || nextToken.type == MM ) {
+      Match( nextToken.type, parsedResult ); //  PP ┪ MM
+      if ( Match( IDENTIFIER, parsedResult ) ) {
+        if ( nextToken.type == LBRACKET ) {
+          Match( LBRACKET, parsedResult ); //  '['
+          if (!expression(parsedResult)) return false; 
+          if (!Match(RBRACKET, parsedResult)) return false; //  ']'
+        } // end if
+        return true;
+      } // end if
+        return false;
+    } // end else if
+    
+    return false;
+  } // end unary_exp()
 
   bool Match( Type expected, Token &parsedResult ) {
     if ( nextToken.type == expected ) {

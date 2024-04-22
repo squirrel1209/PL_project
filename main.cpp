@@ -98,9 +98,9 @@ int main() {
             cout << "ErrorName:"  << tokenGroup[i].tokenName << endl ;
         cout << endl ;
     }
-  
-  cout << "Program starts..." << endl ;
   */
+  cout << "Program starts..." << endl ;
+  
   Parser parse( tokenizer ) ;
   parse.Parse() ;
   cout << "Program exits..." << endl ;  
