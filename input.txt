@@ -1,2 +1,2 @@
 // definition
-int a( int & a, in & b ) {}
+int a( void ) {}

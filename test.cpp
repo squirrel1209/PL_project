@@ -1,19 +1,16 @@
-  void statement( Token &parsedResult ) {
-
+  bool statement( Token &parsedResult ) {
     if ( nextToken.type == ';' ) {
-        if ( !Match(';', parsedResult) ) 
-          return; 
-
+      if ( Match( ';', parsedResult ) ) 
+        return true;
     } // end if 
-    
-    else if (nextToken.type == IDENTIFIER || nextToken.type == CONSTANT) {
-        expression();
-        if (!Match(';', parsedResult)) {
-            return; // 或者進行其他錯誤處理
-        }
-    } 
-    
-    else if (nextToken.type == RETURN) {
+
+    else if ( StartExpression() ) {
+      if ( !expression() ) return false;
+      if ( !Match( ';', parsedResult ) ) return false;
+      return true; 
+    } // end else if
+/*
+    else if ( nextToken.type == RETURN ) {
         if (!Match(RETURN, parsedResult)) {
             return; // 或者進行其他錯誤處理
         }
@@ -78,22 +75,10 @@
         std::cerr << "Unexpected token in statement" << std::endl;
         return; // 終止處理
     }
-} // end statement()
+*/
+  } // end statement()
 
-  bool expression( Token &parsedResult ) {
-    bool expression = true;
-    if ( basic_expression( parsedResult ) ) {
 
-      while ( nextToken.type == COMMA && expression ) {
-        Match( COMMA, parsedResult ); 
-        expression = basic_expression( parsedResult );
-      } // end while
-      return expression;
-    } // end if
-    
-    return false;
-  } // end if
-  
   bool basic_expression( Token &parsedResult ) {
     if ( nextToken.type == IDENTIFIER ) {
       return Match( IDENTIFIER, parsedResult )
@@ -143,6 +128,8 @@
         if ( !romce_and_romloe( parsedResult ) ) return false;
     } // end else if
     
+    
+    
     if ( nextToken.type == LPAREN ) {
       Match( LPAREN, parsedResult );
       if ( !actual_parameter_list( parsedResult ) ) return false;
@@ -150,7 +137,8 @@
       if ( !Match( RPAREN, parsedResult ) ) return false;
       return romce_and_romloe( parsedResult );
     } // end if
-    return true;
+    
+    return false;
   } // end rest_of_Identifier_started_basic_exp()
   
   bool rest_of_PPMM_Identifier_started_basic_exp( Token &parsedResult ) {

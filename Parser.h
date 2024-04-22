@@ -28,15 +28,13 @@ private:
     Token parsedResult ;
 
     while ( nextToken.type != QUIT ) {
-
       if ( nextToken.type == VOID || type_specifier() ) {
         definition( parsedResult );
       } // end if
-      /*
-      else if ( startExpression() ) {
-        statement( parsedResult );
+      
+      else if ( statement( parsedResult ) ) {
+        cout << "Statement executed ...\n"; 
       } // end else if
-      */
 
       else 
         parsedResult = nextToken;
@@ -222,6 +220,108 @@ private:
     if ( !Match( RBRACE, parsedResult ) ) return false;
     return true;
   } // end  compound_statement()
+
+  bool statement( Token &parsedResult ) {
+    if ( nextToken.type == ';' ) {
+      if ( Match( ';', parsedResult ) ) 
+        return true;
+    } // end if 
+
+    else if ( StartExpression() ) {
+      if ( !expression() ) return false;
+      if ( !Match( ';', parsedResult ) ) return false;
+      return true; 
+    } // end else if
+/*
+    else if ( nextToken.type == RETURN ) {
+        if (!Match(RETURN, parsedResult)) {
+            return; // 或者進行其他錯誤處理
+        }
+        if (nextToken.type != ';') {
+            expression();
+        }
+        if (!Match(';', parsedResult)) {
+            return; // 或者進行其他錯誤處理
+        }
+    } else if (nextToken.type == '{') {
+        compound_statement();
+    } else if (nextToken.type == IF) {
+        if (!Match(IF, parsedResult)) {
+            return; // 或者進行其他錯誤處理
+        }
+        if (!Match('(', parsedResult)) {
+            return; // 或者進行其他錯誤處理
+        }
+        expression();
+        if (!Match(')', parsedResult)) {
+            return; // 或者進行其他錯誤處理
+        }
+        statement();
+        if (nextToken.type == ELSE) {
+            if (!Match(ELSE, parsedResult)) {
+                return; // 或者進行其他錯誤處理
+            }
+            statement();
+        }
+    } else if (nextToken.type == WHILE) {
+        if (!Match(WHILE, parsedResult)) {
+            return; // 或者進行其他錯誤處理
+        }
+        if (!Match('(', parsedResult)) {
+            return; // 或者進行其他錯誤處理
+        }
+        expression();
+        if (!Match(')', parsedResult)) {
+            return; // 或者進行其他錯誤處理
+        }
+        statement();
+    } else if (nextToken.type == DO) {
+        if (!Match(DO, parsedResult)) {
+            return; // 或者進行其他錯誤處理
+        }
+        statement();
+        if (!Match(WHILE, parsedResult)) {
+            return; // 或者進行其他錯誤處理
+        }
+        if (!Match('(', parsedResult)) {
+            return; // 或者進行其他錯誤處理
+        }
+        expression();
+        if (!Match(')', parsedResult)) {
+            return; // 或者進行其他錯誤處理
+        }
+        if (!Match(';', parsedResult)) {
+            return; // 或者進行其他錯誤處理
+        }
+    } else {
+        // 處理未預期的 token
+        std::cerr << "Unexpected token in statement" << std::endl;
+        return; // 終止處理
+    }
+*/
+  } // end statement()
+
+  bool StartExpression() {
+    if ( nextToken.type == IDENTIFIER || nextToken.type == CONSTANT ||
+         nextToken.type == PP || nextToken.type == MM ||
+         nextToken.type == SIGN )
+      return true;
+    else return false;
+  } // end StartExpression()
+
+  bool expression( Token &parsedResult ) {
+    bool expression = true;
+    if ( basic_expression( parsedResult ) ) {
+
+      while ( nextToken.type == COMMA && expression ) {
+        Match( COMMA, parsedResult ); 
+        expression = basic_expression( parsedResult );
+      } // end while
+      return expression;
+    } // end if
+    
+    return false;
+  } // end if
 
   bool Match( Type expected, Token &parsedResult ) {
     if ( nextToken.type == expected ) {
