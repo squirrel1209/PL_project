@@ -36,20 +36,20 @@ enum Type {
   RBRACE,    // '}'
   PLUS,      // '+'
   MINUS,     // '-'
-  ASTERISK,  // '*'
-  SLASH,     // '/'
-  PERCENT,   // '%'
-  CARET,     // '^'
+  MUL,  // '*'
+  DIV,     // '/'
+  MOD,   // '%'
+  BIT_XOR,     // '^'
   GT,        // '>'
   LT,        // '<'
   GE,        // >= 
   LE,        // <= 
   EQ,        // == 
   NEQ,       // != 
-  AMPERSAND, // '&'
-  PIPE,      // '|'
+  BIT_AND, // '&'
+  BIT_OR,      // '|'
   ASSIGN,    // '='
-  EXCLAMATION, // '!'
+  NOT, // '!'
   AND,       // &&
   OR,        // ||
   PE,        // +=
@@ -315,7 +315,7 @@ public:
       
       else {
         PreviousChar();
-        tokenType = ASTERISK;
+        tokenType = MUL;
       } // end else
     } // end else if
     
@@ -328,7 +328,7 @@ public:
       
       else {
         PreviousChar();
-        tokenType = SLASH;
+        tokenType = DIV;
       } // end else
     } // end else if
     
@@ -341,7 +341,7 @@ public:
       
       else {
         PreviousChar();
-        tokenType = PERCENT;
+        tokenType = MOD;
       } // end else
     } // end else if
     
@@ -367,7 +367,7 @@ public:
       
       else {
         PreviousChar();
-        tokenType = EXCLAMATION;
+        tokenType = NOT;
       } // end else
     } // end else if
     
@@ -416,7 +416,7 @@ public:
       
       else {
         PreviousChar();
-        tokenType = AMPERSAND;
+        tokenType = BIT_AND;
       } // end else
     } // end else if
     
@@ -429,7 +429,7 @@ public:
       
       else {
         PreviousChar();
-        tokenType = PIPE;
+        tokenType = BIT_OR;
       } // end else
     } // end else if
     
@@ -437,7 +437,7 @@ public:
     else if ( ch == ',' ) tokenType = COMMA;
     else if ( ch == '?' ) tokenType = QUESTION;
     else if ( ch == ':' ) tokenType = COLON;
-
+    else if ( ch == '^' ) tokenType = BIT_XOR;
     // 返回創建的Token
     return CreatToken( tokenValue, mlineIndex, tokenType, OTHERERROR );
   } // end GetDelimiter()

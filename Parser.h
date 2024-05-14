@@ -26,26 +26,19 @@ private:
 
   void user_input() {
     Token parsedResult ;
-    bool test = true;
-    if ( test ) {
-      while ( nextToken.type != QUIT ) {
-        
-      } // end while
-      return;
-    } // end if
-
 
     while ( nextToken.type != QUIT ) {
+      parsedResult = nextToken;
+      
       if ( nextToken.type == VOID || type_specifier() ) {
         definition( parsedResult );
       } // end if
       
-      else if ( statement( parsedResult ) ) {
-        cout << "Statement executed ...\n"; 
+      else if ( StartExpression() || nextToken.type == SEMICOLON ) {
+        bool istatement = statement( parsedResult );
+        if ( parsedResult.type == QUIT ) {}
+        else if ( istatement ) cout << "Statement executed ...\n"; 
       } // end else if
-
-      else 
-        parsedResult = nextToken;
 
       if ( parsedResult.type == ERROR ) {
         if ( parsedResult.error == LEXICALERROR )
@@ -190,8 +183,8 @@ private:
   bool formal_parameter_list( Token &parsedResult ) {
     Match( nextToken.type, parsedResult ) ;
     
-    if ( nextToken.type == AMPERSAND ) {
-      Match( AMPERSAND, parsedResult ); // 匹配 '&'
+    if ( nextToken.type == BIT_AND ) {
+      Match( BIT_AND, parsedResult ); // 匹配 '&'
     } // end if
     
     if ( nextToken.type == IDENTIFIER ) {
@@ -230,16 +223,18 @@ private:
   } // end  compound_statement()
 
   bool statement( Token &parsedResult ) {
+ 
     if ( nextToken.type == SEMICOLON ) {
       Match( SEMICOLON, parsedResult );
       return true;
     } // end if 
-
+    
     else if ( StartExpression() ) {
       if ( !expression( parsedResult ) ) return false;
       if ( !Match( SEMICOLON, parsedResult ) ) return false;
-      return true; 
+      return true;
     } // end else if
+    
 /*
     else if ( nextToken.type == RETURN ) {
         if (!Match(RETURN, parsedResult)) {
@@ -307,29 +302,85 @@ private:
         return; // 終止處理
     }
 */
+    return false;
   } // end statement()
 
   bool StartExpression() {
     if ( nextToken.type == IDENTIFIER || nextToken.type == CONSTANT ||
-         nextToken.type == PP || nextToken.type == MM 
-         /*nextToken.type == SIGN*/ )
+         nextToken.type == PP || nextToken.type == MM || nextToken.type == LPAREN ||
+         nextToken.type == PLUS || nextToken.type == MINUS || nextToken.type == NOT )
       return true;
     else return false;
   } // end StartExpression()
 
   bool expression( Token &parsedResult ) {
-    bool expression = true;
+    bool expression = true; 
     if ( basic_expression( parsedResult ) ) {
 
       while ( nextToken.type == COMMA && expression ) {
         Match( COMMA, parsedResult ); 
         expression = basic_expression( parsedResult );
       } // end while
+      
       return expression;
     } // end if
-
+    
     return false;
-  } // end if
+  } // end expression
+
+  bool basic_expression( Token &parsedResult ) {
+
+    if ( nextToken.type == IDENTIFIER ) { // undefine
+      
+      if ( nextToken.tokenName.compare( "cin" ) == 0 || nextToken.tokenName.compare( "cout" ) == 0 ) {
+      } // end if
+      
+      else if ( gsymbolTable.find( nextToken.tokenName ) == gsymbolTable.end() ) {
+        parsedResult = nextToken;
+        parsedResult.type = ERROR;
+        parsedResult.error = SEMANTICERROR;
+        
+        if ( nextToken.tokenName.compare( "Done" ) == 0 ) {
+        	Match( IDENTIFIER, parsedResult );
+        	if ( !rest_of_Identifier_started_basic_exp( parsedResult ) ) return false;
+        	return true;
+        } // end if
+        
+        return false;
+      }  // end if 
+      
+      return Match( IDENTIFIER, parsedResult )
+      && rest_of_Identifier_started_basic_exp( parsedResult );
+    } // end if 
+    
+    else if ( nextToken.type == PP || nextToken.type == MM ) {
+      return Match( nextToken.type, parsedResult ) &&
+        Match( IDENTIFIER, parsedResult ) &&
+        rest_of_PPMM_Identifier_started_basic_exp( parsedResult );
+    } // end else if 
+    
+    else if ( nextToken.type == PLUS || nextToken.type == MINUS || nextToken.type == NOT ) {
+      sign( parsedResult );
+      while ( nextToken.type == PLUS || nextToken.type == MINUS || nextToken.type == NOT ) {
+        sign( parsedResult ); 
+      } // end while
+
+      return signed_unary_exp( parsedResult ) && romce_and_romloe( parsedResult );
+    } // end else if 
+    
+    else if ( nextToken.type == CONSTANT ) {
+      return Match( CONSTANT, parsedResult ) && romce_and_romloe( parsedResult );
+    } // end else if
+    
+    else if ( nextToken.type == LPAREN ) {
+
+      return Match( LPAREN, parsedResult ) &&
+             expression( parsedResult ) &&
+             Match( RPAREN, parsedResult ) &&
+             romce_and_romloe( parsedResult );
+    } // end else if
+    return false;
+  } // end basic_expression()
 
   bool rest_of_Identifier_started_basic_exp( Token &parsedResult ) {
     if ( nextToken.type == LBRACKET ) {
@@ -347,16 +398,49 @@ private:
         if ( !romce_and_romloe( parsedResult ) ) return false;
     } // end else if
     
+    else romce_and_romloe( parsedResult );
+    
     if ( nextToken.type == LPAREN ) {
       Match( LPAREN, parsedResult );
-      if ( !actual_parameter_list( parsedResult ) ) return false;
+      
+      if ( nextToken.type == RPAREN ) {
+        Match( RPAREN, parsedResult );
+        if ( nextToken.type == SEMICOLON ) {
+        	parsedResult.type = QUIT;
+        	return true;
+        } // end if
         
+        return romce_and_romloe( parsedResult );
+      } // end if
+       
+      else if ( !actual_parameter_list( parsedResult ) ) return false;
+
       if ( !Match( RPAREN, parsedResult ) ) return false;
-      return romce_and_romloe( parsedResult );
     } // end if
     
-    return false;
+    return true;
   } // end rest_of_Identifier_started_basic_exp()
+
+  bool rest_of_PPMM_Identifier_started_basic_exp( Token &parsedResult ) {
+    if ( nextToken.type == LBRACKET ) {
+        Match( LBRACKET, parsedResult );
+        if ( !expression(parsedResult) ) return false;  // 解析表?式
+        if ( !Match( RBRACKET, parsedResult ) ) return false;  // 消耗 ']'
+    } // end if
+
+    return romce_and_romloe( parsedResult );  // 解析后?表?式
+  } // end rest_of_PPMM_Identifier_started_basic_exp()
+
+  bool actual_parameter_list( Token &parsedResult ) {
+    if ( !basic_expression( parsedResult ) ) return false;
+    
+    while ( nextToken.type == COMMA ) {
+      Match( COMMA, parsedResult );  // 消耗 ','
+      if ( !basic_expression( parsedResult ) ) return false;  
+    } // end while
+    
+    return true;
+  } // end actual_parameter_list()
 
   bool assignment_operator( Token &parsedResult ) {
     if ( nextToken.type == ASSIGN || nextToken.type == TE || nextToken.type == DE || 
@@ -368,14 +452,18 @@ private:
   } // end assignment_operator()
 
   bool romce_and_romloe( Token &parsedResult ) {
-    if ( !rest_of_maybe_logical_OR_exp( parsedResult ) ) return false;  // ?理??或表?式
-
+    
+    if ( !rest_of_maybe_logical_OR_exp( parsedResult ) ) {
+      return false;  // ?理??或表?式
+    }
+    
     if ( nextToken.type == QUESTION ) {
         Match( QUESTION, parsedResult );  // 消耗 '?'
         if ( !basic_expression( parsedResult ) ) return false;  // 解析?件?真?的表?式
         if ( !Match( COLON, parsedResult ) ) return false;  // 消耗 ':'
         if ( !basic_expression( parsedResult ) ) return false;  // 解析?件?假?的表?式
     } // end if
+
 
     return true;
   } // end romce_and_romloe()
@@ -387,9 +475,20 @@ private:
       Match( OR, parsedResult );  // 消耗 '||'
       if ( !maybe_logical_AND_exp( parsedResult ) ) return false;  // 解析??与表?式
     } // end while
-
+    
     return true;
   } // end rest_of_maybe_logical_OR_exp()
+
+  bool maybe_logical_AND_exp( Token &parsedResult ) {
+    if ( !maybe_bit_OR_exp( parsedResult ) ) return false;  // ?理第一?可能的位或表?式
+
+    while (nextToken.type == AND) {
+        Match( AND, parsedResult );  // 消耗 '&&'
+        if ( !maybe_bit_OR_exp( parsedResult ) ) return false;  // ?理后?的位或表?式
+    } // end while
+
+    return true;
+  } // end maybe_logical_AND_exp()
 
   bool rest_of_maybe_logical_AND_exp( Token &parsedResult ) {
     if ( !rest_of_maybe_bit_OR_exp( parsedResult ) ) return false;  // ?理位或表?式的剩余部分
@@ -402,38 +501,85 @@ private:
     return true;
   } // end rest_of_maybe_logical_AND_exp()
 
+  bool maybe_bit_OR_exp( Token &parsedResult ) {
+    if ( !maybe_bit_ex_OR_exp( parsedResult ) ) return false;  // ?理第一?可能的位异或表?式
+
+    while ( nextToken.type == BIT_OR ) {
+      Match( BIT_OR, parsedResult );  // 消耗 '|'
+      if ( !maybe_bit_ex_OR_exp( parsedResult ) ) return false;  // ?理后?的位异或表?式
+    } // end while
+
+    return true;
+  } // end maybe_bit_OR_exp()
+
   bool rest_of_maybe_bit_OR_exp(Token &parsedResult) {
-    if (!rest_of_maybe_bit_ex_OR_exp(parsedResult)) return false;
+    if ( !rest_of_maybe_bit_ex_OR_exp( parsedResult ) ) return false;
 
-    while (nextToken.type == BIT_OR) {
-        Match(BIT_OR, parsedResult);
-        if (!maybe_bit_ex_OR_exp(parsedResult)) return false;
-    }
+    while ( nextToken.type == BIT_OR)  {
+      Match (BIT_OR, parsedResult );
+      if ( !maybe_bit_ex_OR_exp( parsedResult ) ) return false;
+    } // end while
 
+    //cout << nextToken.tokenName;
     return true;
   } // end rest_of_maybe_bit_OR_exp()
 
+  bool maybe_bit_ex_OR_exp( Token &parsedResult ) {
+    if ( !maybe_bit_AND_exp( parsedResult ) ) return false;
+
+    while ( nextToken.type == BIT_XOR ) {
+      Match( BIT_XOR, parsedResult );
+      if ( !maybe_bit_AND_exp( parsedResult ) ) return false;
+    } // end while 
+
+    return true;
+  } // end maybe_bit_ex_OR_exp()
+
   bool rest_of_maybe_bit_ex_OR_exp(Token &parsedResult) {
-    if (!rest_of_maybe_bit_AND_exp(parsedResult)) return false;
+    if ( !rest_of_maybe_bit_AND_exp( parsedResult ) ) return false;
 
-    while (nextToken.type == BIT_XOR) {
-        Match(BIT_XOR, parsedResult);
-        if (!maybe_bit_AND_exp(parsedResult)) return false;
-    }
+    while ( nextToken.type == BIT_XOR ) {
+      Match( BIT_XOR, parsedResult );
+      if ( !maybe_bit_AND_exp( parsedResult ) ) return false;
+    } // end while
 
+    //cout << nextToken.tokenName;
     return true;
   } // end rest_of_maybe_bit_ex_OR_exp()
   
-  bool rest_of_maybe_bit_AND_exp(Token &parsedResult) {
-    if (!rest_of_maybe_equality_exp(parsedResult)) return false;
+  bool maybe_bit_AND_exp( Token &parsedResult ) {
+    if ( !maybe_equality_exp( parsedResult ) ) return false;
 
     while (nextToken.type == BIT_AND) {
-        Match(BIT_AND, parsedResult);
-        if (!maybe_equality_exp(parsedResult)) return false;
-    }
+      Match(BIT_AND, parsedResult);
+      if (!maybe_equality_exp(parsedResult)) return false;
+    } // end while
 
     return true;
+  } // end maybe_bit_AND_exp()
+  
+  bool rest_of_maybe_bit_AND_exp( Token &parsedResult ) {
+    if ( !rest_of_maybe_equality_exp( parsedResult ) ) return false;
+
+    while ( nextToken.type == BIT_AND ) {
+      Match( BIT_AND, parsedResult );
+      if ( !maybe_equality_exp( parsedResult ) ) return false;
+    } // end while
+
+    //cout << nextToken.tokenName;
+    return true;
   } // end rest_of_maybe_bit_AND_exp()
+  
+  bool maybe_equality_exp(Token &parsedResult) {
+    if ( !maybe_relational_exp( parsedResult ) ) return false;
+
+    while ( nextToken.type == EQ || nextToken.type == NEQ ) {
+      Match( nextToken.type, parsedResult );  // 消耗 EQ 或 NEQ
+      if ( !maybe_relational_exp( parsedResult ) ) return false;
+    } // end while 
+
+    return true;
+  } // end maybe_equality_exp()
   
   bool rest_of_maybe_equality_exp(Token &parsedResult) {
   	
@@ -443,36 +589,71 @@ private:
         Match(nextToken.type, parsedResult);  // 消耗 EQ 或 NEQ
         if (!maybe_relational_exp(parsedResult)) return false;
     }
-
+    //cout << nextToken.tokenName;
     return true;
   } // end rest_of_maybe_equality_exp()
 
-  bool rest_of_maybe_relational_exp(Token &parsedResult) {
-    if (!rest_of_maybe_shift_exp(parsedResult)) return false;
+  bool maybe_relational_exp(Token &parsedResult) {
+    if ( !maybe_shift_exp( parsedResult ) ) return false;
 
-    while (nextToken.type == LESS || nextToken.type == GREATER || 
+    while ( nextToken.type == GT || nextToken.type == LT || 
            nextToken.type == LE || nextToken.type == GE) {
-        Match(nextToken.type, parsedResult);  // 消耗 <, >, <=, 或 >=
-        if (!maybe_shift_exp(parsedResult)) return false;
-    }
+      Match( nextToken.type, parsedResult );  // 消耗 <, >, <=, 或 >=
+      if ( !maybe_shift_exp( parsedResult ) ) return false;
+    } // end while
 
+    return true;
+  } // end maybe_relational_exp()
+
+  bool rest_of_maybe_relational_exp( Token &parsedResult ) {
+    if ( !rest_of_maybe_shift_exp( parsedResult ) ) return false;
+
+    while (nextToken.type == GT || nextToken.type == LT || 
+           nextToken.type == LE || nextToken.type == GE) {
+      Match( nextToken.type, parsedResult );  // 消耗 <, >, <=, 或 >=
+      if ( !maybe_shift_exp( parsedResult ) ) return false;
+    } // end while
+    // cout << nextToken.tokenName;
     return true;
   } // end rest_of_maybe_relational_exp()
 
-  bool rest_of_maybe_shift_exp(Token &parsedResult) {
-    if (!rest_of_maybe_additive_exp(parsedResult)) return false;
+  bool maybe_shift_exp( Token &parsedResult ) {
+    if ( !maybe_additive_exp( parsedResult ) ) return false;
 
-    while (nextToken.type == LS || nextToken.type == RS) {
-        Match(nextToken.type, parsedResult);  // 消耗 LS 或 RS
-        if (!maybe_additive_exp(parsedResult)) return false;
-    }
+    while ( nextToken.type == LS || nextToken.type == RS ) {
+      Match( nextToken.type, parsedResult );  // 消耗 << 或 >>
+      if ( !maybe_additive_exp( parsedResult ) ) return false;
+    } // end while
 
+    return true;
+  } // maybe_shift_exp()
+
+  bool rest_of_maybe_shift_exp( Token &parsedResult ) {
+    if ( !rest_of_maybe_additive_exp( parsedResult ) ) return false;
+
+    while ( nextToken.type == LS || nextToken.type == RS ) {
+        Match( nextToken.type, parsedResult );  // 消耗 LS 或 RS
+        if ( !maybe_additive_exp( parsedResult ) ) return false;
+    } // end while
+
+    //cout << nextToken.tokenName;
     return true;
   } // end rest_of_maybe_shift_exp()
 
+  bool maybe_additive_exp( Token &parsedResult ) {
+    if ( !maybe_mult_exp( parsedResult ) ) return false;
+
+    while ( nextToken.type == PLUS || nextToken.type == MINUS ) {
+      Match( nextToken.type, parsedResult );  // 消耗 '+' 或 '-'
+      if ( !maybe_mult_exp( parsedResult ) ) return false;
+    } // end while
+
+    return true;
+  } // end maybe_additive_exp()
+
   bool rest_of_maybe_additive_exp(Token &parsedResult) {
     if (!rest_of_maybe_mult_exp(parsedResult)) return false;
-
+    
     while (nextToken.type == PLUS || nextToken.type == MINUS) {
         Match(nextToken.type, parsedResult);  // 消耗 '+' 或 '-'
         if (!maybe_mult_exp(parsedResult)) return false;
@@ -481,18 +662,24 @@ private:
     return true;
   } // end rest_of_maybe_additive_exp()
 
+  bool maybe_mult_exp( Token &parsedResult ) {
+    // cout << nextToken.tokenName << endl;
+    if ( !unary_exp( parsedResult ) ) return false;
+    return rest_of_maybe_mult_exp( parsedResult );  
+  } // end maybe_mult_exp()
+
   bool rest_of_maybe_mult_exp(Token &parsedResult) {
     while (nextToken.type == MUL || nextToken.type == DIV || nextToken.type == MOD) {
-        Match(nextToken.type, parsedResult);  // 消耗 '*', '/', 或 '%'
+        Match(nextToken.type, parsedResult);  
         if (!unary_exp(parsedResult)) return false;
     }
-    return true;  // ?部分可以?空，因此默?返回 true
-  }
+    return true;  
+  } // end rest_of_maybe_mult_exp()
 
   bool unary_exp( Token &parsedResult ) {
     if ( nextToken.type == PLUS || nextToken.type == MINUS || nextToken.type == NOT ) {
       while ( nextToken.type == PLUS || nextToken.type == MINUS || nextToken.type == NOT ) {
-        sign( parsedResult );  // ?理所有前置的符?
+        sign( parsedResult );
       } // end while
         
       return signed_unary_exp(parsedResult);
@@ -517,6 +704,91 @@ private:
     
     return false;
   } // end unary_exp()
+
+  bool signed_unary_exp( Token &parsedResult ) {
+    if ( nextToken.type == IDENTIFIER ) {
+      Match( IDENTIFIER, parsedResult );
+      if ( nextToken.type == LPAREN ) {
+        Match( LPAREN, parsedResult ); 
+        
+        if ( nextToken.type != RPAREN ) {
+          if ( !actual_parameter_list( parsedResult ) ) return false;
+        } // end if
+         
+        if ( !Match( RPAREN, parsedResult ) ) return false; // 消耗 ')'
+      } // end if
+      
+      else if ( nextToken.type == LBRACKET ) {
+        Match( LBRACKET, parsedResult );
+        
+        if ( !expression( parsedResult ) ) return false;
+        if ( !Match( RBRACKET, parsedResult ) ) return false; // 消耗 ']'
+      } // end else if
+    
+      return true;
+    } // end if 
+    
+    else if ( nextToken.type == CONSTANT ) {
+      return Match( CONSTANT, parsedResult );
+    } // end else if 
+    
+    else if (nextToken.type == LPAREN) {
+      Match( LPAREN, parsedResult ); // 消耗 '('
+      if ( !expression( parsedResult ) ) return false;
+      return Match(RPAREN, parsedResult); // 消耗 ')'
+    } // end else if
+    
+    return false;
+  }
+
+   bool unsigned_unary_exp( Token &parsedResult ) {
+    if ( nextToken.type == IDENTIFIER ) {
+      Match( IDENTIFIER, parsedResult );
+      
+      if ( nextToken.type == LPAREN ) {
+        Match( LPAREN, parsedResult ); 
+        if ( nextToken.type != RPAREN ) {
+          if ( !actual_parameter_list( parsedResult ) ) return false;
+        } // end if
+ 
+        if ( !Match( RPAREN, parsedResult ) ) return false; // 消耗 ')'
+      } // end if
+      
+      else if ( nextToken.type == LBRACKET ) {
+        Match( LBRACKET, parsedResult );
+        
+        if ( !expression( parsedResult ) ) return false;
+        if ( !Match( RBRACKET, parsedResult ) ) return false; // 消耗 ']'
+        if ( nextToken.type == PP || nextToken.type == MM ) {
+          Match( nextToken.type, parsedResult );
+        } // end if
+      } // end else if
+    
+      return true;
+    } // end if 
+    
+    else if ( nextToken.type == CONSTANT ) {
+      return Match( CONSTANT, parsedResult );
+    } // end else if 
+    
+    else if (nextToken.type == LPAREN) {
+      Match( LPAREN, parsedResult ); // 消耗 '('
+      
+      if ( !expression( parsedResult ) ) return false;
+      
+      return Match(RPAREN, parsedResult); // 消耗 ')'
+    } // end else if
+    
+    return false;
+  } // end unsigned_unary_exp
+
+  bool sign( Token &parsedResult ) {
+    if ( nextToken.type == PLUS || nextToken.type == MINUS || nextToken.type == NOT ) {
+      return Match( nextToken.type, parsedResult );
+    } // end if
+    
+    return false;
+  } // end sign()
 
   bool Match( Type expected, Token &parsedResult ) {
     if ( nextToken.type == expected ) {

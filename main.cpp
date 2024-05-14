@@ -27,7 +27,7 @@ vector<string> read_lines_from_file( string filename ) {
   return input_lines;
 } // end read_lines_from_file
 
-
+/*
 string TypeToString(Type type) {
     switch (type) {
         case QUIT: return "QUIT";
@@ -85,7 +85,7 @@ string TypeToString(Type type) {
         default: return "UNKNOWN";
     }
 }
-
+*/
 
 int main() {
   vector<string> input = read_lines_from_file("input.txt");
