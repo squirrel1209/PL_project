@@ -27,7 +27,7 @@ private:
   void user_input() {
     Token parsedResult ;
 
-    while ( nextToken.type != QUIT ) {
+    while ( nextToken.type != QUIT && parsedResult.type != QUIT ) {
       parsedResult = nextToken;
       
       if ( nextToken.type == VOID || type_specifier() ) {
@@ -343,6 +343,7 @@ private:
         if ( nextToken.tokenName.compare( "Done" ) == 0 ) {
         	Match( IDENTIFIER, parsedResult );
         	if ( !rest_of_Identifier_started_basic_exp( parsedResult ) ) return false;
+        	
         	return true;
         } // end if
         
