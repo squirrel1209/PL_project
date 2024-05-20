@@ -72,8 +72,8 @@ private:
         if ( function_definition_without_ID( parsedResult ) ) {
         	for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
         	  if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) 
-        	    printf( "Definition of %s entered ...\n", gIdToeknName[i].c_str() );
-        	  else printf( "New definition of %s entered...\n", gIdToeknName[i].c_str() );
+        	    printf( "Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
+        	  else printf( "New definition of %s() entered...\n", gIdToeknName[i].c_str() );
         	  
         	  gsymbolTable[gIdToeknName[i]] = type;
           } // end for
@@ -84,16 +84,26 @@ private:
     } // end if
     
     else {
+      bool function = false;
       Match( nextToken.type, parsedResult );
       gIdToeknName.push_back( nextToken.tokenName );
       
       if ( Match( IDENTIFIER, parsedResult ) ) {
-        if ( function_definition_or_declarators( parsedResult ) ) {
+        if ( function_definition_or_declarators( parsedResult, function ) ) {
         	for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
-        	  if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) 
-        	    printf( "Definition of %s entered ...\n", gIdToeknName[i].c_str() );
-        	  else printf( "New definition of %s entered...\n", gIdToeknName[i].c_str() );
-        	  
+        		
+        	  if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) {
+        	    if ( !function )
+        	      printf( "Definition of %s entered ...\n", gIdToeknName[i].c_str() );
+        	    else printf( "Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
+            } // end if
+            
+        	  else {
+	    if ( !function )
+	      printf( "New definition of %s entered...\n", gIdToeknName[i].c_str() );
+              else
+                printf( "New definition of %s() entered...\n", gIdToeknName[i].c_str() );
+            } // end else
         	  gsymbolTable[gIdToeknName[i]] = type;
           } // end for
           
@@ -111,9 +121,10 @@ private:
     nextToken.type == CHAR || nextToken.type == BOOL || nextToken.type == STRING ;
   } // end type_specifier()
  
-  bool function_definition_or_declarators( Token &parsedResult ) {
+  bool function_definition_or_declarators( Token &parsedResult, bool &function ) {
     // 檢查下一個符號是否是左括號，如果是，則處理為函數定義
     if ( nextToken.type == LPAREN ) {
+      function = true;
       return function_definition_without_ID( parsedResult  );
     } // end if
     
@@ -183,6 +194,8 @@ private:
   } // end function_definition_without_ID()
  
   bool formal_parameter_list( Token &parsedResult ) {
+    Type type = nextToken.type;
+
     Match( nextToken.type, parsedResult ) ;
     
     if ( nextToken.type == BIT_AND ) {
@@ -190,8 +203,10 @@ private:
     } // end if
     
     if ( nextToken.type == IDENTIFIER ) {
+      gsymbolTable[nextToken.tokenName] = type;
       Match( IDENTIFIER, parsedResult ); 
-    } // end if 
+    } // end if  
+    
     else return false;
     
     if ( nextToken.type == LBRACKET ) {
@@ -220,12 +235,16 @@ private:
   bool compound_statement( Token &parsedResult ) {
     bool iscompound_statement = false;
     if ( !Match( LBRACE, parsedResult ) ) return false;
-    iscompound_statement = statement( parsedResult );
-    iscompound_statement = declaration( parsedResult );
+      iscompound_statement = statement( parsedResult );
+    
+    if ( iscompound_statement == false )
+      iscompound_statement = declaration( parsedResult );
     
     while ( iscompound_statement ) {
       iscompound_statement = statement( parsedResult );
-      iscompound_statement = declaration( parsedResult );
+    
+      if ( iscompound_statement == false )
+        iscompound_statement = declaration( parsedResult );
     } // end while
 
     if ( !Match( RBRACE, parsedResult ) ) return false;
@@ -236,22 +255,17 @@ private:
     if ( !type_specifier() ) return false;
     Type type = nextToken.type;
     Match( nextToken.type, parsedResult );
-    gIdToeknName.push_back( nextToken.tokenName );
+    
+    string tokenName = nextToken.tokenName;
       
     if ( Match( IDENTIFIER, parsedResult ) ) {
       if ( rest_of_declarators( parsedResult ) ) {
-        for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
-          if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) 
-        	  printf( "Definition of %s entered ...\n", gIdToeknName[i].c_str() );
-        	else printf( "New definition of %s entered...\n", gIdToeknName[i].c_str() );
-        	  
-          gsymbolTable[gIdToeknName[i]] = type;
-        } // end for
-          
-          gIdToeknName.clear();
-          return true;
+        gsymbolTable[tokenName] = type;
+        return true;
       } // end if
     }  // end if
+    
+    return false;
   } // end declaration()
 
   bool statement( Token &parsedResult ) {
@@ -267,8 +281,8 @@ private:
       return true;
     } // end else if
     
-
     else if ( nextToken.type == RETURN ) {
+      Match( RETURN, parsedResult );
       if ( nextToken.type != SEMICOLON ) {
         if ( !expression( parsedResult ) ) return false;
       } // end if
@@ -276,6 +290,8 @@ private:
       if ( !Match( SEMICOLON, parsedResult ) ) {
         return false; // 或者進行其他錯誤處理
       } // end if
+      
+      return true;
     } // end else if
     
     else if ( nextToken.type == LBRACE ) {

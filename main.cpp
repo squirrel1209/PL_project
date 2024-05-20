@@ -99,10 +99,10 @@ int main() {
         cout << endl ;
     }
   */
-  cout << "Program starts..." << endl ;
+  cout << "Our-C running ..." << endl ;
   
   Parser parse( tokenizer ) ;
   parse.Parse() ;
-  cout << "Program exits..." << endl ;  
+  cout << "Our-C exited ..." << endl ; 
   
 } // end main()
