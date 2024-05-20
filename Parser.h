@@ -26,8 +26,10 @@ private:
 
   void user_input() {
     Token parsedResult ;
-
+    int startLine;
+    
     while ( nextToken.type != QUIT && parsedResult.type != QUIT ) {
+      startLine = nextToken.line;
       parsedResult = nextToken;
       
       if ( nextToken.type == VOID || type_specifier() ) {
@@ -42,13 +44,13 @@ private:
 
       if ( parsedResult.type == ERROR ) {
         if ( parsedResult.error == LEXICALERROR )
-          printf( "Line %d : unrecognized token with first char : '%s'\n", parsedResult.line, parsedResult.tokenName.c_str() );
+          printf( "Line %d : unrecognized token with first char : '%s'\n", parsedResult.line - startLine + 1, parsedResult.tokenName.c_str() );
 
         else if ( parsedResult.error == SYNTACTICALERROR )
-          printf( "Line %d : Unexpected token : '%s'\n", parsedResult.line, parsedResult.tokenName.c_str() );
+          printf( "Line %d : Unexpected token : '%s'\n", parsedResult.line - startLine + 1, parsedResult.tokenName.c_str() );
 	 
         else if ( parsedResult.error == SEMANTICERROR )
-          printf( "Line %d : Undefined identifier : '%s'\n", parsedResult.line, parsedResult.tokenName.c_str() ); 
+          printf( "Line %d : Undefined identifier : '%s'\n", parsedResult.line - startLine + 1, parsedResult.tokenName.c_str() ); 
         else cout << "> Error" << endl ;
         
         while ( parsedResult.line >= nextToken.line ) nextToken = tokenizer.GetNextToken();
@@ -216,11 +218,41 @@ private:
   } // end formal_parameter_list()
 
   bool compound_statement( Token &parsedResult ) {
-    if ( !Match( LBRACE, parsedResult ) ) return false; 
+    bool iscompound_statement = false;
+    if ( !Match( LBRACE, parsedResult ) ) return false;
+    iscompound_statement = statement( parsedResult );
+    iscompound_statement = declaration( parsedResult );
+    
+    while ( iscompound_statement ) {
+      iscompound_statement = statement( parsedResult );
+      iscompound_statement = declaration( parsedResult );
+    } // end while
 
     if ( !Match( RBRACE, parsedResult ) ) return false;
     return true;
   } // end  compound_statement()
+
+  bool declaration( Token &parsedResult ) {
+    if ( !type_specifier() ) return false;
+    Type type = nextToken.type;
+    Match( nextToken.type, parsedResult );
+    gIdToeknName.push_back( nextToken.tokenName );
+      
+    if ( Match( IDENTIFIER, parsedResult ) ) {
+      if ( rest_of_declarators( parsedResult ) ) {
+        for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
+          if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) 
+        	  printf( "Definition of %s entered ...\n", gIdToeknName[i].c_str() );
+        	else printf( "New definition of %s entered...\n", gIdToeknName[i].c_str() );
+        	  
+          gsymbolTable[gIdToeknName[i]] = type;
+        } // end for
+          
+          gIdToeknName.clear();
+          return true;
+      } // end if
+    }  // end if
+  } // end declaration()
 
   bool statement( Token &parsedResult ) {
  
@@ -235,73 +267,56 @@ private:
       return true;
     } // end else if
     
-/*
+
     else if ( nextToken.type == RETURN ) {
-        if (!Match(RETURN, parsedResult)) {
-            return; // 或者進行其他錯誤處理
-        }
-        if (nextToken.type != ';') {
-            expression();
-        }
-        if (!Match(';', parsedResult)) {
-            return; // 或者進行其他錯誤處理
-        }
-    } else if (nextToken.type == '{') {
-        compound_statement();
-    } else if (nextToken.type == IF) {
-        if (!Match(IF, parsedResult)) {
-            return; // 或者進行其他錯誤處理
-        }
-        if (!Match('(', parsedResult)) {
-            return; // 或者進行其他錯誤處理
-        }
-        expression();
-        if (!Match(')', parsedResult)) {
-            return; // 或者進行其他錯誤處理
-        }
-        statement();
-        if (nextToken.type == ELSE) {
-            if (!Match(ELSE, parsedResult)) {
-                return; // 或者進行其他錯誤處理
-            }
-            statement();
-        }
-    } else if (nextToken.type == WHILE) {
-        if (!Match(WHILE, parsedResult)) {
-            return; // 或者進行其他錯誤處理
-        }
-        if (!Match('(', parsedResult)) {
-            return; // 或者進行其他錯誤處理
-        }
-        expression();
-        if (!Match(')', parsedResult)) {
-            return; // 或者進行其他錯誤處理
-        }
-        statement();
-    } else if (nextToken.type == DO) {
-        if (!Match(DO, parsedResult)) {
-            return; // 或者進行其他錯誤處理
-        }
-        statement();
-        if (!Match(WHILE, parsedResult)) {
-            return; // 或者進行其他錯誤處理
-        }
-        if (!Match('(', parsedResult)) {
-            return; // 或者進行其他錯誤處理
-        }
-        expression();
-        if (!Match(')', parsedResult)) {
-            return; // 或者進行其他錯誤處理
-        }
-        if (!Match(';', parsedResult)) {
-            return; // 或者進行其他錯誤處理
-        }
-    } else {
-        // 處理未預期的 token
-        std::cerr << "Unexpected token in statement" << std::endl;
-        return; // 終止處理
-    }
-*/
+      if ( nextToken.type != SEMICOLON ) {
+        if ( !expression( parsedResult ) ) return false;
+      } // end if
+
+      if ( !Match( SEMICOLON, parsedResult ) ) {
+        return false; // 或者進行其他錯誤處理
+      } // end if
+    } // end else if
+    
+    else if ( nextToken.type == LBRACE ) {
+      if ( !compound_statement( parsedResult ) ) return false;
+      return true;
+    } // end if 
+    
+    else if ( nextToken.type == IF ) {
+      Match( IF, parsedResult );
+      if ( !Match( LPAREN, parsedResult ) ) return false;
+      if ( !expression( parsedResult ) ) return false;
+      if ( !Match( RPAREN, parsedResult ) ) return false;
+      if ( !statement( parsedResult ) ) return false;
+      
+      if ( nextToken.type == ELSE ) {
+        Match( IF, parsedResult );
+        if ( !statement( parsedResult ) ) return false;
+      } // end if 
+      
+      return true;
+    } // end else if 
+    
+    else if (nextToken.type == WHILE) {
+      Match( WHILE, parsedResult );
+      if ( !Match( LPAREN, parsedResult ) ) return false;
+      if ( !expression( parsedResult ) ) return false;
+      if ( !Match( RPAREN, parsedResult ) ) return false;
+      if ( !statement( parsedResult ) ) return false; 
+    } // end else if
+    
+    else if ( nextToken.type == DO ) {
+      Match( DO, parsedResult );
+      if ( !statement( parsedResult ) ) return false; 
+      if ( !Match( WHILE, parsedResult ) ) return false;
+      if ( !Match( LPAREN, parsedResult ) ) return false;
+      if ( !expression( parsedResult ) ) return false;
+      if ( !Match( RPAREN, parsedResult ) ) return false;
+      if ( !Match( SEMICOLON, parsedResult ) ) return false;
+      return true;
+    } // end else if
+
     return false;
   } // end statement()
 
@@ -355,9 +370,17 @@ private:
     } // end if 
     
     else if ( nextToken.type == PP || nextToken.type == MM ) {
-      return Match( nextToken.type, parsedResult ) &&
-        Match( IDENTIFIER, parsedResult ) &&
-        rest_of_PPMM_Identifier_started_basic_exp( parsedResult );
+      if ( !Match( nextToken.type, parsedResult ) ) return false;
+      if ( nextToken.type != IDENTIFIER ) return false;
+      if ( gsymbolTable.find( nextToken.tokenName ) == gsymbolTable.end() ) {
+          parsedResult = nextToken;
+          parsedResult.type = ERROR;
+          parsedResult.error = SEMANTICERROR;
+          return false;
+      }  // end if 
+      
+      Match( IDENTIFIER, parsedResult );
+      return  rest_of_PPMM_Identifier_started_basic_exp( parsedResult );
     } // end else if 
     
     else if ( nextToken.type == PLUS || nextToken.type == MINUS || nextToken.type == NOT ) {
@@ -692,7 +715,15 @@ private:
     
     else if ( nextToken.type == PP || nextToken.type == MM ) {
       Match( nextToken.type, parsedResult ); // 消耗 PP 或 MM
+      
       if ( Match( IDENTIFIER, parsedResult ) ) {
+          if ( gsymbolTable.find( nextToken.tokenName ) == gsymbolTable.end() ) {
+              parsedResult = nextToken;
+              parsedResult.type = ERROR;
+              parsedResult.error = SEMANTICERROR;
+              return false;
+          }  // end if 
+        
         if ( nextToken.type == LBRACKET ) {
           Match( LBRACKET, parsedResult ); // 消耗 '['
           if (!expression(parsedResult)) return false; 
@@ -708,6 +739,13 @@ private:
 
   bool signed_unary_exp( Token &parsedResult ) {
     if ( nextToken.type == IDENTIFIER ) {
+        if ( gsymbolTable.find( nextToken.tokenName ) == gsymbolTable.end() ) {
+            parsedResult = nextToken;
+            parsedResult.type = ERROR;
+            parsedResult.error = SEMANTICERROR;
+            return false;
+        }  // end if 
+        
       Match( IDENTIFIER, parsedResult );
       if ( nextToken.type == LPAREN ) {
         Match( LPAREN, parsedResult ); 
@@ -742,8 +780,15 @@ private:
     return false;
   }
 
-   bool unsigned_unary_exp( Token &parsedResult ) {
+  bool unsigned_unary_exp( Token &parsedResult ) {
     if ( nextToken.type == IDENTIFIER ) {
+        if ( gsymbolTable.find( nextToken.tokenName ) == gsymbolTable.end() ) {
+            parsedResult = nextToken;
+            parsedResult.type = ERROR;
+            parsedResult.error = SEMANTICERROR;
+            return false;
+        }  // end if 
+
       Match( IDENTIFIER, parsedResult );
       
       if ( nextToken.type == LPAREN ) {
