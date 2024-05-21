@@ -12,6 +12,56 @@
 map<string, Type> gsymbolTable;
 vector<string> gIdToeknName;
 
+struct Variable {
+  string typeName;
+  string name;
+};
+
+struct Function {
+  string typeName;
+  vector<Variable> parameter;
+  vector<string> body;
+};
+
+// ㄏノ map ㄓ纗ㄧ计嘿籔ㄤ︽﹚竡
+map<string, Function> functionMap;
+
+// ㄧ计﹚竡纗 map い
+  void DefineFunction( string name, string returnType, vector<Variable> params, vector<string> body) {
+    Function func;
+    func.typeName = returnType;
+    func.parameter = params;
+    func.body = body;
+    functionMap[name] = func;
+  }
+
+// ┮Τㄧ计嘿
+void ListAllFunctions() {
+    cout << "Listing all functions:" << endl;
+    map<string, Function>::const_iterator it;
+    for (it = functionMap.begin(); it != functionMap.end(); ++it) {
+        cout << it->first << "()" << endl;
+    }
+}
+
+// ﹚ㄧ计﹚竡
+void ListFunction( string name) {
+    map<string, Function>::const_iterator it = functionMap.find(name);
+    if (it != functionMap.end()) {
+        cout << "> " << it->second.typeName << " " << name << "(";
+        for (size_t i = 0; i < it->second.parameter.size(); ++i) {
+            cout << it->second.parameter[i].typeName << " " << it->second.parameter[i].name;
+            if (i < it->second.parameter.size() - 1) cout << ", ";
+        }
+        cout << ")" << endl;
+        for (size_t i = 0; i < it->second.body.size(); ++i) {
+            cout << it->second.body[i] << endl;
+        }
+    } else {
+        cout << "Function " << name << " not found." << endl;
+    }
+}
+
 class Parser {
 public:
   explicit Parser( Tokenizer& tokenizer ) : tokenizer( tokenizer ), nextToken( tokenizer.GetNextToken() ) {}
@@ -63,12 +113,14 @@ private:
   
   bool definition( Token &parsedResult ) {
     Type type = nextToken.type;
-
+    
     if ( nextToken.type == VOID ) {
       Match( VOID, parsedResult );
       gIdToeknName.push_back( nextToken.tokenName );
       
       if ( Match( IDENTIFIER, parsedResult ) ) {
+        parsedResult.type = VOID;
+        parsedResult.tokenName = nextToken.tokenName;
         if ( function_definition_without_ID( parsedResult ) ) {
         	for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
         	  if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) 
@@ -182,9 +234,11 @@ private:
   bool function_definition_without_ID( Token &parsedResult ) {
     if ( !Match( LPAREN, parsedResult ) ) return false; 
 
-    if ( nextToken.type == VOID ) 
+    if ( nextToken.type == VOID ) {
       Match( VOID, parsedResult ); // で皌 VOID
       
+    } // end if
+
     else if ( type_specifier() ) 
       if ( !formal_parameter_list( parsedResult ) ) return false;// 秆猂 formal_parameter_list
 
@@ -854,6 +908,7 @@ private:
 
   bool Match( Type expected, Token &parsedResult ) {
     if ( nextToken.type == expected ) {
+      parsedResult.content.push_back( nextToken.tokenName );
       nextToken = tokenizer.GetNextToken();
       return true;
     } // end if 

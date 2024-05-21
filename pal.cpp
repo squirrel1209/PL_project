@@ -219,7 +219,7 @@ public:
     } // end else if
 
     return ERROR;
-  } // end GetKeywordType
+  } // end GetKeywordType() 
 
   Token GetIdentOrKeyword( char nextChar ) {
     string id = "";
@@ -234,9 +234,9 @@ public:
     
     // 檢查是否為關鍵字
     if ( id.compare( "int" ) == 0 || id.compare( "float" ) == 0 || id.compare( "char" ) == 0 || 
-      id.compare( "bool" ) == 0 || id.compare( "string" ) == 0 || id.compare( "void" ) == 0 || 
-      id.compare( "if" ) == 0 || id.compare( "else" ) == 0 || id.compare( "while" ) == 0 || 
-      id.compare( "do" ) == 0 || id.compare( "return" ) == 0) {
+         id.compare( "bool" ) == 0 || id.compare( "string" ) == 0 || id.compare( "void" ) == 0 || 
+         id.compare( "if" ) == 0 || id.compare( "else" ) == 0 || id.compare( "while" ) == 0 || 
+         id.compare( "do" ) == 0 || id.compare( "return" ) == 0 ) {
 
       return CreatToken( id, mlineIndex, GetKeywordType( id ), LEXICALERROR );
     } // end if
@@ -244,7 +244,7 @@ public:
     else {
       return CreatToken( id, mlineIndex, IDENTIFIER, LEXICALERROR );
     } // end else 
-  } // end GetIdentOrKeyword
+  } // end GetIdentOrKeyword() 
 
   // 檢查給定的字符串是否是一個有效的數字（整數或浮點數）。
   Token GetNUM( char nextChar ) {
@@ -261,7 +261,7 @@ public:
         } // end if
         
         else if ( hasDot && !hasDigit ) { // Error 
-        	return CreatToken( ".", mlineIndex, ERROR, LEXICALERROR );
+          return CreatToken( ".", mlineIndex, ERROR, LEXICALERROR );
         } // end else if
         
         hasDot = true;
@@ -531,7 +531,9 @@ public:
         nextChar = GetNextChar();
       } // end while
       
-      if ( nextChar == '\0' ) return CreatToken( "string missing terminating '\"", mlineIndex, ERROR, SYNTACTICALERROR );
+      if ( nextChar == '\0' ) 
+        return CreatToken( "string missing terminating '\"", mlineIndex, ERROR, SYNTACTICALERROR );
+
       return CreatToken( str, mlineIndex, CONSTANT, LEXICALERROR );
     } // end else if
     
@@ -605,8 +607,8 @@ int main() {
 
   cout << "Our-C running ..." << endl ;
   
-  //Parser parse( tokenizer ) ;
-  //parse.Parse() ;
+  // Parser parse( tokenizer ) ;
+  // parse.Parse() ;
   cout << "Our-C exited ..." << endl ; 
   
 } // end main()

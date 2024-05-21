@@ -1,4 +1,3 @@
 int AddTwo( int x ) { return x + 2 ; } // comment
 int AddFive( int x ) { int y ; y = AddTwo( x ) ; // comment
                        return y + 3 ; }          // comment
-

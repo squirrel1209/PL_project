@@ -7,6 +7,7 @@
 # include <cctype> 
 # include <string>
  #include <fstream>
+#include <map>
 
 using namespace std;
 typedef char String200[200];
@@ -67,6 +68,30 @@ enum Type {
   COLON      // ':'
 };
 
+map<Type, string> TypeNameMap = {
+  { INT, "int" }, {FLOAT, "float"}, {CHAR, "char"}, {BOOL, "bool"}, {STRING, "string"}, {VOID, "void"},
+  {IF, "if"}, {ELSE, "else"}, {WHILE, "while"}, {DO, "do"}, {RETURN, "return"},
+  {LPAREN, "("}, {RPAREN, ")"}, {LBRACKET, "["}, {RBRACKET, "]"},
+  {LBRACE, "{"}, {RBRACE, "}"},
+  {PLUS, "+"}, {MINUS, "-"}, {MUL, "*"}, {DIV, "/"}, {MOD, "%"}, 
+  {BIT_XOR, "^"}, {GT, ">"}, {LT, "<"}, {GE, ">="}, {LE, "<="}, {EQ, "=="}, {NEQ, "!="},
+  {BIT_AND, "&"}, {BIT_OR, "|"},
+  {ASSIGN, "="}, {NOT, "!"}, {AND, "&&"}, {OR, "||"},
+  {PE, "+="}, {ME, "-="}, {TE, "*="}, {DE, "/="}, {RE, "%="},
+  {PP, "++"}, {MM, "--"}, {RS, ">>"}, {LS, "<<"},
+  {SEMICOLON, ";"}, {COMMA, ","},
+  {QUESTION, "?"}, {COLON, ":"}
+};
+
+string toString(Type t) {
+  map<Type, string>::const_iterator it = TypeNameMap.find(t);
+  if (it != TypeNameMap.end()) {
+    return it->second;
+  } else {
+    return "[Unknown Type]";
+  }
+}
+
 enum ErrorType {
   LEXICALERROR,      // 當詞法分析器遇到一個它無法識別為任何有效符號的字符時報告的錯誤。
   SYNTACTICALERROR,  // 當語法分析器在分析符號序列時遇到一個不符合當前語法規則的符號時報告的錯誤。
@@ -80,6 +105,7 @@ struct Token {
   Type type;         // 標記類型
   int line;          // 標記所在的行數
   ErrorType error;       // 關聯的錯誤信息
+  vector<string> content;
 };
 
 string AnyToString( int num ) {
