@@ -23,6 +23,8 @@ struct Function {
   vector<string> body;
 };
 
+vector<Variable> gTempVariable;
+
 // 使用 map 來存儲函數名稱與其多行定義
 map<string, Function> functionMap;
 
@@ -39,23 +41,30 @@ map<string, Function> functionMap;
 void ListAllFunctions() {
     cout << "Listing all functions:" << endl;
     map<string, Function>::const_iterator it;
-    for (it = functionMap.begin(); it != functionMap.end(); ++it) {
+    for ( it = functionMap.begin(); it != functionMap.end(); ++it ) {
         cout << it->first << "()" << endl;
     }
 }
 
 // 列出指定函數的定義
-void ListFunction( string name) {
+void ListFunction( string name ) {
     map<string, Function>::const_iterator it = functionMap.find(name);
     if (it != functionMap.end()) {
+    	cout << "> " ;
+    	/* 
         cout << "> " << it->second.typeName << " " << name << "(";
         for (size_t i = 0; i < it->second.parameter.size(); ++i) {
             cout << it->second.parameter[i].typeName << " " << it->second.parameter[i].name;
             if (i < it->second.parameter.size() - 1) cout << ", ";
         }
+        
         cout << ")" << endl;
+        */ 
         for (size_t i = 0; i < it->second.body.size(); ++i) {
-            cout << it->second.body[i] << endl;
+            cout << it->second.body[i] ;
+            if ( it->second.body[i].compare( ";" ) == 0 || it->second.body[i].compare( "{" ) == 0 || it->second.body[i].compare( "}" ) == 0 ) cout << endl;
+            else if ( i+1 < it->second.body.size() && it->second.body[i+1].compare( "(" ) == 0 ) {}
+	  else cout << ' ';
         }
     } else {
         cout << "Function " << name << " not found." << endl;
@@ -86,7 +95,8 @@ private:
         definition( parsedResult );
       } // end if
       
-      else if ( StartExpression() || nextToken.type == SEMICOLON ) {
+      else if ( StartExpression() || nextToken.type == SEMICOLON || nextToken.type == IF ||
+                nextToken.type == WHILE || nextToken.type == DO || nextToken.type == RETURN ) {
         bool istatement = statement( parsedResult );
         if ( parsedResult.type == QUIT ) {}
         else if ( istatement ) cout << "Statement executed ...\n"; 
@@ -113,7 +123,8 @@ private:
   
   bool definition( Token &parsedResult ) {
     Type type = nextToken.type;
-    
+    vector<Variable> variable;
+    Variable temp;
     if ( nextToken.type == VOID ) {
       Match( VOID, parsedResult );
       gIdToeknName.push_back( nextToken.tokenName );
@@ -121,12 +132,17 @@ private:
       if ( Match( IDENTIFIER, parsedResult ) ) {
         parsedResult.type = VOID;
         parsedResult.tokenName = nextToken.tokenName;
+        parsedResult.content.clear(); 
         if ( function_definition_without_ID( parsedResult ) ) {
         	for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
         	  if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) 
         	    printf( "Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
         	  else printf( "New definition of %s() entered...\n", gIdToeknName[i].c_str() );
-        	  
+
+        	  temp.typeName = "void";
+        	  temp.name = "void";
+        	  variable.push_back( temp );
+        	  DefineFunction( parsedResult.tokenName, "void", variable, parsedResult.content );
         	  gsymbolTable[gIdToeknName[i]] = type;
           } // end for
           
@@ -137,24 +153,36 @@ private:
     
     else {
       bool function = false;
+      parsedResult.type = nextToken.type;
+      parsedResult.content.clear();
+      gTempVariable.clear();
+      
       Match( nextToken.type, parsedResult );
       gIdToeknName.push_back( nextToken.tokenName );
+      parsedResult.tokenName = nextToken.tokenName;
       
       if ( Match( IDENTIFIER, parsedResult ) ) {
         if ( function_definition_or_declarators( parsedResult, function ) ) {
         	for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
         		
         	  if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) {
-        	    if ( !function )
+        	    if ( !function ) {
         	      printf( "Definition of %s entered ...\n", gIdToeknName[i].c_str() );
-        	    else printf( "Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
+        	      
+              } // end if
+        	    else {
+	      DefineFunction( parsedResult.tokenName, toString(parsedResult.type), gTempVariable, parsedResult.content );
+	      printf( "Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
+              }
             } // end if
             
         	  else {
 	    if ( !function )
 	      printf( "New definition of %s entered...\n", gIdToeknName[i].c_str() );
-              else
-                printf( "New definition of %s() entered...\n", gIdToeknName[i].c_str() );
+              else {
+                DefineFunction( parsedResult.tokenName, toString(parsedResult.type), gTempVariable, parsedResult.content );
+	      printf( "New definition of %s() entered...\n", gIdToeknName[i].c_str() );
+              }
             } // end else
         	  gsymbolTable[gIdToeknName[i]] = type;
           } // end for
@@ -236,7 +264,6 @@ private:
 
     if ( nextToken.type == VOID ) {
       Match( VOID, parsedResult ); // 匹配 VOID
-      
     } // end if
 
     else if ( type_specifier() ) 
@@ -248,8 +275,9 @@ private:
   } // end function_definition_without_ID()
  
   bool formal_parameter_list( Token &parsedResult ) {
+    Variable variable;
     Type type = nextToken.type;
-
+    
     Match( nextToken.type, parsedResult ) ;
     
     if ( nextToken.type == BIT_AND ) {
@@ -258,6 +286,9 @@ private:
     
     if ( nextToken.type == IDENTIFIER ) {
       gsymbolTable[nextToken.tokenName] = type;
+      variable.typeName = toString( type );
+      variable.name = nextToken.tokenName;
+      gTempVariable.push_back( variable );
       Match( IDENTIFIER, parsedResult ); 
     } // end if  
     
@@ -323,7 +354,6 @@ private:
   } // end declaration()
 
   bool statement( Token &parsedResult ) {
- 
     if ( nextToken.type == SEMICOLON ) {
       Match( SEMICOLON, parsedResult );
       return true;
@@ -359,12 +389,12 @@ private:
       if ( !expression( parsedResult ) ) return false;
       if ( !Match( RPAREN, parsedResult ) ) return false;
       if ( !statement( parsedResult ) ) return false;
-      
+
       if ( nextToken.type == ELSE ) {
         Match( IF, parsedResult );
         if ( !statement( parsedResult ) ) return false;
       } // end if 
-      
+
       return true;
     } // end else if 
     
@@ -399,6 +429,7 @@ private:
   } // end StartExpression()
 
   bool expression( Token &parsedResult ) {
+  	
     bool expression = true; 
     if ( basic_expression( parsedResult ) ) {
 
@@ -414,18 +445,34 @@ private:
   } // end expression
 
   bool basic_expression( Token &parsedResult ) {
-
     if ( nextToken.type == IDENTIFIER ) { // undefine
       
       if ( nextToken.tokenName.compare( "cin" ) == 0 || nextToken.tokenName.compare( "cout" ) == 0 ) {
       } // end if
       
+      else if ( nextToken.tokenName.compare( "ListAllFunctions" ) == 0 ) {
+        Match( IDENTIFIER, parsedResult );
+        if ( !rest_of_Identifier_started_basic_exp( parsedResult ) ) return false;
+        ListAllFunctions();
+        return true;
+      } // end if
+      
+      else if ( nextToken.tokenName.compare( "ListFunction" ) == 0 ) {
+        Match( IDENTIFIER, parsedResult );
+        
+        if ( !rest_of_Identifier_started_basic_exp( parsedResult ) ) return false;
+        
+        ListFunction( parsedResult.tokenName ); 
+        return true;
+      } // end if      
+
       else if ( gsymbolTable.find( nextToken.tokenName ) == gsymbolTable.end() ) {
         parsedResult = nextToken;
         parsedResult.type = ERROR;
         parsedResult.error = SEMANTICERROR;
         
         if ( nextToken.tokenName.compare( "Done" ) == 0 ) {
+        	parsedResult.tokenName = nextToken.tokenName;
         	Match( IDENTIFIER, parsedResult );
         	if ( !rest_of_Identifier_started_basic_exp( parsedResult ) ) return false;
         	
@@ -463,6 +510,7 @@ private:
     } // end else if 
     
     else if ( nextToken.type == CONSTANT ) {
+      parsedResult.tokenName = nextToken.tokenName;
       return Match( CONSTANT, parsedResult ) && romce_and_romloe( parsedResult );
     } // end else if
     
@@ -473,6 +521,7 @@ private:
              Match( RPAREN, parsedResult ) &&
              romce_and_romloe( parsedResult );
     } // end else if
+    
     return false;
   } // end basic_expression()
 
@@ -499,7 +548,7 @@ private:
       
       if ( nextToken.type == RPAREN ) {
         Match( RPAREN, parsedResult );
-        if ( nextToken.type == SEMICOLON ) {
+        if ( nextToken.type == SEMICOLON && parsedResult.tokenName.compare( "Done" ) == 0 ) {
         	parsedResult.type = QUIT;
         	return true;
         } // end if
@@ -508,7 +557,7 @@ private:
       } // end if
        
       else if ( !actual_parameter_list( parsedResult ) ) return false;
-
+      
       if ( !Match( RPAREN, parsedResult ) ) return false;
     } // end if
     
