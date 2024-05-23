@@ -14,7 +14,7 @@ typedef char String200[200];
 string gtestnum ;
 
 vector<string> Read_lines() {
-  vector<string> minput_lines ;
+  vector<string> ginput_lines ;
     
   
   string line;   
@@ -25,14 +25,14 @@ vector<string> Read_lines() {
     
     if ( ch == '\n' ) {
       if ( isFirstLine ) {
-        // 如果是第一行，則重置line並更改標誌狀態，不將其添加到minput_lines
+        // 如果是第一行，則重置line並更改標誌狀態，不將其添加到ginput_lines
         gtestnum = line ;
         line.clear();
         isFirstLine = false;
       } // end if
       
       else {
-        minput_lines.push_back( line );
+        ginput_lines.push_back( line );
         line.clear();  // 清空line以用於下一行的讀取
       } // end else
     } // end if 
@@ -40,10 +40,10 @@ vector<string> Read_lines() {
 
   // 檢查最後一行是否因為文件結束而沒有換行符結尾
   if ( !line.empty() ) {
-    minput_lines.push_back( line );
+    ginput_lines.push_back( line );
   } // end if
   
-  return minput_lines;
+  return ginput_lines;
 } // end Read_lines()
 
 enum Type {
@@ -118,6 +118,7 @@ struct Token {
 
 map<string, Type> gsymbolTable;
 vector<string> gIdToeknName;
+vector<string> ginput;
 
 struct Variable {
   string typeName;
@@ -264,7 +265,6 @@ string AnyToString( char ch ) {
 
 class Tokenizer {
 private:
-  vector<string> minput;
   int mlineIndex;
   int mcolumnIndex;
   int mlastmlineIndex;
@@ -274,9 +274,6 @@ public:
     mcolumnIndex = 0;
   } // end Tokenizer()
 
-  void TokenInput( vector<string> input ) {
-    minput = input;
-  } // end TokenInput()
 
   // 處理和分析來自輸入的 tokens，賦予每個 token 相應的類型。
   vector<Token> ProcessTokens() {
@@ -631,7 +628,7 @@ public:
       return GetDelimiter( '/' ) ;
     } // end if 
     
-    if ( mlineIndex >= minput.size() ) {
+    if ( mlineIndex >= ginput.size() ) {
       return CreatToken( "\0", mlineIndex, QUIT, LEXICALERROR );
     } // end if 
         
@@ -694,7 +691,7 @@ public:
   void PreviousChar() {
     if ( mcolumnIndex == 0 && mlineIndex >= 1 ) {
       mlineIndex-- ;
-      mcolumnIndex = minput[mlineIndex].size() ;
+      mcolumnIndex = ginput[mlineIndex].size() ;
     } // end if
     
     else mcolumnIndex-- ;
@@ -707,9 +704,9 @@ public:
   
     mlastmlineIndex = mlineIndex;  
 
-    if ( mlineIndex < minput.size() ) {
-      if ( mcolumnIndex < minput[mlineIndex].size() ) {
-        char nextChar = minput[mlineIndex][mcolumnIndex++];
+    if ( mlineIndex < ginput.size() ) {
+      if ( mcolumnIndex < ginput[mlineIndex].size() ) {
+        char nextChar = ginput[mlineIndex][mcolumnIndex++];
         return nextChar; 
       } // end if
       
@@ -742,19 +739,20 @@ private:
   void User_input() {
     Token parsedResult ;
     int startLine;
-
     while ( mnextToken.type != QUIT && parsedResult.type != QUIT ) {
 
       startLine = mnextToken.line;
       parsedResult = mnextToken;
       
       if ( mnextToken.type == VOID || Type_specifier() ) {
+        cout << "abc";
         Definition( parsedResult );
       } // end if
 
       else if ( StartExpression() || mnextToken.type == SEMICOLON || mnextToken.type == IF ||
                 mnextToken.type == WHILE || mnextToken.type == DO || mnextToken.type == RETURN ||
                 mnextToken.type == ELSE ) {
+        cout << "abc";
         bool iStatement = Statement( parsedResult );
         if ( parsedResult.type == QUIT ) { }
         else if ( iStatement ) cout << "Statement executed ...\n"; 
@@ -1238,9 +1236,9 @@ private:
 
   bool Rest_of_PPMM_Identifier_started_basic_exp( Token &parsedResult ) {
     if ( mnextToken.type == LBRACKET ) {
-        Match( LBRACKET, parsedResult );
-        if ( !Expression(parsedResult) ) return false; 
-        if ( !Match( RBRACKET, parsedResult ) ) return false; 
+      Match( LBRACKET, parsedResult );
+      if ( !Expression( parsedResult ) ) return false; 
+      if ( !Match( RBRACKET, parsedResult ) ) return false; 
     } // end if
 
     return Romce_and_romloe( parsedResult );  // 解析后?表?式
@@ -1259,7 +1257,7 @@ private:
 
   bool AsSignment_operator( Token &parsedResult ) {
     if ( mnextToken.type == ASSIGN || mnextToken.type == TE || mnextToken.type == DE || 
-        mnextToken.type == RE || mnextToken.type == PE || mnextToken.type == ME) {
+         mnextToken.type == RE || mnextToken.type == PE || mnextToken.type == ME ) {
       return Match( mnextToken.type, parsedResult );
     } // end if
     
@@ -1270,13 +1268,13 @@ private:
     
     if ( !Rest_of_maybe_logical_OR_exp( parsedResult ) ) {
       return false; 
-    }
+    } // end if 
     
     if ( mnextToken.type == QUESTION ) {
-        Match( QUESTION, parsedResult );  // 消耗 '?'
-        if ( !Basic_Expression( parsedResult ) ) return false;  // 解析?件?真?的表?式
-        if ( !Match( COLON, parsedResult ) ) return false;  // 消耗 ':'
-        if ( !Basic_Expression( parsedResult ) ) return false;  // 解析?件?假?的表?式
+      Match( QUESTION, parsedResult );  // 消耗 '?'
+      if ( !Basic_Expression( parsedResult ) ) return false;  // 解析?件?真?的表?式
+      if ( !Match( COLON, parsedResult ) ) return false;  // 消耗 ':'
+      if ( !Basic_Expression( parsedResult ) ) return false;  // 解析?件?假?的表?式
     } // end if
 
 
@@ -1297,9 +1295,9 @@ private:
   bool Maybe_logical_AND_exp( Token &parsedResult ) {
     if ( !Maybe_bit_OR_exp( parsedResult ) ) return false;  // ?理第一?可能的位或表?式
 
-    while (mnextToken.type == AND) {
-        Match( AND, parsedResult );  // 消耗 '&&'
-        if ( !Maybe_bit_OR_exp( parsedResult ) ) return false;  // ?理后?的位或表?式
+    while ( mnextToken.type == AND ) {
+      Match( AND, parsedResult );  // 消耗 '&&'
+      if ( !Maybe_bit_OR_exp( parsedResult ) ) return false;  // ?理后?的位或表?式
     } // end while
 
     return true;
@@ -1309,8 +1307,8 @@ private:
     if ( !Rest_of_maybe_bit_OR_exp( parsedResult ) ) return false;  // ?理位或表?式的剩余部分
 
     while ( mnextToken.type == AND ) {
-        Match( AND, parsedResult );  // 消耗 '&&'
-        if ( !Maybe_bit_OR_exp( parsedResult ) ) return false;  // ?理后?的位或表?式
+      Match( AND, parsedResult );  // 消耗 '&&'
+      if ( !Maybe_bit_OR_exp( parsedResult ) ) return false;  // ?理后?的位或表?式
     } // end while
 
     return true;
@@ -1330,8 +1328,8 @@ private:
   bool Rest_of_maybe_bit_OR_exp( Token &parsedResult ) {
     if ( !Rest_of_maybe_bit_ex_OR_exp( parsedResult ) ) return false;
 
-    while ( mnextToken.type == BIT_OR)  {
-      Match (BIT_OR, parsedResult );
+    while ( mnextToken.type == BIT_OR )  {
+      Match( BIT_OR, parsedResult );
       if ( !Maybe_bit_ex_OR_exp( parsedResult ) ) return false;
     } // end while
 
@@ -1365,9 +1363,9 @@ private:
   bool Maybe_bit_AND_exp( Token &parsedResult ) {
     if ( !Maybe_equality_exp( parsedResult ) ) return false;
 
-    while (mnextToken.type == BIT_AND) {
-      Match(BIT_AND, parsedResult);
-      if (!Maybe_equality_exp(parsedResult)) return false;
+    while ( mnextToken.type == BIT_AND ) {
+      Match( BIT_AND, parsedResult );
+      if ( !Maybe_equality_exp( parsedResult ) ) return false;
     } // end while
 
     return true;
@@ -1398,12 +1396,12 @@ private:
   
   bool Rest_of_maybe_equality_exp( Token &parsedResult ) {
 
-    if (!Rest_of_maybe_relational_exp(parsedResult)) return false;
+    if ( !Rest_of_maybe_relational_exp( parsedResult ) ) return false;
 
-    while (mnextToken.type == EQ || mnextToken.type == NEQ) {
-        Match(mnextToken.type, parsedResult);  // 消耗 EQ 或 NEQ
-        if (!Maybe_relational_exp(parsedResult)) return false;
-    }
+    while ( mnextToken.type == EQ || mnextToken.type == NEQ ) {
+      Match( mnextToken.type, parsedResult );  // 消耗 EQ 或 NEQ
+      if ( !Maybe_relational_exp( parsedResult ) ) return false;
+    } // end while
     // cout << mnextToken.tokenName;
     return true;
   } // end Rest_of_maybe_equality_exp()
@@ -1412,7 +1410,7 @@ private:
     if ( !Maybe_shift_exp( parsedResult ) ) return false;
 
     while ( mnextToken.type == GT || mnextToken.type == LT || 
-           mnextToken.type == LE || mnextToken.type == GE) {
+            mnextToken.type == LE || mnextToken.type == GE ) {
       Match( mnextToken.type, parsedResult );  // 消耗 <, >, <=, 或 >=
       if ( !Maybe_shift_exp( parsedResult ) ) return false;
     } // end while
@@ -1422,11 +1420,12 @@ private:
 
   bool Rest_of_maybe_relational_exp( Token &parsedResult ) {
     if ( !Rest_of_maybe_shift_exp( parsedResult ) ) return false;
-    while (mnextToken.type == GT || mnextToken.type == LT || 
-           mnextToken.type == LE || mnextToken.type == GE) {
+    while ( mnextToken.type == GT || mnextToken.type == LT || 
+            mnextToken.type == LE || mnextToken.type == GE ) {
       Match( mnextToken.type, parsedResult );  // 消耗 <, >, <=, 或 >=
       if ( !Maybe_shift_exp( parsedResult ) ) return false;
     } // end while
+    
     return true;
   } // end Rest_of_maybe_relational_exp()
 
@@ -1445,8 +1444,8 @@ private:
     if ( !Rest_of_maybe_additive_exp( parsedResult ) ) return false;
 
     while ( mnextToken.type == LS || mnextToken.type == RS ) {
-        Match( mnextToken.type, parsedResult );  // 消耗 LS 或 RS
-        if ( !Maybe_additive_exp( parsedResult ) ) return false;
+      Match( mnextToken.type, parsedResult );  // 消耗 LS 或 RS
+      if ( !Maybe_additive_exp( parsedResult ) ) return false;
     } // end while
 
     // cout << mnextToken.tokenName;
@@ -1465,12 +1464,12 @@ private:
   } // end Maybe_additive_exp()
 
   bool Rest_of_maybe_additive_exp( Token &parsedResult ) {
-    if (!Rest_of_maybe_mult_exp(parsedResult)) return false;
+    if ( !Rest_of_maybe_mult_exp( parsedResult ) ) return false;
     
-    while (mnextToken.type == PLUS || mnextToken.type == MINUS) {
-        Match(mnextToken.type, parsedResult);  // 消耗 '+' 或 '-'
-        if (!Maybe_mult_exp(parsedResult)) return false;
-    }
+    while ( mnextToken.type == PLUS || mnextToken.type == MINUS ) {
+      Match( mnextToken.type, parsedResult );  // 消耗 '+' 或 '-'
+      if ( !Maybe_mult_exp( parsedResult ) ) return false;
+    } // end while
 
     return true;
   } // end Rest_of_maybe_additive_exp()
@@ -1482,10 +1481,11 @@ private:
   } // end Maybe_mult_exp()
 
   bool Rest_of_maybe_mult_exp( Token &parsedResult ) {
-    while (mnextToken.type == MUL || mnextToken.type == DIV || mnextToken.type == MOD) {
-        Match(mnextToken.type, parsedResult);  
-        if (!Unary_exp(parsedResult)) return false;
-    }
+    while ( mnextToken.type == MUL || mnextToken.type == DIV || mnextToken.type == MOD ) {
+      Match( mnextToken.type, parsedResult );  
+      if ( !Unary_exp( parsedResult ) ) return false;
+    } // end while
+    
     return true;  
   } // end Rest_of_maybe_mult_exp()
 
@@ -1495,32 +1495,35 @@ private:
         Sign( parsedResult );
       } // end while
         
-      return Signed_Unary_exp(parsedResult);
-    } // end of
+      return Signed_Unary_exp( parsedResult );
+    } // end if
      
     else if ( mnextToken.type == IDENTIFIER || mnextToken.type == CONSTANT || mnextToken.type == LPAREN ) {
-      return Unsigned_unary_exp(parsedResult);
+      return Unsigned_unary_exp( parsedResult );
     } // end else if 
     
     else if ( mnextToken.type == PP || mnextToken.type == MM ) {
       Match( mnextToken.type, parsedResult ); // 消耗 PP 或 MM
       
       if ( Match( IDENTIFIER, parsedResult ) ) {
-          if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() ) {
-              parsedResult = mnextToken;
-              parsedResult.type = ERROR;
-              parsedResult.error = SEMANTICERROR;
-              return false;
-          }  // end if 
+        if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() ) {
+          parsedResult = mnextToken;
+          parsedResult.type = ERROR;
+          parsedResult.error = SEMANTICERROR;
+
+          return false;
+        }  // end if 
         
         if ( mnextToken.type == LBRACKET ) {
           Match( LBRACKET, parsedResult ); // 消耗 '['
-          if (!Expression(parsedResult)) return false; 
-          if (!Match(RBRACKET, parsedResult)) return false; // 消耗 ']'
+          if ( !Expression( parsedResult ) ) return false; 
+          if ( !Match( RBRACKET, parsedResult ) ) return false; // 消耗 ']'
         } // end if
+
         return true;
       } // end if
-        return false;
+
+      return false;
     } // end else if
     
     return false;
@@ -1528,12 +1531,13 @@ private:
 
   bool Signed_Unary_exp( Token &parsedResult ) {
     if ( mnextToken.type == IDENTIFIER ) {
-        if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() ) {
-            parsedResult = mnextToken;
-            parsedResult.type = ERROR;
-            parsedResult.error = SEMANTICERROR;
-            return false;
-        }  // end if 
+      if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() ) {
+        parsedResult = mnextToken;
+        parsedResult.type = ERROR;
+        parsedResult.error = SEMANTICERROR;
+
+        return false;
+      }  // end if 
         
       Match( IDENTIFIER, parsedResult );
       if ( mnextToken.type == LPAREN ) {
@@ -1560,23 +1564,25 @@ private:
       return Match( CONSTANT, parsedResult );
     } // end else if 
     
-    else if (mnextToken.type == LPAREN) {
+    else if ( mnextToken.type == LPAREN ) {
       Match( LPAREN, parsedResult ); // 消耗 '('
       if ( !Expression( parsedResult ) ) return false;
-      return Match(RPAREN, parsedResult); // 消耗 ')'
+      
+      return Match( RPAREN, parsedResult ); // 消耗 ')'
     } // end else if
     
     return false;
-  }
+  }  // end Signed_Unary_exp()
 
   bool Unsigned_unary_exp( Token &parsedResult ) {
     if ( mnextToken.type == IDENTIFIER ) {
-        if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() ) {
-            parsedResult = mnextToken;
-            parsedResult.type = ERROR;
-            parsedResult.error = SEMANTICERROR;
-            return false;
-        }  // end if 
+      if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() ) {
+        parsedResult = mnextToken;
+        parsedResult.type = ERROR;
+        parsedResult.error = SEMANTICERROR;
+
+        return false;
+      }  // end if 
 
       Match( IDENTIFIER, parsedResult );
       
@@ -1606,16 +1612,16 @@ private:
       return Match( CONSTANT, parsedResult );
     } // end else if 
     
-    else if (mnextToken.type == LPAREN) {
+    else if ( mnextToken.type == LPAREN ) {
       Match( LPAREN, parsedResult ); // 消耗 '('
       
       if ( !Expression( parsedResult ) ) return false;
       
-      return Match(RPAREN, parsedResult); // 消耗 ')'
+      return Match( RPAREN, parsedResult ); // 消耗 ')'
     } // end else if
     
     return false;
-  } // end Unsigned_unary_exp
+  } // end Unsigned_unary_exp()
 
   bool Sign( Token &parsedResult ) {
     if ( mnextToken.type == PLUS || mnextToken.type == MINUS || mnextToken.type == NOT ) {
@@ -1649,12 +1655,11 @@ private:
 
 int main() {
   InitializegTypeNameMap();
-  vector<string> minput = Read_lines();
-  gtokenizer.TokenInput( minput );
+  ginput = Read_lines();
   cout << "Our-C running ..." << endl ;
   
-  // Parser parse( gtokenizer ) ;
-  // parse.Parse() ;
+  Parser parse ;
+  parse.Parse() ;
   cout << "Our-C exited ..." << endl ; 
   
 } // end main()
