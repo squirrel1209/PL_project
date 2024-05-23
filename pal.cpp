@@ -739,20 +739,18 @@ private:
   void User_input() {
     Token parsedResult ;
     int startLine;
+    
     while ( mnextToken.type != QUIT && parsedResult.type != QUIT ) {
 
       startLine = mnextToken.line;
       parsedResult = mnextToken;
-      
-      if ( mnextToken.type == VOID || Type_specifier() ) {
-        cout << "abc";
+      if ( mnextToken.type == VOID || mnextToken.type == INT ) {
         Definition( parsedResult );
       } // end if
 
       else if ( StartExpression() || mnextToken.type == SEMICOLON || mnextToken.type == IF ||
                 mnextToken.type == WHILE || mnextToken.type == DO || mnextToken.type == RETURN ||
                 mnextToken.type == ELSE ) {
-        cout << "abc";
         bool iStatement = Statement( parsedResult );
         if ( parsedResult.type == QUIT ) { }
         else if ( iStatement ) cout << "Statement executed ...\n"; 
