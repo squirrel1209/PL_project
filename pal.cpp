@@ -133,98 +133,99 @@ struct Function {
 vector<Variable> gTempVariable;
 
 // 使用 map 來存儲函數名稱與其多行定義
-map<string, Function> functionMap;
+map<string, Function> gfunctionMap;
 
-map<Type, string> TypeNameMap;
+map<Type, string> gTypeNameMap;
 
-void initializeTypeNameMap() {
-    TypeNameMap[INT] = "int";
-    TypeNameMap[FLOAT] = "float";
-    TypeNameMap[CHAR] = "char";
-    TypeNameMap[BOOL] = "bool";
-    TypeNameMap[STRING] = "string";
-    TypeNameMap[VOID] = "void";
-    TypeNameMap[IF] = "if";
-    TypeNameMap[ELSE] = "else";
-    TypeNameMap[WHILE] = "while";
-    TypeNameMap[DO] = "do";
-    TypeNameMap[RETURN] = "return";
-    TypeNameMap[LPAREN] = "(";
-    TypeNameMap[RPAREN] = ")";
-    TypeNameMap[LBRACKET] = "[";
-    TypeNameMap[RBRACKET] = "]";
-    TypeNameMap[LBRACE] = "{";
-    TypeNameMap[RBRACE] = "}";
-    TypeNameMap[PLUS] = "+";
-    TypeNameMap[MINUS] = "-";
-    TypeNameMap[MUL] = "*";
-    TypeNameMap[DIV] = "/";
-    TypeNameMap[MOD] = "%";
-    TypeNameMap[BIT_XOR] = "^";
-    TypeNameMap[GT] = ">";
-    TypeNameMap[LT] = "<";
-    TypeNameMap[GE] = ">=";
-    TypeNameMap[LE] = "<=";
-    TypeNameMap[EQ] = "==";
-    TypeNameMap[NEQ] = "!=";
-    TypeNameMap[BIT_AND] = "&";
-    TypeNameMap[BIT_OR] = "|";
-    TypeNameMap[ASSIGN] = "=";
-    TypeNameMap[NOT] = "!";
-    TypeNameMap[AND] = "&&";
-    TypeNameMap[OR] = "||";
-    TypeNameMap[PE] = "+=";
-    TypeNameMap[ME] = "-=";
-    TypeNameMap[TE] = "*=";
-    TypeNameMap[DE] = "/=";
-    TypeNameMap[RE] = "%=";
-    TypeNameMap[PP] = "++";
-    TypeNameMap[MM] = "--";
-    TypeNameMap[RS] = ">>";
-    TypeNameMap[LS] = "<<";
-    TypeNameMap[SEMICOLON] = ";";
-    TypeNameMap[COMMA] = ",";
-    TypeNameMap[QUESTION] = "?";
-    TypeNameMap[COLON] = ":";
+void InitializegTypeNameMap() {
+    gTypeNameMap[INT] = "int";
+    gTypeNameMap[FLOAT] = "float";
+    gTypeNameMap[CHAR] = "char";
+    gTypeNameMap[BOOL] = "bool";
+    gTypeNameMap[STRING] = "string";
+    gTypeNameMap[VOID] = "void";
+    gTypeNameMap[IF] = "if";
+    gTypeNameMap[ELSE] = "else";
+    gTypeNameMap[WHILE] = "while";
+    gTypeNameMap[DO] = "do";
+    gTypeNameMap[RETURN] = "return";
+    gTypeNameMap[LPAREN] = "(";
+    gTypeNameMap[RPAREN] = ")";
+    gTypeNameMap[LBRACKET] = "[";
+    gTypeNameMap[RBRACKET] = "]";
+    gTypeNameMap[LBRACE] = "{";
+    gTypeNameMap[RBRACE] = "}";
+    gTypeNameMap[PLUS] = "+";
+    gTypeNameMap[MINUS] = "-";
+    gTypeNameMap[MUL] = "*";
+    gTypeNameMap[DIV] = "/";
+    gTypeNameMap[MOD] = "%";
+    gTypeNameMap[BIT_XOR] = "^";
+    gTypeNameMap[GT] = ">";
+    gTypeNameMap[LT] = "<";
+    gTypeNameMap[GE] = ">=";
+    gTypeNameMap[LE] = "<=";
+    gTypeNameMap[EQ] = "==";
+    gTypeNameMap[NEQ] = "!=";
+    gTypeNameMap[BIT_AND] = "&";
+    gTypeNameMap[BIT_OR] = "|";
+    gTypeNameMap[ASSIGN] = "=";
+    gTypeNameMap[NOT] = "!";
+    gTypeNameMap[AND] = "&&";
+    gTypeNameMap[OR] = "||";
+    gTypeNameMap[PE] = "+=";
+    gTypeNameMap[ME] = "-=";
+    gTypeNameMap[TE] = "*=";
+    gTypeNameMap[DE] = "/=";
+    gTypeNameMap[RE] = "%=";
+    gTypeNameMap[PP] = "++";
+    gTypeNameMap[MM] = "--";
+    gTypeNameMap[RS] = ">>";
+    gTypeNameMap[LS] = "<<";
+    gTypeNameMap[SEMICOLON] = ";";
+    gTypeNameMap[COMMA] = ",";
+    gTypeNameMap[QUESTION] = "?";
+    gTypeNameMap[COLON] = ":";
 }
 
 // 函數定義，並存儲到 map 中
-  void DefineFunction( string name, string returnType, vector<Variable> params, vector<string> body) {
+  void DefineFunction( string name, string returnType, vector<Variable> params, vector<string> body ) {
     Function func;
     func.typeName = returnType;
     func.parameter = params;
     func.body = body;
-    functionMap[name] = func;
+    gfunctionMap[name] = func;
   }
 
 // 列出所有函數名稱
 void ListAllFunctions() {
     cout << "Listing all functions:" << endl;
     map<string, Function>::const_iterator it;
-    for ( it = functionMap.begin(); it != functionMap.end(); ++it ) {
+    for ( it = gfunctionMap.begin(); it != gfunctionMap.end(); ++it ) {
         cout << it->first << "()" << endl;
     }
 }
 
 // 列出指定函數的定義
 void ListFunction( string name ) {
-    map<string, Function>::const_iterator it = functionMap.find(name);
-    if (it != functionMap.end()) {
-    	cout << "> " ;
-        for (size_t i = 0; i < it->second.body.size(); ++i) {
-            cout << it->second.body[i] ;
-            if ( it->second.body[i].compare( ";" ) == 0 || it->second.body[i].compare( "{" ) == 0 || it->second.body[i].compare( "}" ) == 0 ) cout << endl;
-            else if ( i+1 < it->second.body.size() && it->second.body[i+1].compare( "(" ) == 0 ) {}
-	  else cout << ' ';
-        }
+    map<string, Function>::const_iterator it = gfunctionMap.find(name);
+    if (it != gfunctionMap.end()) {
+      cout << "> " ;
+      for (size_t i = 0; i < it->second.body.size(); ++i) {
+          cout << it->second.body[i] ;
+          if ( it->second.body[i].compare( ";" ) == 0 || it->second.body[i].compare( "{" ) == 0 ||
+               it->second.body[i].compare( "}" ) == 0 ) cout << endl;
+          else if ( i+1 < it->second.body.size() && it->second.body[i+1].compare( "(" ) == 0 ) {}
+          else cout << ' ';
+      }
     } else {
         cout << "Function " << name << " not found." << endl;
     }
 }
 
-string toString(Type t) {
-  map<Type, string>::const_iterator it = TypeNameMap.find(t);
-  if (it != TypeNameMap.end()) {
+string ToString( Type t ) {
+  map<Type, string>::const_iterator it = gTypeNameMap.find(t);
+  if (it != gTypeNameMap.end()) {
     return it->second;
   } else {
     return "[Unknown Type]";
@@ -719,32 +720,35 @@ public:
 
 class Parser {
 public:
-  explicit Parser( Tokenizer& tokenizer ) : tokenizer( tokenizer ), nextToken( tokenizer.GetNextToken() ) {}
-
+  Parser( Tokenizer& mtokenizer ) {
+    this -> mtokenizer = &mtokenizer;  // 將 mtokenizer 的地址賦給指針
+    mnextToken = this->mtokenizer->GetNextToken();
+  }
+  
   void Parse() {
     user_input();
   } // end parse() 
 
 private:
-    Tokenizer& tokenizer;
-    Token nextToken;
+    Tokenizer* mtokenizer;  // 將 mtokenizer 宣告為指針
+    Token mnextToken;
 
   void user_input() {
     Token parsedResult ;
     int startLine;
     
-    while ( nextToken.type != QUIT && parsedResult.type != QUIT ) {
-    	
-      startLine = nextToken.line;
-      parsedResult = nextToken;
+    while ( mnextToken.type != QUIT && parsedResult.type != QUIT ) {
+
+      startLine = mnextToken.line;
+      parsedResult = mnextToken;
       
-      if ( nextToken.type == VOID || type_specifier() ) {
+      if ( mnextToken.type == VOID || type_specifier() ) {
         definition( parsedResult );
       } // end if
-      
-      else if ( StartExpression() || nextToken.type == SEMICOLON || nextToken.type == IF ||
-                nextToken.type == WHILE || nextToken.type == DO || nextToken.type == RETURN ||
-	      nextToken.type == ELSE ) {
+
+      else if ( StartExpression() || mnextToken.type == SEMICOLON || mnextToken.type == IF ||
+                mnextToken.type == WHILE || mnextToken.type == DO || mnextToken.type == RETURN ||
+	      mnextToken.type == ELSE ) {
         bool istatement = statement( parsedResult );
         if ( parsedResult.type == QUIT ) {}
         else if ( istatement ) cout << "Statement executed ...\n"; 
@@ -761,7 +765,7 @@ private:
           printf( "Line %d : Undefined identifier : '%s'\n", parsedResult.line - startLine + 1, parsedResult.tokenName.c_str() ); 
         else cout << "> Error" << endl ;
         
-        while ( parsedResult.line >= nextToken.line ) nextToken = tokenizer.GetNextToken();
+        while ( parsedResult.line >= mnextToken.line ) mnextToken = mtokenizer -> GetNextToken();
       } // end if
       
     } // end while
@@ -770,16 +774,16 @@ private:
   } // end user_input()
   
   bool definition( Token &parsedResult ) {
-    Type type = nextToken.type;
+    Type type = mnextToken.type;
     vector<Variable> variable;
     Variable temp;
-    if ( nextToken.type == VOID ) {
+    if ( mnextToken.type == VOID ) {
       Match( VOID, parsedResult );
-      gIdToeknName.push_back( nextToken.tokenName );
+      gIdToeknName.push_back( mnextToken.tokenName );
       
       if ( Match( IDENTIFIER, parsedResult ) ) {
         parsedResult.type = VOID;
-        parsedResult.tokenName = nextToken.tokenName;
+        parsedResult.tokenName = mnextToken.tokenName;
         parsedResult.content.clear(); 
         if ( function_definition_without_ID( parsedResult ) ) {
         	for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
@@ -801,13 +805,13 @@ private:
     
     else {
       bool function = false;
-      parsedResult.type = nextToken.type;
+      parsedResult.type = mnextToken.type;
       parsedResult.content.clear();
       gTempVariable.clear();
       
-      Match( nextToken.type, parsedResult );
-      gIdToeknName.push_back( nextToken.tokenName );
-      parsedResult.tokenName = nextToken.tokenName;
+      Match( mnextToken.type, parsedResult );
+      gIdToeknName.push_back( mnextToken.tokenName );
+      parsedResult.tokenName = mnextToken.tokenName;
       
       if ( Match( IDENTIFIER, parsedResult ) ) {
         if ( function_definition_or_declarators( parsedResult, function ) ) {
@@ -819,7 +823,7 @@ private:
         	      
               } // end if
         	    else {
-	      DefineFunction( parsedResult.tokenName, toString(parsedResult.type), gTempVariable, parsedResult.content );
+	      DefineFunction( parsedResult.tokenName, ToString(parsedResult.type), gTempVariable, parsedResult.content );
 	      printf( "Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
               }
             } // end if
@@ -828,7 +832,7 @@ private:
 	    if ( !function )
 	      printf( "New definition of %s entered...\n", gIdToeknName[i].c_str() );
               else {
-                DefineFunction( parsedResult.tokenName, toString(parsedResult.type), gTempVariable, parsedResult.content );
+                DefineFunction( parsedResult.tokenName, ToString(parsedResult.type), gTempVariable, parsedResult.content );
 	      printf( "New definition of %s() entered...\n", gIdToeknName[i].c_str() );
               }
             } // end else
@@ -845,13 +849,13 @@ private:
   } // end definition()
   
   bool type_specifier() {
-    return nextToken.type == INT || nextToken.type == FLOAT ||
-    nextToken.type == CHAR || nextToken.type == BOOL || nextToken.type == STRING ;
+    return mnextToken.type == INT || mnextToken.type == FLOAT ||
+    mnextToken.type == CHAR || mnextToken.type == BOOL || mnextToken.type == STRING ;
   } // end type_specifier()
  
   bool function_definition_or_declarators( Token &parsedResult, bool &function ) {
     // 檢查下一個符號是否是左括號，如果是，則處理為函數定義
-    if ( nextToken.type == LPAREN ) {
+    if ( mnextToken.type == LPAREN ) {
       function = true;
       return function_definition_without_ID( parsedResult  );
     } // end if
@@ -864,7 +868,7 @@ private:
 
   bool rest_of_declarators( Token &parsedResult ) {
     // 檢查是否存在 '[' Constant ']' 結構
-    if ( nextToken.type == LBRACKET ) {
+    if ( mnextToken.type == LBRACKET ) {
       Match( LBRACKET, parsedResult );   // 匹配 '['
       
       if ( Match( CONSTANT, parsedResult ) ) 
@@ -874,11 +878,11 @@ private:
     } // end if
 
     // 處理 { ',' Identifier [ '[' Constant ']' ] } 結構
-    while ( nextToken.type == COMMA ) {
+    while ( mnextToken.type == COMMA ) {
       Match( COMMA, parsedResult );
       
-      if ( nextToken.type == IDENTIFIER ) {
-        gIdToeknName.push_back( nextToken.tokenName );
+      if ( mnextToken.type == IDENTIFIER ) {
+        gIdToeknName.push_back( mnextToken.tokenName );
         Match( IDENTIFIER, parsedResult ); // 匹配標識符
         
         // 檢查是否存在 '[' Constant ']' 結構
@@ -892,13 +896,13 @@ private:
       } // end if 
       
       else {
-        if ( nextToken.type != ERROR ) {
-          parsedResult = nextToken;
+        if ( mnextToken.type != ERROR ) {
+          parsedResult = mnextToken;
           parsedResult.type = ERROR;
           parsedResult.error = SYNTACTICALERROR;
         } // end if
         
-        else parsedResult = nextToken;
+        else parsedResult = mnextToken;
         
         return false;
       } // end else
@@ -910,7 +914,7 @@ private:
   bool function_definition_without_ID( Token &parsedResult ) {
     if ( !Match( LPAREN, parsedResult ) ) return false; 
 
-    if ( nextToken.type == VOID ) {
+    if ( mnextToken.type == VOID ) {
       Match( VOID, parsedResult ); // 匹配 VOID
     } // end if
 
@@ -924,25 +928,25 @@ private:
  
   bool formal_parameter_list( Token &parsedResult ) {
     Variable variable;
-    Type type = nextToken.type;
+    Type type = mnextToken.type;
     
-    Match( nextToken.type, parsedResult ) ;
+    Match( mnextToken.type, parsedResult ) ;
     
-    if ( nextToken.type == BIT_AND ) {
+    if ( mnextToken.type == BIT_AND ) {
       Match( BIT_AND, parsedResult ); // 匹配 '&'
     } // end if
     
-    if ( nextToken.type == IDENTIFIER ) {
-      gsymbolTable[nextToken.tokenName] = type;
-      variable.typeName = toString( type );
-      variable.name = nextToken.tokenName;
+    if ( mnextToken.type == IDENTIFIER ) {
+      gsymbolTable[mnextToken.tokenName] = type;
+      variable.typeName = ToString( type );
+      variable.name = mnextToken.tokenName;
       gTempVariable.push_back( variable );
       Match( IDENTIFIER, parsedResult ); 
     } // end if  
     
     else return false;
     
-    if ( nextToken.type == LBRACKET ) {
+    if ( mnextToken.type == LBRACKET ) {
       Match( LBRACKET, parsedResult ); // 匹配 '['
       
       if ( Match( CONSTANT, parsedResult ) ) {
@@ -953,7 +957,7 @@ private:
     } // end if
 
     bool isformal_parameter_list = true;
-    while ( nextToken.type == COMMA && isformal_parameter_list ) {
+    while ( mnextToken.type == COMMA && isformal_parameter_list ) {
       Match( COMMA, parsedResult ); // 匹配 ','
       if ( type_specifier() ) {
         isformal_parameter_list = formal_parameter_list( parsedResult );
@@ -986,10 +990,10 @@ private:
 
   bool declaration( Token &parsedResult ) {
     if ( !type_specifier() ) return false;
-    Type type = nextToken.type;
-    Match( nextToken.type, parsedResult );
+    Type type = mnextToken.type;
+    Match( mnextToken.type, parsedResult );
     
-    string tokenName = nextToken.tokenName;
+    string tokenName = mnextToken.tokenName;
       
     if ( Match( IDENTIFIER, parsedResult ) ) {
       if ( rest_of_declarators( parsedResult ) ) {
@@ -1002,7 +1006,7 @@ private:
   } // end declaration()
 
   bool statement( Token &parsedResult ) {
-    if ( nextToken.type == SEMICOLON ) {
+    if ( mnextToken.type == SEMICOLON ) {
       Match( SEMICOLON, parsedResult );
       return true;
     } // end if 
@@ -1013,9 +1017,9 @@ private:
       return true;
     } // end else if
     
-    else if ( nextToken.type == RETURN ) {
+    else if ( mnextToken.type == RETURN ) {
       Match( RETURN, parsedResult );
-      if ( nextToken.type != SEMICOLON ) {
+      if ( mnextToken.type != SEMICOLON ) {
         if ( !expression( parsedResult ) ) return false;
       } // end if
 
@@ -1026,19 +1030,19 @@ private:
       return true;
     } // end else if
     
-    else if ( nextToken.type == LBRACE ) {
+    else if ( mnextToken.type == LBRACE ) {
       if ( !compound_statement( parsedResult ) ) return false;
       return true;
     } // end if 
     
-    else if ( nextToken.type == IF ) {
+    else if ( mnextToken.type == IF ) {
       Match( IF, parsedResult );
       if ( !Match( LPAREN, parsedResult ) ) return false;
       if ( !expression( parsedResult ) ) return false;
       if ( !Match( RPAREN, parsedResult ) ) return false;
       if ( !statement( parsedResult ) ) return false;
       
-      if ( nextToken.type == ELSE ) {
+      if ( mnextToken.type == ELSE ) {
         Match( ELSE, parsedResult );
         if ( !statement( parsedResult ) ) return false;
       } // end if 
@@ -1046,7 +1050,7 @@ private:
       return true;
     } // end else if 
     
-    else if (nextToken.type == WHILE) {
+    else if (mnextToken.type == WHILE) {
       Match( WHILE, parsedResult );
       if ( !Match( LPAREN, parsedResult ) ) return false;
       if ( !expression( parsedResult ) ) return false;
@@ -1055,7 +1059,7 @@ private:
       return true;
     } // end else if
     
-    else if ( nextToken.type == DO ) {
+    else if ( mnextToken.type == DO ) {
       Match( DO, parsedResult );
       if ( !statement( parsedResult ) ) return false; 
       if ( !Match( WHILE, parsedResult ) ) return false;
@@ -1071,17 +1075,17 @@ private:
   } // end statement()
 
   bool StartStatement() {
-    if ( StartExpression() || nextToken.type == SEMICOLON || nextToken.type == IF ||
-         nextToken.type == WHILE || nextToken.type == DO || nextToken.type == RETURN ||
-         nextToken.type == ELSE ) return true;
+    if ( StartExpression() || mnextToken.type == SEMICOLON || mnextToken.type == IF ||
+         mnextToken.type == WHILE || mnextToken.type == DO || mnextToken.type == RETURN ||
+         mnextToken.type == ELSE ) return true;
 
     else return false;	
   } // end StartStatement()
 
   bool StartExpression() {
-    if ( nextToken.type == IDENTIFIER || nextToken.type == CONSTANT ||
-         nextToken.type == PP || nextToken.type == MM || nextToken.type == LPAREN ||
-         nextToken.type == PLUS || nextToken.type == MINUS || nextToken.type == NOT )
+    if ( mnextToken.type == IDENTIFIER || mnextToken.type == CONSTANT ||
+         mnextToken.type == PP || mnextToken.type == MM || mnextToken.type == LPAREN ||
+         mnextToken.type == PLUS || mnextToken.type == MINUS || mnextToken.type == NOT )
       return true;
     else return false;
   } // end StartExpression()
@@ -1090,7 +1094,7 @@ private:
     bool expression = true; 
     if ( basic_expression( parsedResult ) ) {
 
-      while ( nextToken.type == COMMA && expression ) {
+      while ( mnextToken.type == COMMA && expression ) {
         Match( COMMA, parsedResult ); 
         expression = basic_expression( parsedResult );
       } // end while
@@ -1103,19 +1107,19 @@ private:
 
   bool basic_expression( Token &parsedResult ) {
 
-    if ( nextToken.type == IDENTIFIER ) { // undefine
+    if ( mnextToken.type == IDENTIFIER ) { // undefine
       
-      if ( nextToken.tokenName.compare( "cin" ) == 0 || nextToken.tokenName.compare( "cout" ) == 0 ) {
+      if ( mnextToken.tokenName.compare( "cin" ) == 0 || mnextToken.tokenName.compare( "cout" ) == 0 ) {
       } // end if
       
-      else if ( nextToken.tokenName.compare( "ListAllFunctions" ) == 0 ) {
+      else if ( mnextToken.tokenName.compare( "ListAllFunctions" ) == 0 ) {
         Match( IDENTIFIER, parsedResult );
         if ( !rest_of_Identifier_started_basic_exp( parsedResult ) ) return false;
         ListAllFunctions();
         return true;
       } // end if
       
-      else if ( nextToken.tokenName.compare( "ListFunction" ) == 0 ) {
+      else if ( mnextToken.tokenName.compare( "ListFunction" ) == 0 ) {
         Match( IDENTIFIER, parsedResult );
         
         if ( !rest_of_Identifier_started_basic_exp( parsedResult ) ) return false;
@@ -1124,13 +1128,13 @@ private:
         return true;
       } // end if      
 
-      else if ( gsymbolTable.find( nextToken.tokenName ) == gsymbolTable.end() ) {
-        parsedResult = nextToken;
+      else if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() ) {
+        parsedResult = mnextToken;
         parsedResult.type = ERROR;
         parsedResult.error = SEMANTICERROR;
         
-        if ( nextToken.tokenName.compare( "Done" ) == 0 ) {
-        	parsedResult.tokenName = nextToken.tokenName;
+        if ( mnextToken.tokenName.compare( "Done" ) == 0 ) {
+        	parsedResult.tokenName = mnextToken.tokenName;
         	Match( IDENTIFIER, parsedResult );
         	if ( !rest_of_Identifier_started_basic_exp( parsedResult ) ) return false;
         	
@@ -1144,11 +1148,11 @@ private:
       return rest_of_Identifier_started_basic_exp( parsedResult );
     } // end if 
     
-    else if ( nextToken.type == PP || nextToken.type == MM ) {
-      if ( !Match( nextToken.type, parsedResult ) ) return false;
-      if ( nextToken.type != IDENTIFIER ) return false;
-      if ( gsymbolTable.find( nextToken.tokenName ) == gsymbolTable.end() ) {
-          parsedResult = nextToken;
+    else if ( mnextToken.type == PP || mnextToken.type == MM ) {
+      if ( !Match( mnextToken.type, parsedResult ) ) return false;
+      if ( mnextToken.type != IDENTIFIER ) return false;
+      if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() ) {
+          parsedResult = mnextToken;
           parsedResult.type = ERROR;
           parsedResult.error = SEMANTICERROR;
           return false;
@@ -1158,21 +1162,21 @@ private:
       return  rest_of_PPMM_Identifier_started_basic_exp( parsedResult );
     } // end else if 
     
-    else if ( nextToken.type == PLUS || nextToken.type == MINUS || nextToken.type == NOT ) {
+    else if ( mnextToken.type == PLUS || mnextToken.type == MINUS || mnextToken.type == NOT ) {
       sign( parsedResult );
-      while ( nextToken.type == PLUS || nextToken.type == MINUS || nextToken.type == NOT ) {
+      while ( mnextToken.type == PLUS || mnextToken.type == MINUS || mnextToken.type == NOT ) {
         sign( parsedResult ); 
       } // end while
 
       return signed_unary_exp( parsedResult ) && romce_and_romloe( parsedResult );
     } // end else if 
     
-    else if ( nextToken.type == CONSTANT ) {
-      parsedResult.tokenName = nextToken.tokenName;
+    else if ( mnextToken.type == CONSTANT ) {
+      parsedResult.tokenName = mnextToken.tokenName;
       return Match( CONSTANT, parsedResult ) && romce_and_romloe( parsedResult );
     } // end else if
     
-    else if ( nextToken.type == LPAREN ) {
+    else if ( mnextToken.type == LPAREN ) {
       if ( !Match( LPAREN, parsedResult ) ) return false;
       if ( !expression( parsedResult ) ) return false;
       if ( !Match( RPAREN, parsedResult ) ) return false;
@@ -1183,7 +1187,7 @@ private:
   } // end basic_expression()
 
   bool rest_of_Identifier_started_basic_exp( Token &parsedResult ) {
-    if ( nextToken.type == LBRACKET ) {
+    if ( mnextToken.type == LBRACKET ) {
         Match( LBRACKET, parsedResult );
         if ( !expression( parsedResult ) ) return false;
         if ( !Match( RBRACKET, parsedResult ) ) return false;
@@ -1193,19 +1197,19 @@ private:
         if ( !basic_expression( parsedResult ) ) return false;
     } // end if 
     
-    else if ( nextToken.type == PP || nextToken.type == MM ) {
-        Match( nextToken.type, parsedResult );
+    else if ( mnextToken.type == PP || mnextToken.type == MM ) {
+        Match( mnextToken.type, parsedResult );
         if ( !romce_and_romloe( parsedResult ) ) return false;
     } // end else if
     
     else romce_and_romloe( parsedResult );
     
-    if ( nextToken.type == LPAREN ) {
+    if ( mnextToken.type == LPAREN ) {
       Match( LPAREN, parsedResult );
       
-      if ( nextToken.type == RPAREN ) {
+      if ( mnextToken.type == RPAREN ) {
         Match( RPAREN, parsedResult );
-        if ( nextToken.type == SEMICOLON && parsedResult.tokenName.compare( "Done" ) == 0 ) {
+        if ( mnextToken.type == SEMICOLON && parsedResult.tokenName.compare( "Done" ) == 0 ) {
         	parsedResult.type = QUIT;
         	return true;
         } // end if
@@ -1223,7 +1227,7 @@ private:
   } // end rest_of_Identifier_started_basic_exp()
 
   bool rest_of_PPMM_Identifier_started_basic_exp( Token &parsedResult ) {
-    if ( nextToken.type == LBRACKET ) {
+    if ( mnextToken.type == LBRACKET ) {
         Match( LBRACKET, parsedResult );
         if ( !expression(parsedResult) ) return false; 
         if ( !Match( RBRACKET, parsedResult ) ) return false; 
@@ -1235,7 +1239,7 @@ private:
   bool actual_parameter_list( Token &parsedResult ) {
     if ( !basic_expression( parsedResult ) ) return false;
     
-    while ( nextToken.type == COMMA ) {
+    while ( mnextToken.type == COMMA ) {
       Match( COMMA, parsedResult );  // 消耗 ','
       if ( !basic_expression( parsedResult ) ) return false;  
     } // end while
@@ -1244,9 +1248,9 @@ private:
   } // end actual_parameter_list()
 
   bool assignment_operator( Token &parsedResult ) {
-    if ( nextToken.type == ASSIGN || nextToken.type == TE || nextToken.type == DE || 
-        nextToken.type == RE || nextToken.type == PE || nextToken.type == ME) {
-      return Match( nextToken.type, parsedResult );
+    if ( mnextToken.type == ASSIGN || mnextToken.type == TE || mnextToken.type == DE || 
+        mnextToken.type == RE || mnextToken.type == PE || mnextToken.type == ME) {
+      return Match( mnextToken.type, parsedResult );
     } // end if
     
     return false;
@@ -1258,7 +1262,7 @@ private:
       return false; 
     }
     
-    if ( nextToken.type == QUESTION ) {
+    if ( mnextToken.type == QUESTION ) {
         Match( QUESTION, parsedResult );  // 消耗 '?'
         if ( !basic_expression( parsedResult ) ) return false;  // 解析?件?真?的表?式
         if ( !Match( COLON, parsedResult ) ) return false;  // 消耗 ':'
@@ -1272,7 +1276,7 @@ private:
   bool rest_of_maybe_logical_OR_exp( Token &parsedResult ) {
     if ( !rest_of_maybe_logical_AND_exp( parsedResult ) ) return false;  // ?理??与表?式
 
-    while ( nextToken.type == OR ) {
+    while ( mnextToken.type == OR ) {
       Match( OR, parsedResult );  // 消耗 '||'
       if ( !maybe_logical_AND_exp( parsedResult ) ) return false;  // 解析??与表?式
     } // end while
@@ -1283,7 +1287,7 @@ private:
   bool maybe_logical_AND_exp( Token &parsedResult ) {
     if ( !maybe_bit_OR_exp( parsedResult ) ) return false;  // ?理第一?可能的位或表?式
 
-    while (nextToken.type == AND) {
+    while (mnextToken.type == AND) {
         Match( AND, parsedResult );  // 消耗 '&&'
         if ( !maybe_bit_OR_exp( parsedResult ) ) return false;  // ?理后?的位或表?式
     } // end while
@@ -1294,7 +1298,7 @@ private:
   bool rest_of_maybe_logical_AND_exp( Token &parsedResult ) {
     if ( !rest_of_maybe_bit_OR_exp( parsedResult ) ) return false;  // ?理位或表?式的剩余部分
 
-    while ( nextToken.type == AND ) {
+    while ( mnextToken.type == AND ) {
         Match( AND, parsedResult );  // 消耗 '&&'
         if ( !maybe_bit_OR_exp( parsedResult ) ) return false;  // ?理后?的位或表?式
     } // end while
@@ -1305,7 +1309,7 @@ private:
   bool maybe_bit_OR_exp( Token &parsedResult ) {
     if ( !maybe_bit_ex_OR_exp( parsedResult ) ) return false;  // ?理第一?可能的位异或表?式
 
-    while ( nextToken.type == BIT_OR ) {
+    while ( mnextToken.type == BIT_OR ) {
       Match( BIT_OR, parsedResult );  // 消耗 '|'
       if ( !maybe_bit_ex_OR_exp( parsedResult ) ) return false;  // ?理后?的位异或表?式
     } // end while
@@ -1316,19 +1320,19 @@ private:
   bool rest_of_maybe_bit_OR_exp(Token &parsedResult) {
     if ( !rest_of_maybe_bit_ex_OR_exp( parsedResult ) ) return false;
 
-    while ( nextToken.type == BIT_OR)  {
+    while ( mnextToken.type == BIT_OR)  {
       Match (BIT_OR, parsedResult );
       if ( !maybe_bit_ex_OR_exp( parsedResult ) ) return false;
     } // end while
 
-    //cout << nextToken.tokenName;
+    //cout << mnextToken.tokenName;
     return true;
   } // end rest_of_maybe_bit_OR_exp()
 
   bool maybe_bit_ex_OR_exp( Token &parsedResult ) {
     if ( !maybe_bit_AND_exp( parsedResult ) ) return false;
 
-    while ( nextToken.type == BIT_XOR ) {
+    while ( mnextToken.type == BIT_XOR ) {
       Match( BIT_XOR, parsedResult );
       if ( !maybe_bit_AND_exp( parsedResult ) ) return false;
     } // end while 
@@ -1339,19 +1343,19 @@ private:
   bool rest_of_maybe_bit_ex_OR_exp(Token &parsedResult) {
     if ( !rest_of_maybe_bit_AND_exp( parsedResult ) ) return false;
 
-    while ( nextToken.type == BIT_XOR ) {
+    while ( mnextToken.type == BIT_XOR ) {
       Match( BIT_XOR, parsedResult );
       if ( !maybe_bit_AND_exp( parsedResult ) ) return false;
     } // end while
 
-    //cout << nextToken.tokenName;
+    //cout << mnextToken.tokenName;
     return true;
   } // end rest_of_maybe_bit_ex_OR_exp()
   
   bool maybe_bit_AND_exp( Token &parsedResult ) {
     if ( !maybe_equality_exp( parsedResult ) ) return false;
 
-    while (nextToken.type == BIT_AND) {
+    while (mnextToken.type == BIT_AND) {
       Match(BIT_AND, parsedResult);
       if (!maybe_equality_exp(parsedResult)) return false;
     } // end while
@@ -1362,20 +1366,20 @@ private:
   bool rest_of_maybe_bit_AND_exp( Token &parsedResult ) {
     if ( !rest_of_maybe_equality_exp( parsedResult ) ) return false;
 
-    while ( nextToken.type == BIT_AND ) {
+    while ( mnextToken.type == BIT_AND ) {
       Match( BIT_AND, parsedResult );
       if ( !maybe_equality_exp( parsedResult ) ) return false;
     } // end while
 
-    //cout << nextToken.tokenName;
+    //cout << mnextToken.tokenName;
     return true;
   } // end rest_of_maybe_bit_AND_exp()
   
   bool maybe_equality_exp(Token &parsedResult) {
     if ( !maybe_relational_exp( parsedResult ) ) return false;
 
-    while ( nextToken.type == EQ || nextToken.type == NEQ ) {
-      Match( nextToken.type, parsedResult );  // 消耗 EQ 或 NEQ
+    while ( mnextToken.type == EQ || mnextToken.type == NEQ ) {
+      Match( mnextToken.type, parsedResult );  // 消耗 EQ 或 NEQ
       if ( !maybe_relational_exp( parsedResult ) ) return false;
     } // end while 
 
@@ -1386,20 +1390,20 @@ private:
   	
     if (!rest_of_maybe_relational_exp(parsedResult)) return false;
 
-    while (nextToken.type == EQ || nextToken.type == NEQ) {
-        Match(nextToken.type, parsedResult);  // 消耗 EQ 或 NEQ
+    while (mnextToken.type == EQ || mnextToken.type == NEQ) {
+        Match(mnextToken.type, parsedResult);  // 消耗 EQ 或 NEQ
         if (!maybe_relational_exp(parsedResult)) return false;
     }
-    //cout << nextToken.tokenName;
+    //cout << mnextToken.tokenName;
     return true;
   } // end rest_of_maybe_equality_exp()
 
   bool maybe_relational_exp(Token &parsedResult) {
     if ( !maybe_shift_exp( parsedResult ) ) return false;
 
-    while ( nextToken.type == GT || nextToken.type == LT || 
-           nextToken.type == LE || nextToken.type == GE) {
-      Match( nextToken.type, parsedResult );  // 消耗 <, >, <=, 或 >=
+    while ( mnextToken.type == GT || mnextToken.type == LT || 
+           mnextToken.type == LE || mnextToken.type == GE) {
+      Match( mnextToken.type, parsedResult );  // 消耗 <, >, <=, 或 >=
       if ( !maybe_shift_exp( parsedResult ) ) return false;
     } // end while
 
@@ -1408,9 +1412,9 @@ private:
 
   bool rest_of_maybe_relational_exp( Token &parsedResult ) {
     if ( !rest_of_maybe_shift_exp( parsedResult ) ) return false;
-    while (nextToken.type == GT || nextToken.type == LT || 
-           nextToken.type == LE || nextToken.type == GE) {
-      Match( nextToken.type, parsedResult );  // 消耗 <, >, <=, 或 >=
+    while (mnextToken.type == GT || mnextToken.type == LT || 
+           mnextToken.type == LE || mnextToken.type == GE) {
+      Match( mnextToken.type, parsedResult );  // 消耗 <, >, <=, 或 >=
       if ( !maybe_shift_exp( parsedResult ) ) return false;
     } // end while
     return true;
@@ -1419,8 +1423,8 @@ private:
   bool maybe_shift_exp( Token &parsedResult ) {
     if ( !maybe_additive_exp( parsedResult ) ) return false;
 
-    while ( nextToken.type == LS || nextToken.type == RS ) {
-      Match( nextToken.type, parsedResult );  // 消耗 << 或 >>
+    while ( mnextToken.type == LS || mnextToken.type == RS ) {
+      Match( mnextToken.type, parsedResult );  // 消耗 << 或 >>
       if ( !maybe_additive_exp( parsedResult ) ) return false;
     } // end while
 
@@ -1430,20 +1434,20 @@ private:
   bool rest_of_maybe_shift_exp( Token &parsedResult ) {
     if ( !rest_of_maybe_additive_exp( parsedResult ) ) return false;
 
-    while ( nextToken.type == LS || nextToken.type == RS ) {
-        Match( nextToken.type, parsedResult );  // 消耗 LS 或 RS
+    while ( mnextToken.type == LS || mnextToken.type == RS ) {
+        Match( mnextToken.type, parsedResult );  // 消耗 LS 或 RS
         if ( !maybe_additive_exp( parsedResult ) ) return false;
     } // end while
 
-    //cout << nextToken.tokenName;
+    //cout << mnextToken.tokenName;
     return true;
   } // end rest_of_maybe_shift_exp()
 
   bool maybe_additive_exp( Token &parsedResult ) {
     if ( !maybe_mult_exp( parsedResult ) ) return false;
 
-    while ( nextToken.type == PLUS || nextToken.type == MINUS ) {
-      Match( nextToken.type, parsedResult );  // 消耗 '+' 或 '-'
+    while ( mnextToken.type == PLUS || mnextToken.type == MINUS ) {
+      Match( mnextToken.type, parsedResult );  // 消耗 '+' 或 '-'
       if ( !maybe_mult_exp( parsedResult ) ) return false;
     } // end while
 
@@ -1453,8 +1457,8 @@ private:
   bool rest_of_maybe_additive_exp(Token &parsedResult) {
     if (!rest_of_maybe_mult_exp(parsedResult)) return false;
     
-    while (nextToken.type == PLUS || nextToken.type == MINUS) {
-        Match(nextToken.type, parsedResult);  // 消耗 '+' 或 '-'
+    while (mnextToken.type == PLUS || mnextToken.type == MINUS) {
+        Match(mnextToken.type, parsedResult);  // 消耗 '+' 或 '-'
         if (!maybe_mult_exp(parsedResult)) return false;
     }
 
@@ -1462,44 +1466,44 @@ private:
   } // end rest_of_maybe_additive_exp()
 
   bool maybe_mult_exp( Token &parsedResult ) {
-    // cout << nextToken.tokenName << endl;
+    // cout << mnextToken.tokenName << endl;
     if ( !unary_exp( parsedResult ) ) return false;
     return rest_of_maybe_mult_exp( parsedResult );  
   } // end maybe_mult_exp()
 
   bool rest_of_maybe_mult_exp(Token &parsedResult) {
-    while (nextToken.type == MUL || nextToken.type == DIV || nextToken.type == MOD) {
-        Match(nextToken.type, parsedResult);  
+    while (mnextToken.type == MUL || mnextToken.type == DIV || mnextToken.type == MOD) {
+        Match(mnextToken.type, parsedResult);  
         if (!unary_exp(parsedResult)) return false;
     }
     return true;  
   } // end rest_of_maybe_mult_exp()
 
   bool unary_exp( Token &parsedResult ) {
-    if ( nextToken.type == PLUS || nextToken.type == MINUS || nextToken.type == NOT ) {
-      while ( nextToken.type == PLUS || nextToken.type == MINUS || nextToken.type == NOT ) {
+    if ( mnextToken.type == PLUS || mnextToken.type == MINUS || mnextToken.type == NOT ) {
+      while ( mnextToken.type == PLUS || mnextToken.type == MINUS || mnextToken.type == NOT ) {
         sign( parsedResult );
       } // end while
         
       return signed_unary_exp(parsedResult);
     } // end of
      
-    else if ( nextToken.type == IDENTIFIER || nextToken.type == CONSTANT || nextToken.type == LPAREN ) {
+    else if ( mnextToken.type == IDENTIFIER || mnextToken.type == CONSTANT || mnextToken.type == LPAREN ) {
       return unsigned_unary_exp(parsedResult);
     } // end else if 
     
-    else if ( nextToken.type == PP || nextToken.type == MM ) {
-      Match( nextToken.type, parsedResult ); // 消耗 PP 或 MM
+    else if ( mnextToken.type == PP || mnextToken.type == MM ) {
+      Match( mnextToken.type, parsedResult ); // 消耗 PP 或 MM
       
       if ( Match( IDENTIFIER, parsedResult ) ) {
-          if ( gsymbolTable.find( nextToken.tokenName ) == gsymbolTable.end() ) {
-              parsedResult = nextToken;
+          if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() ) {
+              parsedResult = mnextToken;
               parsedResult.type = ERROR;
               parsedResult.error = SEMANTICERROR;
               return false;
           }  // end if 
         
-        if ( nextToken.type == LBRACKET ) {
+        if ( mnextToken.type == LBRACKET ) {
           Match( LBRACKET, parsedResult ); // 消耗 '['
           if (!expression(parsedResult)) return false; 
           if (!Match(RBRACKET, parsedResult)) return false; // 消耗 ']'
@@ -1513,26 +1517,26 @@ private:
   } // end unary_exp()
 
   bool signed_unary_exp( Token &parsedResult ) {
-    if ( nextToken.type == IDENTIFIER ) {
-        if ( gsymbolTable.find( nextToken.tokenName ) == gsymbolTable.end() ) {
-            parsedResult = nextToken;
+    if ( mnextToken.type == IDENTIFIER ) {
+        if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() ) {
+            parsedResult = mnextToken;
             parsedResult.type = ERROR;
             parsedResult.error = SEMANTICERROR;
             return false;
         }  // end if 
         
       Match( IDENTIFIER, parsedResult );
-      if ( nextToken.type == LPAREN ) {
+      if ( mnextToken.type == LPAREN ) {
         Match( LPAREN, parsedResult ); 
         
-        if ( nextToken.type != RPAREN ) {
+        if ( mnextToken.type != RPAREN ) {
           if ( !actual_parameter_list( parsedResult ) ) return false;
         } // end if
          
         if ( !Match( RPAREN, parsedResult ) ) return false; // 消耗 ')'
       } // end if
       
-      else if ( nextToken.type == LBRACKET ) {
+      else if ( mnextToken.type == LBRACKET ) {
         Match( LBRACKET, parsedResult );
         
         if ( !expression( parsedResult ) ) return false;
@@ -1542,11 +1546,11 @@ private:
       return true;
     } // end if 
     
-    else if ( nextToken.type == CONSTANT ) {
+    else if ( mnextToken.type == CONSTANT ) {
       return Match( CONSTANT, parsedResult );
     } // end else if 
     
-    else if (nextToken.type == LPAREN) {
+    else if (mnextToken.type == LPAREN) {
       Match( LPAREN, parsedResult ); // 消耗 '('
       if ( !expression( parsedResult ) ) return false;
       return Match(RPAREN, parsedResult); // 消耗 ')'
@@ -1556,9 +1560,9 @@ private:
   }
 
   bool unsigned_unary_exp( Token &parsedResult ) {
-    if ( nextToken.type == IDENTIFIER ) {
-        if ( gsymbolTable.find( nextToken.tokenName ) == gsymbolTable.end() ) {
-            parsedResult = nextToken;
+    if ( mnextToken.type == IDENTIFIER ) {
+        if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() ) {
+            parsedResult = mnextToken;
             parsedResult.type = ERROR;
             parsedResult.error = SEMANTICERROR;
             return false;
@@ -1566,33 +1570,33 @@ private:
 
       Match( IDENTIFIER, parsedResult );
       
-      if ( nextToken.type == LPAREN ) {
+      if ( mnextToken.type == LPAREN ) {
         Match( LPAREN, parsedResult ); 
-        if ( nextToken.type != RPAREN ) {
+        if ( mnextToken.type != RPAREN ) {
           if ( !actual_parameter_list( parsedResult ) ) return false;
         } // end if
  
         if ( !Match( RPAREN, parsedResult ) ) return false; // 消耗 ')'
       } // end if
       
-      else if ( nextToken.type == LBRACKET ) {
+      else if ( mnextToken.type == LBRACKET ) {
         Match( LBRACKET, parsedResult );
         
         if ( !expression( parsedResult ) ) return false;
         if ( !Match( RBRACKET, parsedResult ) ) return false; // 消耗 ']'
-        if ( nextToken.type == PP || nextToken.type == MM ) {
-          Match( nextToken.type, parsedResult );
+        if ( mnextToken.type == PP || mnextToken.type == MM ) {
+          Match( mnextToken.type, parsedResult );
         } // end if
       } // end else if
     
       return true;
     } // end if 
     
-    else if ( nextToken.type == CONSTANT ) {
+    else if ( mnextToken.type == CONSTANT ) {
       return Match( CONSTANT, parsedResult );
     } // end else if 
     
-    else if (nextToken.type == LPAREN) {
+    else if (mnextToken.type == LPAREN) {
       Match( LPAREN, parsedResult ); // 消耗 '('
       
       if ( !expression( parsedResult ) ) return false;
@@ -1604,29 +1608,29 @@ private:
   } // end unsigned_unary_exp
 
   bool sign( Token &parsedResult ) {
-    if ( nextToken.type == PLUS || nextToken.type == MINUS || nextToken.type == NOT ) {
-      return Match( nextToken.type, parsedResult );
+    if ( mnextToken.type == PLUS || mnextToken.type == MINUS || mnextToken.type == NOT ) {
+      return Match( mnextToken.type, parsedResult );
     } // end if
     
     return false;
   } // end sign()
 
   bool Match( Type expected, Token &parsedResult ) {
-    if ( nextToken.type == expected ) {
-      parsedResult.content.push_back( nextToken.tokenName );
-      nextToken = tokenizer.GetNextToken();
+    if ( mnextToken.type == expected ) {
+      parsedResult.content.push_back( mnextToken.tokenName );
+      mnextToken = mtokenizer -> GetNextToken();
       return true;
     } // end if 
     
     else {
-      if ( nextToken.type != ERROR ) {
-        parsedResult = nextToken;
+      if ( mnextToken.type != ERROR ) {
+        parsedResult = mnextToken;
         parsedResult.type = ERROR;
         parsedResult.error = SYNTACTICALERROR;
       } // end if
         
-      else parsedResult = nextToken;
-      nextToken = tokenizer.GetNextToken();
+      else parsedResult = mnextToken;
+      mnextToken = mtokenizer -> GetNextToken();
       return false;
     } // end else
   } // end Match()
@@ -1635,13 +1639,13 @@ private:
 
 
 int main() {
-  initializeTypeNameMap();
+  InitializegTypeNameMap();
   vector<string> minput = Read_lines();
-  Tokenizer tokenizer( minput );
+  Tokenizer mtokenizer( minput );
 
   cout << "Our-C running ..." << endl ;
   
-  // Parser parse( tokenizer ) ;
+  // Parser parse( mtokenizer ) ;
   // parse.Parse() ;
   cout << "Our-C exited ..." << endl ; 
   
