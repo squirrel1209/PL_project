@@ -51,15 +51,6 @@ void ListFunction( string name ) {
     map<string, Function>::const_iterator it = functionMap.find(name);
     if (it != functionMap.end()) {
     	cout << "> " ;
-    	/* 
-        cout << "> " << it->second.typeName << " " << name << "(";
-        for (size_t i = 0; i < it->second.parameter.size(); ++i) {
-            cout << it->second.parameter[i].typeName << " " << it->second.parameter[i].name;
-            if (i < it->second.parameter.size() - 1) cout << ", ";
-        }
-        
-        cout << ")" << endl;
-        */ 
         for (size_t i = 0; i < it->second.body.size(); ++i) {
             cout << it->second.body[i] ;
             if ( it->second.body[i].compare( ";" ) == 0 || it->second.body[i].compare( "{" ) == 0 || it->second.body[i].compare( "}" ) == 0 ) cout << endl;
@@ -88,6 +79,7 @@ private:
     int startLine;
     
     while ( nextToken.type != QUIT && parsedResult.type != QUIT ) {
+    	
       startLine = nextToken.line;
       parsedResult = nextToken;
       
@@ -96,7 +88,8 @@ private:
       } // end if
       
       else if ( StartExpression() || nextToken.type == SEMICOLON || nextToken.type == IF ||
-                nextToken.type == WHILE || nextToken.type == DO || nextToken.type == RETURN ) {
+                nextToken.type == WHILE || nextToken.type == DO || nextToken.type == RETURN ||
+	      nextToken.type == ELSE ) {
         bool istatement = statement( parsedResult );
         if ( parsedResult.type == QUIT ) {}
         else if ( istatement ) cout << "Statement executed ...\n"; 
@@ -320,18 +313,18 @@ private:
   bool compound_statement( Token &parsedResult ) {
     bool iscompound_statement = false;
     if ( !Match( LBRACE, parsedResult ) ) return false;
-      iscompound_statement = statement( parsedResult );
-    
-    if ( iscompound_statement == false )
-      iscompound_statement = declaration( parsedResult );
+      iscompound_statement = StartStatement();
+      if ( iscompound_statement ) iscompound_statement = statement( parsedResult );
+      else iscompound_statement = declaration( parsedResult );
+
     
     while ( iscompound_statement ) {
-      iscompound_statement = statement( parsedResult );
-    
-      if ( iscompound_statement == false )
-        iscompound_statement = declaration( parsedResult );
+      iscompound_statement = StartStatement();
+      if ( iscompound_statement ) iscompound_statement = statement( parsedResult );
+      else iscompound_statement = declaration( parsedResult );
     } // end while
 
+    
     if ( !Match( RBRACE, parsedResult ) ) return false;
     return true;
   } // end  compound_statement()
@@ -389,12 +382,12 @@ private:
       if ( !expression( parsedResult ) ) return false;
       if ( !Match( RPAREN, parsedResult ) ) return false;
       if ( !statement( parsedResult ) ) return false;
-
+      
       if ( nextToken.type == ELSE ) {
-        Match( IF, parsedResult );
+        Match( ELSE, parsedResult );
         if ( !statement( parsedResult ) ) return false;
       } // end if 
-
+      
       return true;
     } // end else if 
     
@@ -404,6 +397,7 @@ private:
       if ( !expression( parsedResult ) ) return false;
       if ( !Match( RPAREN, parsedResult ) ) return false;
       if ( !statement( parsedResult ) ) return false; 
+      return true;
     } // end else if
     
     else if ( nextToken.type == DO ) {
@@ -417,8 +411,17 @@ private:
       return true;
     } // end else if
 
+    else Match( ERROR, parsedResult );
     return false;
   } // end statement()
+
+  bool StartStatement() {
+    if ( StartExpression() || nextToken.type == SEMICOLON || nextToken.type == IF ||
+         nextToken.type == WHILE || nextToken.type == DO || nextToken.type == RETURN ||
+         nextToken.type == ELSE ) return true;
+
+    else return false;	
+  } // end StartStatement()
 
   bool StartExpression() {
     if ( nextToken.type == IDENTIFIER || nextToken.type == CONSTANT ||
@@ -429,7 +432,6 @@ private:
   } // end StartExpression()
 
   bool expression( Token &parsedResult ) {
-  	
     bool expression = true; 
     if ( basic_expression( parsedResult ) ) {
 
@@ -445,6 +447,7 @@ private:
   } // end expression
 
   bool basic_expression( Token &parsedResult ) {
+
     if ( nextToken.type == IDENTIFIER ) { // undefine
       
       if ( nextToken.tokenName.compare( "cin" ) == 0 || nextToken.tokenName.compare( "cout" ) == 0 ) {
@@ -482,8 +485,8 @@ private:
         return false;
       }  // end if 
       
-      return Match( IDENTIFIER, parsedResult )
-      && rest_of_Identifier_started_basic_exp( parsedResult );
+      if ( !Match( IDENTIFIER, parsedResult ) ) return false;
+      return rest_of_Identifier_started_basic_exp( parsedResult );
     } // end if 
     
     else if ( nextToken.type == PP || nextToken.type == MM ) {
@@ -515,11 +518,10 @@ private:
     } // end else if
     
     else if ( nextToken.type == LPAREN ) {
-
-      return Match( LPAREN, parsedResult ) &&
-             expression( parsedResult ) &&
-             Match( RPAREN, parsedResult ) &&
-             romce_and_romloe( parsedResult );
+      if ( !Match( LPAREN, parsedResult ) ) return false;
+      if ( !expression( parsedResult ) ) return false;
+      if ( !Match( RPAREN, parsedResult ) ) return false;
+      return romce_and_romloe( parsedResult );
     } // end else if
     
     return false;
@@ -559,6 +561,7 @@ private:
       else if ( !actual_parameter_list( parsedResult ) ) return false;
       
       if ( !Match( RPAREN, parsedResult ) ) return false;
+      return romce_and_romloe( parsedResult );
     } // end if
     
     return true;
@@ -567,8 +570,8 @@ private:
   bool rest_of_PPMM_Identifier_started_basic_exp( Token &parsedResult ) {
     if ( nextToken.type == LBRACKET ) {
         Match( LBRACKET, parsedResult );
-        if ( !expression(parsedResult) ) return false;  // 解析表?式
-        if ( !Match( RBRACKET, parsedResult ) ) return false;  // 消耗 ']'
+        if ( !expression(parsedResult) ) return false; 
+        if ( !Match( RBRACKET, parsedResult ) ) return false; 
     } // end if
 
     return romce_and_romloe( parsedResult );  // 解析后?表?式
@@ -597,7 +600,7 @@ private:
   bool romce_and_romloe( Token &parsedResult ) {
     
     if ( !rest_of_maybe_logical_OR_exp( parsedResult ) ) {
-      return false;  // ?理??或表?式
+      return false; 
     }
     
     if ( nextToken.type == QUESTION ) {
@@ -750,13 +753,11 @@ private:
 
   bool rest_of_maybe_relational_exp( Token &parsedResult ) {
     if ( !rest_of_maybe_shift_exp( parsedResult ) ) return false;
-
     while (nextToken.type == GT || nextToken.type == LT || 
            nextToken.type == LE || nextToken.type == GE) {
       Match( nextToken.type, parsedResult );  // 消耗 <, >, <=, 或 >=
       if ( !maybe_shift_exp( parsedResult ) ) return false;
     } // end while
-    // cout << nextToken.tokenName;
     return true;
   } // end rest_of_maybe_relational_exp()
 
