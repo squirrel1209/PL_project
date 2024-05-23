@@ -135,20 +135,58 @@ vector<Variable> gTempVariable;
 // 使用 map 來存儲函數名稱與其多行定義
 map<string, Function> functionMap;
 
-map<Type, string> TypeNameMap = {
-  { INT, "int" }, {FLOAT, "float"}, {CHAR, "char"}, {BOOL, "bool"}, {STRING, "string"}, {VOID, "void"},
-  {IF, "if"}, {ELSE, "else"}, {WHILE, "while"}, {DO, "do"}, {RETURN, "return"},
-  {LPAREN, "("}, {RPAREN, ")"}, {LBRACKET, "["}, {RBRACKET, "]"},
-  {LBRACE, "{"}, {RBRACE, "}"},
-  {PLUS, "+"}, {MINUS, "-"}, {MUL, "*"}, {DIV, "/"}, {MOD, "%"}, 
-  {BIT_XOR, "^"}, {GT, ">"}, {LT, "<"}, {GE, ">="}, {LE, "<="}, {EQ, "=="}, {NEQ, "!="},
-  {BIT_AND, "&"}, {BIT_OR, "|"},
-  {ASSIGN, "="}, {NOT, "!"}, {AND, "&&"}, {OR, "||"},
-  {PE, "+="}, {ME, "-="}, {TE, "*="}, {DE, "/="}, {RE, "%="},
-  {PP, "++"}, {MM, "--"}, {RS, ">>"}, {LS, "<<"},
-  {SEMICOLON, ";"}, {COMMA, ","},
-  {QUESTION, "?"}, {COLON, ":"}
-};
+map<Type, string> TypeNameMap;
+
+void initializeTypeNameMap() {
+    TypeNameMap[INT] = "int";
+    TypeNameMap[FLOAT] = "float";
+    TypeNameMap[CHAR] = "char";
+    TypeNameMap[BOOL] = "bool";
+    TypeNameMap[STRING] = "string";
+    TypeNameMap[VOID] = "void";
+    TypeNameMap[IF] = "if";
+    TypeNameMap[ELSE] = "else";
+    TypeNameMap[WHILE] = "while";
+    TypeNameMap[DO] = "do";
+    TypeNameMap[RETURN] = "return";
+    TypeNameMap[LPAREN] = "(";
+    TypeNameMap[RPAREN] = ")";
+    TypeNameMap[LBRACKET] = "[";
+    TypeNameMap[RBRACKET] = "]";
+    TypeNameMap[LBRACE] = "{";
+    TypeNameMap[RBRACE] = "}";
+    TypeNameMap[PLUS] = "+";
+    TypeNameMap[MINUS] = "-";
+    TypeNameMap[MUL] = "*";
+    TypeNameMap[DIV] = "/";
+    TypeNameMap[MOD] = "%";
+    TypeNameMap[BIT_XOR] = "^";
+    TypeNameMap[GT] = ">";
+    TypeNameMap[LT] = "<";
+    TypeNameMap[GE] = ">=";
+    TypeNameMap[LE] = "<=";
+    TypeNameMap[EQ] = "==";
+    TypeNameMap[NEQ] = "!=";
+    TypeNameMap[BIT_AND] = "&";
+    TypeNameMap[BIT_OR] = "|";
+    TypeNameMap[ASSIGN] = "=";
+    TypeNameMap[NOT] = "!";
+    TypeNameMap[AND] = "&&";
+    TypeNameMap[OR] = "||";
+    TypeNameMap[PE] = "+=";
+    TypeNameMap[ME] = "-=";
+    TypeNameMap[TE] = "*=";
+    TypeNameMap[DE] = "/=";
+    TypeNameMap[RE] = "%=";
+    TypeNameMap[PP] = "++";
+    TypeNameMap[MM] = "--";
+    TypeNameMap[RS] = ">>";
+    TypeNameMap[LS] = "<<";
+    TypeNameMap[SEMICOLON] = ";";
+    TypeNameMap[COMMA] = ",";
+    TypeNameMap[QUESTION] = "?";
+    TypeNameMap[COLON] = ":";
+}
 
 // 函數定義，並存儲到 map 中
   void DefineFunction( string name, string returnType, vector<Variable> params, vector<string> body) {
@@ -1597,6 +1635,7 @@ private:
 
 
 int main() {
+  initializeTypeNameMap();
   vector<string> minput = Read_lines();
   Tokenizer tokenizer( minput );
 

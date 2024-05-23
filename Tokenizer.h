@@ -67,7 +67,7 @@ enum Type {
   QUESTION,  // '?'
   COLON      // ':'
 };
-
+/* 
 map<Type, string> TypeNameMap = {
   { INT, "int" }, {FLOAT, "float"}, {CHAR, "char"}, {BOOL, "bool"}, {STRING, "string"}, {VOID, "void"},
   {IF, "if"}, {ELSE, "else"}, {WHILE, "while"}, {DO, "do"}, {RETURN, "return"},
@@ -91,7 +91,7 @@ string toString(Type t) {
     return "[Unknown Type]";
   }
 }
-
+*/ 
 enum ErrorType {
   LEXICALERROR,      // 當詞法分析器遇到一個它無法識別為任何有效符號的字符時報告的錯誤。
   SYNTACTICALERROR,  // 當語法分析器在分析符號序列時遇到一個不符合當前語法規則的符號時報告的錯誤。
