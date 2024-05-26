@@ -7,7 +7,6 @@
 # include <map>
 # include <cmath>
 
-using namespace std;
 
 using namespace std;
 typedef char String200[200];
@@ -117,6 +116,7 @@ struct Token {
 };
 
 map<string, Type> gsymbolTable;
+map<string, Type> gLocalsymbolTable;
 vector<string> gIdToeknName;
 vector<string> ginput;
 
@@ -738,22 +738,22 @@ private:
 
   void User_input() {
     Token parsedResult ;
+    parsedResult = mnextToken;
     int startLine;
-    
     while ( mnextToken.type != QUIT && parsedResult.type != QUIT ) {
 
       startLine = mnextToken.line;
       parsedResult = mnextToken;
-      if ( mnextToken.type == VOID || mnextToken.type == INT ) {
+      if ( mnextToken.type == VOID || Type_specifier() ) {
         Definition( parsedResult );
       } // end if
 
       else if ( StartExpression() || mnextToken.type == SEMICOLON || mnextToken.type == IF ||
                 mnextToken.type == WHILE || mnextToken.type == DO || mnextToken.type == RETURN ||
-                mnextToken.type == ELSE ) {
+                mnextToken.type == ELSE  || mnextToken.type == LBRACE ) {
         bool iStatement = Statement( parsedResult );
         if ( parsedResult.type == QUIT ) { }
-        else if ( iStatement ) cout << "Statement executed ...\n"; 
+        else if ( iStatement ) cout << "> Statement executed ...\n"; 
       } // end else if
 
       if ( parsedResult.type == ERROR ) {
@@ -792,9 +792,9 @@ private:
         parsedResult.content.clear(); 
         if ( Function_definition_without_ID( parsedResult ) ) {
           for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
-            if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) 
-              printf( "Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
-            else printf( "New Definition of %s() entered...\n", gIdToeknName[i].c_str() );
+            if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end()  ) 
+              printf( "> Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
+            else printf( "> New definition of %s() entered ...\n", gIdToeknName[i].c_str() );
 
             temp.typeName = "void";
             temp.name = "void";
@@ -813,7 +813,7 @@ private:
       parsedResult.type = mnextToken.type;
       parsedResult.content.clear();
       gTempVariable.clear();
-      
+
       Match( mnextToken.type, parsedResult );
       gIdToeknName.push_back( mnextToken.tokenName );
       parsedResult.tokenName = mnextToken.tokenName;
@@ -823,22 +823,22 @@ private:
           for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
             if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) {
               if ( !function ) {
-                printf( "Definition of %s entered ...\n", gIdToeknName[i].c_str() );
+                printf( "> Definition of %s entered ...\n", gIdToeknName[i].c_str() );
               } // end if
               else {
                 DefineFunction( parsedResult.tokenName, ToString( parsedResult.type ), 
                                 gTempVariable, parsedResult.content );
-                printf( "Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
+                printf( "> Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
               } // end else
             } // end if
 
             else {
               if ( !function )
-                printf( "New Definition of %s entered...\n", gIdToeknName[i].c_str() );
+                printf( "> New definition of %s entered ...\n", gIdToeknName[i].c_str() );
               else {
                 DefineFunction( parsedResult.tokenName, ToString( parsedResult.type ), 
                                 gTempVariable, parsedResult.content );
-                printf( "New Definition of %s() entered...\n", gIdToeknName[i].c_str() );
+                printf( "> New definition of %s() entered ...\n", gIdToeknName[i].c_str() );
               } // end else
             } // end else
 
@@ -982,7 +982,7 @@ private:
     if ( isCompound_Statement ) isCompound_Statement = Statement( parsedResult );
     else isCompound_Statement = Declaration( parsedResult );
 
-    
+
     while ( isCompound_Statement ) {
       isCompound_Statement = StartStatement();
       if ( isCompound_Statement ) isCompound_Statement = Statement( parsedResult );
@@ -991,6 +991,7 @@ private:
 
     
     if ( !Match( RBRACE, parsedResult ) ) return false;
+
     return true;
   } // end Compound_Statement()
 
@@ -1003,7 +1004,7 @@ private:
       
     if ( Match( IDENTIFIER, parsedResult ) ) {
       if ( Rest_of_declarators( parsedResult ) ) {
-        gsymbolTable[tokenName] = type;
+        gLocalsymbolTable[tokenName] = type;
         return true;
       } // end if
     }  // end if
@@ -1037,6 +1038,7 @@ private:
     } // end else if
     
     else if ( mnextToken.type == LBRACE ) {
+      gLocalsymbolTable.clear();
       if ( !Compound_Statement( parsedResult ) ) return false;
       return true;
     } // end if 
@@ -1083,7 +1085,7 @@ private:
   bool StartStatement() {
     if ( StartExpression() || mnextToken.type == SEMICOLON || mnextToken.type == IF ||
          mnextToken.type == WHILE || mnextToken.type == DO || mnextToken.type == RETURN ||
-         mnextToken.type == ELSE ) return true;
+         mnextToken.type == ELSE || mnextToken.type == LBRACE ) return true;
 
     else return false;
   } // end StartStatement()
@@ -1134,7 +1136,8 @@ private:
         return true;
       } // end if      
 
-      else if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() ) {
+      else if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() && 
+                gLocalsymbolTable.find( mnextToken.tokenName ) == gLocalsymbolTable.end() ) {
         parsedResult = mnextToken;
         parsedResult.type = ERROR;
         parsedResult.error = SEMANTICERROR;
@@ -1157,7 +1160,8 @@ private:
     else if ( mnextToken.type == PP || mnextToken.type == MM ) {
       if ( !Match( mnextToken.type, parsedResult ) ) return false;
       if ( mnextToken.type != IDENTIFIER ) return false;
-      if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() ) {
+      if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() && 
+           gLocalsymbolTable.find( mnextToken.tokenName ) == gLocalsymbolTable.end() ) {
         parsedResult = mnextToken;
         parsedResult.type = ERROR;
         parsedResult.error = SEMANTICERROR;
@@ -1504,7 +1508,8 @@ private:
       Match( mnextToken.type, parsedResult ); // ®ø¯Ó PP ©Î MM
       
       if ( Match( IDENTIFIER, parsedResult ) ) {
-        if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() ) {
+        if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() &&
+             gLocalsymbolTable.find( mnextToken.tokenName ) == gLocalsymbolTable.end() ) {
           parsedResult = mnextToken;
           parsedResult.type = ERROR;
           parsedResult.error = SEMANTICERROR;
@@ -1529,7 +1534,8 @@ private:
 
   bool Signed_Unary_exp( Token &parsedResult ) {
     if ( mnextToken.type == IDENTIFIER ) {
-      if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() ) {
+      if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() &&
+           gLocalsymbolTable.find( mnextToken.tokenName ) == gLocalsymbolTable.end() ) {
         parsedResult = mnextToken;
         parsedResult.type = ERROR;
         parsedResult.error = SEMANTICERROR;
@@ -1574,7 +1580,8 @@ private:
 
   bool Unsigned_unary_exp( Token &parsedResult ) {
     if ( mnextToken.type == IDENTIFIER ) {
-      if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() ) {
+      if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() &&
+           gLocalsymbolTable.find( mnextToken.tokenName ) == gLocalsymbolTable.end() ) {
         parsedResult = mnextToken;
         parsedResult.type = ERROR;
         parsedResult.error = SEMANTICERROR;
@@ -1658,6 +1665,6 @@ int main() {
   
   Parser parse ;
   parse.Parse() ;
-  cout << "Our-C exited ..." << endl ; 
+  cout << "> Our-C exited ..." << endl ; 
   
 } // end main()

@@ -9,10 +9,11 @@
  #include <fstream>
 #include <map>
 
+
 using namespace std;
 typedef char String200[200];
+string gtestnum ;
 
-// 定義不同類型的標記或符號
 enum Type {
   QUIT,
   ERROR,
@@ -75,7 +76,6 @@ enum ErrorType {
   OTHERERROR         // 表示其他錯誤
 };
 
-// 定義標記結構體，包含標記名稱、類型、所在行數和錯誤信息
 struct Token {
   string tokenName;  // 標記名稱
   Type type;         // 標記類型
@@ -84,27 +84,29 @@ struct Token {
   vector<string> content;
 };
 
+map<string, Type> gsymbolTable;
+vector<string> gIdToeknName;
+vector<string> ginput;
+
+
 string AnyToString( int num ) {
   String200 buffer;        
   sprintf( buffer, "%d", num );  
   return string( buffer );     
 } // end AnyToString()
 
-// 定義一個函數，將浮點數（float）轉換為字符串。
 string AnyToString( float num ) {
   String200 buffer;        
   sprintf( buffer, "%f", num );
   return string( buffer );     
 } // end AnyToString()
 
-// 定義一個函數，將雙精度浮點數（double）轉換為字符串。
 string AnyToString( double num ) {
   String200 buffer;        
   sprintf( buffer, "%f", num );
   return string( buffer );     
 } // end AnyToString()
 
-// 定義一個函數，將字符轉換為字符串。
 string AnyToString( char ch ) {
   String200 buffer;        
   buffer[0] = ch;          
@@ -112,18 +114,18 @@ string AnyToString( char ch ) {
   return string( buffer );     
 } // end AnyToString()
 
+
 class Tokenizer {
 private:
-  vector<string> minput;
   int mlineIndex;
   int mcolumnIndex;
   int mlastmlineIndex;
 public:
-  Tokenizer( vector<string> input ) {
-    minput = input;
+  Tokenizer() {
     mlineIndex = 0;
     mcolumnIndex = 0;
   } // end Tokenizer()
+
 
   // 處理和分析來自輸入的 tokens，賦予每個 token 相應的類型。
   vector<Token> ProcessTokens() {
@@ -190,7 +192,7 @@ public:
     } // end else if
 
     return ERROR;
-  } // end GetKeywordType
+  } // end GetKeywordType() 
 
   Token GetIdentOrKeyword( char nextChar ) {
     string id = "";
@@ -205,9 +207,9 @@ public:
     
     // 檢查是否為關鍵字
     if ( id.compare( "int" ) == 0 || id.compare( "float" ) == 0 || id.compare( "char" ) == 0 || 
-      id.compare( "bool" ) == 0 || id.compare( "string" ) == 0 || id.compare( "void" ) == 0 || 
-      id.compare( "if" ) == 0 || id.compare( "else" ) == 0 || id.compare( "while" ) == 0 || 
-      id.compare( "do" ) == 0 || id.compare( "return" ) == 0) {
+         id.compare( "bool" ) == 0 || id.compare( "string" ) == 0 || id.compare( "void" ) == 0 || 
+         id.compare( "if" ) == 0 || id.compare( "else" ) == 0 || id.compare( "while" ) == 0 || 
+         id.compare( "do" ) == 0 || id.compare( "return" ) == 0 ) {
 
       return CreatToken( id, mlineIndex, GetKeywordType( id ), LEXICALERROR );
     } // end if
@@ -215,7 +217,7 @@ public:
     else {
       return CreatToken( id, mlineIndex, IDENTIFIER, LEXICALERROR );
     } // end else 
-  } // end GetIdentOrKeyword
+  } // end GetIdentOrKeyword() 
 
   // 檢查給定的字符串是否是一個有效的數字（整數或浮點數）。
   Token GetNUM( char nextChar ) {
@@ -232,7 +234,7 @@ public:
         } // end if
         
         else if ( hasDot && !hasDigit ) { // Error 
-        	return CreatToken( ".", mlineIndex, ERROR, LEXICALERROR );
+          return CreatToken( ".", mlineIndex, ERROR, LEXICALERROR );
         } // end else if
         
         hasDot = true;
@@ -478,7 +480,7 @@ public:
       return GetDelimiter( '/' ) ;
     } // end if 
     
-    if ( mlineIndex >= minput.size() ) {
+    if ( mlineIndex >= ginput.size() ) {
       return CreatToken( "\0", mlineIndex, QUIT, LEXICALERROR );
     } // end if 
         
@@ -502,7 +504,9 @@ public:
         nextChar = GetNextChar();
       } // end while
       
-      if ( nextChar == '\0' ) return CreatToken( "string missing terminating '\"", mlineIndex, ERROR, SYNTACTICALERROR );
+      if ( nextChar == '\0' ) 
+        return CreatToken( "string missing terminating '\"", mlineIndex, ERROR, SYNTACTICALERROR );
+
       return CreatToken( str, mlineIndex, CONSTANT, LEXICALERROR );
     } // end else if
     
@@ -539,7 +543,7 @@ public:
   void PreviousChar() {
     if ( mcolumnIndex == 0 && mlineIndex >= 1 ) {
       mlineIndex-- ;
-      mcolumnIndex = minput[mlineIndex].size() ;
+      mcolumnIndex = ginput[mlineIndex].size() ;
     } // end if
     
     else mcolumnIndex-- ;
@@ -552,9 +556,9 @@ public:
   
     mlastmlineIndex = mlineIndex;  
 
-    if ( mlineIndex < minput.size() ) {
-      if ( mcolumnIndex < minput[mlineIndex].size() ) {
-        char nextChar = minput[mlineIndex][mcolumnIndex++];
+    if ( mlineIndex < ginput.size() ) {
+      if ( mcolumnIndex < ginput[mlineIndex].size() ) {
+        char nextChar = ginput[mlineIndex][mcolumnIndex++];
         return nextChar; 
       } // end if
       
@@ -569,4 +573,5 @@ public:
   } // end GetNextChar()
 };
 
+Tokenizer gtokenizer;
 #endif

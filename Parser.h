@@ -9,13 +9,12 @@
 #include <map>
 #include "Tokenizer.h"
 
-map<string, Type> gsymbolTable;
-vector<string> gIdToeknName;
 
 struct Variable {
   string typeName;
   string name;
 };
+
 
 struct Function {
   string typeName;
@@ -26,41 +25,109 @@ struct Function {
 vector<Variable> gTempVariable;
 
 // ㄏノ map ㄓ纗ㄧ计嘿籔ㄤ︽﹚竡
-map<string, Function> functionMap;
+map<string, Function> gfunctionMap;
+
+map<Type, string> gTypeNameMap;
+
+void InitializegTypeNameMap() {
+  gTypeNameMap[INT] = "int";
+  gTypeNameMap[FLOAT] = "float";
+  gTypeNameMap[CHAR] = "char";
+  gTypeNameMap[BOOL] = "bool";
+  gTypeNameMap[STRING] = "string";
+  gTypeNameMap[VOID] = "void";
+  gTypeNameMap[IF] = "if";
+  gTypeNameMap[ELSE] = "else";
+  gTypeNameMap[WHILE] = "while";
+  gTypeNameMap[DO] = "do";
+  gTypeNameMap[RETURN] = "return";
+  gTypeNameMap[LPAREN] = "("; 
+  gTypeNameMap[RPAREN] = ")";
+  gTypeNameMap[LBRACKET] = "[";
+  gTypeNameMap[RBRACKET] = "]";
+  gTypeNameMap[LBRACE] = "{";
+  gTypeNameMap[RBRACE] = "}";
+  gTypeNameMap[PLUS] = "+";
+  gTypeNameMap[MINUS] = "-";
+  gTypeNameMap[MUL] = "*";
+  gTypeNameMap[DIV] = "/";
+  gTypeNameMap[MOD] = "%";
+  gTypeNameMap[BIT_XOR] = "^";
+  gTypeNameMap[GT] = ">";
+  gTypeNameMap[LT] = "<";
+  gTypeNameMap[GE] = ">=";
+  gTypeNameMap[LE] = "<=";
+  gTypeNameMap[EQ] = "==";
+  gTypeNameMap[NEQ] = "!=";
+  gTypeNameMap[BIT_AND] = "&";
+  gTypeNameMap[BIT_OR] = "|";
+  gTypeNameMap[ASSIGN] = "=";
+  gTypeNameMap[NOT] = "!";
+  gTypeNameMap[AND] = "&&";
+  gTypeNameMap[OR] = "||";
+  gTypeNameMap[PE] = "+=";
+  gTypeNameMap[ME] = "-=";
+  gTypeNameMap[TE] = "*=";
+  gTypeNameMap[DE] = "/=";
+  gTypeNameMap[RE] = "%=";
+  gTypeNameMap[PP] = "++";
+  gTypeNameMap[MM] = "--";
+  gTypeNameMap[RS] = ">>";
+  gTypeNameMap[LS] = "<<";
+  gTypeNameMap[SEMICOLON] = ";";
+  gTypeNameMap[COMMA] = ",";
+  gTypeNameMap[QUESTION] = "?";
+  gTypeNameMap[COLON] = ":";
+} // end InitializegTypeNameMap()
 
 // ㄧ计﹚竡纗 map い
-  void DefineFunction( string name, string returnType, vector<Variable> params, vector<string> body) {
-    Function func;
-    func.typeName = returnType;
-    func.parameter = params;
-    func.body = body;
-    functionMap[name] = func;
-  }
+void DefineFunction( string name, string returnType, vector<Variable> params, vector<string> body ) {
+  Function func;
+  func.typeName = returnType;
+  func.parameter = params;
+  func.body = body;
+  gfunctionMap[name] = func;
+} // end DefineFunction()
 
 // ┮Τㄧ计嘿
 void ListAllFunctions() {
-    cout << "Listing all functions:" << endl;
-    map<string, Function>::const_iterator it;
-    for ( it = functionMap.begin(); it != functionMap.end(); ++it ) {
-        cout << it->first << "()" << endl;
-    }
-}
+  cout << "Listing all functions:" << endl;
+  map<string, Function>::iterator it;
+  for ( it = gfunctionMap.begin() ; it != gfunctionMap.end() ; ++it ) {
+    cout << it->first << "()" << endl;
+  } // end for 
+} // end ListAllFunctions()
 
 // ﹚ㄧ计﹚竡
 void ListFunction( string name ) {
-    map<string, Function>::const_iterator it = functionMap.find(name);
-    if (it != functionMap.end()) {
-    	cout << "> " ;
-        for (size_t i = 0; i < it->second.body.size(); ++i) {
-            cout << it->second.body[i] ;
-            if ( it->second.body[i].compare( ";" ) == 0 || it->second.body[i].compare( "{" ) == 0 || it->second.body[i].compare( "}" ) == 0 ) cout << endl;
-            else if ( i+1 < it->second.body.size() && it->second.body[i+1].compare( "(" ) == 0 ) {}
-	  else cout << ' ';
-        }
-    } else {
-        cout << "Function " << name << " not found." << endl;
-    }
-}
+  map<string, Function>::iterator it = gfunctionMap.find( name );
+  if ( it != gfunctionMap.end() ) {
+    cout << "> " ;
+    for ( size_t i = 0 ; i < it -> second.body.size() ; ++i ) {
+      cout << it -> second.body[i] ;
+      if ( it -> second.body[i].compare( ";" ) == 0 || it -> second.body[i].compare( "{" ) == 0 ||
+           it -> second.body[i].compare( "}" ) == 0 ) cout << endl;
+      else if ( i+1 < it -> second.body.size() && it -> second.body[i+1].compare( "(" ) == 0 ) { }
+      else cout << ' ';
+    } // end for
+  } // end if 
+    
+  else {
+    cout << "Function " << name << " not found." << endl;
+  } // end else
+} // end ListFunction()
+
+string ToString( Type t ) {
+  map<Type, string>::iterator it = gTypeNameMap.find( t );
+  if ( it != gTypeNameMap.end() ) {
+    return it->second;
+  } // end if
+  
+  else {
+    return "[Unknown Type]";
+  } // end else
+} // end ToString()
+
 
 class Parser {
 public:
@@ -77,13 +144,12 @@ private:
 
   void User_input() {
     Token parsedResult ;
+    parsedResult = mnextToken;
     int startLine;
-
     while ( mnextToken.type != QUIT && parsedResult.type != QUIT ) {
 
       startLine = mnextToken.line;
       parsedResult = mnextToken;
-      
       if ( mnextToken.type == VOID || Type_specifier() ) {
         Definition( parsedResult );
       } // end if
@@ -133,8 +199,8 @@ private:
         if ( Function_definition_without_ID( parsedResult ) ) {
           for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
             if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) 
-              printf( "Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
-            else printf( "New Definition of %s() entered...\n", gIdToeknName[i].c_str() );
+              printf( "> Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
+            else printf( "> New Definition of %s() entered...\n", gIdToeknName[i].c_str() );
 
             temp.typeName = "void";
             temp.name = "void";
@@ -153,7 +219,7 @@ private:
       parsedResult.type = mnextToken.type;
       parsedResult.content.clear();
       gTempVariable.clear();
-      
+
       Match( mnextToken.type, parsedResult );
       gIdToeknName.push_back( mnextToken.tokenName );
       parsedResult.tokenName = mnextToken.tokenName;
@@ -163,22 +229,22 @@ private:
           for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
             if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) {
               if ( !function ) {
-                printf( "Definition of %s entered ...\n", gIdToeknName[i].c_str() );
+                printf( "> Definition of %s entered ...\n", gIdToeknName[i].c_str() );
               } // end if
               else {
                 DefineFunction( parsedResult.tokenName, ToString( parsedResult.type ), 
                                 gTempVariable, parsedResult.content );
-                printf( "Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
+                printf( "> Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
               } // end else
             } // end if
 
             else {
               if ( !function )
-                printf( "New Definition of %s entered...\n", gIdToeknName[i].c_str() );
+                printf( "> New Definition of %s entered...\n", gIdToeknName[i].c_str() );
               else {
                 DefineFunction( parsedResult.tokenName, ToString( parsedResult.type ), 
                                 gTempVariable, parsedResult.content );
-                printf( "New Definition of %s() entered...\n", gIdToeknName[i].c_str() );
+                printf( "> New Definition of %s() entered...\n", gIdToeknName[i].c_str() );
               } // end else
             } // end else
 
@@ -331,6 +397,7 @@ private:
 
     
     if ( !Match( RBRACE, parsedResult ) ) return false;
+    cout << mnextToken.tokenName;
     return true;
   } // end Compound_Statement()
 

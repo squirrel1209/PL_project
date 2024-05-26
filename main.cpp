@@ -30,7 +30,8 @@ vector<string> read_lines_from_file( string filename ) {
 
 int main() {
   vector<string> input = read_lines_from_file("input.txt");
-  Tokenizer tokenizer(input);
+  InitializegTypeNameMap();
+
   /*
   vector<Token> tokenGroup = tokenizer.ProcessTokens() ;
     for ( int i = 0 ; i < tokenGroup.size() ; i++ ) {
@@ -42,8 +43,8 @@ int main() {
   */
   cout << "Our-C running ..." << endl ;
   
-  Parser parse( tokenizer ) ;
+  Parser parse ;
   parse.Parse() ;
-  cout << "Our-C exited ..." << endl ; 
+  cout << "> Our-C exited ..." << endl ; 
   
 } // end main()
