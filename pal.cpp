@@ -758,15 +758,15 @@ private:
 
       if ( parsedResult.type == ERROR ) {
         if ( parsedResult.error == LEXICALERROR )
-          printf( "Line %d : unrecognized token with first char : '%s'\n", 
+          printf( "> Line %d : unrecognized token with first char : '%s'\n", 
                   parsedResult.line - startLine + 1, parsedResult.tokenName.c_str() );
 
         else if ( parsedResult.error == SYNTACTICALERROR )
-          printf( "Line %d : Unexpected token : '%s'\n", 
+          printf( "> Line %d : unexpected token : '%s'\n", 
                   parsedResult.line - startLine + 1, parsedResult.tokenName.c_str() );
 
         else if ( parsedResult.error == SEMANTICERROR )
-          printf( "Line %d : Undefined identifier : '%s'\n", 
+          printf( "> Line %d : undefined identifier : '%s'\n", 
                   parsedResult.line - startLine + 1, parsedResult.tokenName.c_str() ); 
         else cout << "> Error" << endl ;
         
@@ -1644,13 +1644,17 @@ private:
     } // end if 
     
     else {
-      if ( mnextToken.type != ERROR ) {
+      if ( parsedResult.type == ERROR ) {    } // end if
+
+      else if ( mnextToken.type != ERROR ) {
+        
         parsedResult = mnextToken;
         parsedResult.type = ERROR;
         parsedResult.error = SYNTACTICALERROR;
-      } // end if
+      } // end else if
         
       else parsedResult = mnextToken;
+
       mnextToken = gtokenizer.GetNextToken();
       return false;
     } // end else

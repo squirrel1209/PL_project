@@ -750,7 +750,6 @@ public:
 
 Tokenizer gtokenizer;
 
-
 class Parser {
 public:
   Parser() {
@@ -786,15 +785,15 @@ private:
 
       if ( parsedResult.type == ERROR ) {
         if ( parsedResult.error == LEXICALERROR )
-          printf( "Line %d : unrecognized token with first char : '%s'\n", 
+          printf( "> Line %d : unrecognized token with first char : '%s'\n", 
                   parsedResult.line - startLine + 1, parsedResult.tokenName.c_str() );
 
         else if ( parsedResult.error == SYNTACTICALERROR )
-          printf( "Line %d : Unexpected token : '%s'\n", 
+          printf( "> Line %d : unexpected token : '%s'\n", 
                   parsedResult.line - startLine + 1, parsedResult.tokenName.c_str() );
 
         else if ( parsedResult.error == SEMANTICERROR )
-          printf( "Line %d : Undefined identifier : '%s'\n", 
+          printf( "> Line %d : undefined identifier : '%s'\n", 
                   parsedResult.line - startLine + 1, parsedResult.tokenName.c_str() ); 
         else cout << "> Error" << endl ;
         
@@ -822,7 +821,7 @@ private:
           for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
             if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end()  ) 
               printf( "> Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
-            else printf( "> New Definition of %s() entered...\n", gIdToeknName[i].c_str() );
+            else printf( "> New definition of %s() entered ...\n", gIdToeknName[i].c_str() );
 
             temp.typeName = "void";
             temp.name = "void";
@@ -862,11 +861,11 @@ private:
 
             else {
               if ( !function )
-                printf( "> New Definition of %s entered...\n", gIdToeknName[i].c_str() );
+                printf( "> New definition of %s entered ...\n", gIdToeknName[i].c_str() );
               else {
                 DefineFunction( parsedResult.tokenName, ToString( parsedResult.type ), 
                                 gTempVariable, parsedResult.content );
-                printf( "> New Definition of %s() entered...\n", gIdToeknName[i].c_str() );
+                printf( "> New definition of %s() entered ...\n", gIdToeknName[i].c_str() );
               } // end else
             } // end else
 
@@ -1189,7 +1188,7 @@ private:
       if ( !Match( mnextToken.type, parsedResult ) ) return false;
       if ( mnextToken.type != IDENTIFIER ) return false;
       if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() && 
-           gLocalsymbolTable.find( mnextToken.tokenName ) == gLocalsymbolTable.end()) {
+           gLocalsymbolTable.find( mnextToken.tokenName ) == gLocalsymbolTable.end() ) {
         parsedResult = mnextToken;
         parsedResult.type = ERROR;
         parsedResult.error = SEMANTICERROR;
@@ -1610,6 +1609,7 @@ private:
     if ( mnextToken.type == IDENTIFIER ) {
       if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() &&
            gLocalsymbolTable.find( mnextToken.tokenName ) == gLocalsymbolTable.end() ) {
+
         parsedResult = mnextToken;
         parsedResult.type = ERROR;
         parsedResult.error = SEMANTICERROR;
@@ -1672,13 +1672,17 @@ private:
     } // end if 
     
     else {
-      if ( mnextToken.type != ERROR ) {
+      if ( parsedResult.type == ERROR ) {    } // end if
+    	
+      else if ( mnextToken.type != ERROR ) {
+        
         parsedResult = mnextToken;
         parsedResult.type = ERROR;
         parsedResult.error = SYNTACTICALERROR;
-      } // end if
+      } // end else if
         
       else parsedResult = mnextToken;
+
       mnextToken = gtokenizer.GetNextToken();
       return false;
     } // end else
