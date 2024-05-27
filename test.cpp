@@ -141,6 +141,7 @@ vector<string> ginput;
 struct Variable {
   string typeName;
   string name;
+  vector<string> body;
 };
 
 struct Function {
@@ -153,7 +154,7 @@ vector<Variable> gTempVariable;
 
 // 使用 map 來存儲函數名稱與其多行定義
 map<string, Function> gfunctionMap;
-
+map<string, Variable> gvariableMap;
 map<Type, string> gTypeNameMap;
 
 void InitializegTypeNameMap() {
@@ -216,14 +217,28 @@ void DefineFunction( string name, string returnType, vector<Variable> params, ve
   gfunctionMap[name] = func;
 } // end DefineFunction()
 
+void DefineVariable( string name, string returnType, vector<string> body ) {
+  Variable var;
+  var.name = name;
+  var.typeName = returnType;
+  var.body = body;
+  gvariableMap[name] = var;
+} // end DefineVariable
+
 // 列出所有函數名稱
 void ListAllFunctions() {
-  cout << "Listing all functions:" << endl;
   map<string, Function>::iterator it;
   for ( it = gfunctionMap.begin() ; it != gfunctionMap.end() ; ++it ) {
     cout << it->first << "()" << endl;
   } // end for 
 } // end ListAllFunctions()
+
+void ListAllVariables() {
+  map<string, Variable>::iterator it;
+  for ( it = gvariableMap.begin() ; it != gvariableMap.end() ; ++it ) {
+    cout << it->first << endl;
+  } // end for 
+} // end ListAllVariables()
 
 // 列出指定函數的定義
 void ListFunction( string name ) {
@@ -243,6 +258,33 @@ void ListFunction( string name ) {
     cout << "Function " << name << " not found." << endl;
   } // end else
 } // end ListFunction()
+
+void ListVariable( string name ) {
+  bool isfind = false;
+
+  map<string, Variable>::iterator it = gvariableMap.find( name );
+  if ( it != gvariableMap.end() ) {
+    if ( it -> second.body[1].compare( name ) == 0 ) isfind = true;
+    cout << it -> second.typeName << " " << it -> second.name;
+    
+    for ( size_t i = 2 ; i < it -> second.body.size() ; ++i ) {
+      if ( it -> second.body[i].compare( "," ) == 0 ||
+           it -> second.body[i].compare( ";" ) == 0 ) isfind = false;
+      if ( isfind && it -> second.body[i].compare( "[" ) == 0 ) {
+        cout << "abc";
+        cout << it -> second.body[i] ;
+      } // end if
+      
+      else if ( isfind ) cout << " " << it -> second.body[i] ;
+    } // end for 
+
+    cout << " ;" << endl;
+  } // end if 
+    
+  else {
+    cout << "Variable " << name << " not found." << endl;
+  } // end else
+} // end ListVariable()
 
 void RemoveKeyFromMap( map<string, Type>& symbolTable, string keyToRemove ) {
     // 搜尋鍵
@@ -768,7 +810,7 @@ private:
     parsedResult = mnextToken;
     int startLine;
     while ( mnextToken.type != QUIT && parsedResult.type != QUIT ) {
-
+      cout << "> " ;
       startLine = mnextToken.line;
       parsedResult = mnextToken;
       if ( mnextToken.type == VOID || Type_specifier() ) {
@@ -780,22 +822,22 @@ private:
                 mnextToken.type == ELSE  || mnextToken.type == LBRACE ) {
         bool iStatement = Statement( parsedResult );
         if ( parsedResult.type == QUIT ) { }
-        else if ( iStatement ) cout << "> Statement executed ...\n"; 
+        else if ( iStatement ) cout << "Statement executed ...\n"; 
       } // end else if
 
       if ( parsedResult.type == ERROR ) {
         if ( parsedResult.error == LEXICALERROR )
-          printf( "> Line %d : unrecognized token with first char : '%s'\n", 
+          printf( "Line %d : unrecognized token with first char : '%s'\n", 
                   parsedResult.line - startLine + 1, parsedResult.tokenName.c_str() );
 
         else if ( parsedResult.error == SYNTACTICALERROR )
-          printf( "> Line %d : unexpected token : '%s'\n", 
+          printf( "Line %d : unexpected token : '%s'\n", 
                   parsedResult.line - startLine + 1, parsedResult.tokenName.c_str() );
 
         else if ( parsedResult.error == SEMANTICERROR )
-          printf( "> Line %d : undefined identifier : '%s'\n", 
+          printf( "Line %d : undefined identifier : '%s'\n", 
                   parsedResult.line - startLine + 1, parsedResult.tokenName.c_str() ); 
-        else cout << "> Error" << endl ;
+        else cout << "Error" << endl ;
         
         while ( parsedResult.line >= mnextToken.line ) mnextToken = gtokenizer.GetNextToken();
       } // end if
@@ -820,8 +862,8 @@ private:
         if ( Function_definition_without_ID( parsedResult ) ) {
           for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
             if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end()  ) 
-              printf( "> Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
-            else printf( "> New definition of %s() entered ...\n", gIdToeknName[i].c_str() );
+              printf( "Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
+            else printf( "New definition of %s() entered ...\n", gIdToeknName[i].c_str() );
 
             temp.typeName = "void";
             temp.name = "void";
@@ -834,7 +876,7 @@ private:
         } // end if
       } // end if
     } // end if
-    
+
     else {
       bool function = false;
       parsedResult.type = mnextToken.type;
@@ -846,26 +888,31 @@ private:
       parsedResult.tokenName = mnextToken.tokenName;
       
       if ( Match( IDENTIFIER, parsedResult ) ) {
+      	
         if ( Function_definition_or_declarators( parsedResult, function ) ) {
           for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
             if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) {
               if ( !function ) {
-                printf( "> Definition of %s entered ...\n", gIdToeknName[i].c_str() );
+                
+                DefineVariable( gIdToeknName[i], ToString( parsedResult.type ), parsedResult.content ); 
+                printf( "Definition of %s entered ...\n", gIdToeknName[i].c_str() );
               } // end if
               else {
                 DefineFunction( parsedResult.tokenName, ToString( parsedResult.type ), 
                                 gTempVariable, parsedResult.content );
-                printf( "> Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
+                printf( "Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
               } // end else
             } // end if
 
             else {
-              if ( !function )
-                printf( "> New definition of %s entered ...\n", gIdToeknName[i].c_str() );
+              if ( !function ) {
+                DefineVariable( gIdToeknName[i], ToString( parsedResult.type ), parsedResult.content ); 
+                printf( "New definition of %s entered ...\n", gIdToeknName[i].c_str() );
+              } // end if
               else {
                 DefineFunction( parsedResult.tokenName, ToString( parsedResult.type ), 
                                 gTempVariable, parsedResult.content );
-                printf( "> New definition of %s() entered ...\n", gIdToeknName[i].c_str() );
+                printf( "New definition of %s() entered ...\n", gIdToeknName[i].c_str() );
               } // end else
             } // end else
 
@@ -875,6 +922,7 @@ private:
           gIdToeknName.clear();
           return true;
         } // end if
+        
       }  // end if
     } // end else
     
@@ -913,19 +961,21 @@ private:
     // 處理 { ',' Identifier [ '[' Constant ']' ] } 結構
     while ( mnextToken.type == COMMA ) {
       Match( COMMA, parsedResult );
-      
+
       if ( mnextToken.type == IDENTIFIER ) {
         gIdToeknName.push_back( mnextToken.tokenName );
         Match( IDENTIFIER, parsedResult ); // 匹配標識符
         
         // 檢查是否存在 '[' Constant ']' 結構
-        if ( Match( LBRACKET, parsedResult ) ) {
-
-          if ( Match( CONSTANT, parsedResult ) ) 
-            Match( RBRACKET, parsedResult ) ;
+        if ( mnextToken.type == LBRACKET ) {
+          Match( LBRACKET, parsedResult );
+          
+          if ( Match( CONSTANT, parsedResult ) ) {
+	  Match( RBRACKET, parsedResult ); 
+          } // end if
+          
           else return false ;
         } // end if
-        else return false;
       } // end if 
       
       else {
@@ -1161,7 +1211,23 @@ private:
         
         ListFunction( parsedResult.tokenName ); 
         return true;
-      } // end if      
+      } // end else if
+      
+      else if ( mnextToken.tokenName.compare( "ListAllVariables" ) == 0 ) {
+        Match( IDENTIFIER, parsedResult );
+        if ( !Rest_of_identifier_started_basic_exp( parsedResult ) ) return false;
+        ListAllVariables();
+        return true;
+      } // end if
+      
+      else if ( mnextToken.tokenName.compare( "ListVariable" ) == 0 ) {
+        Match( IDENTIFIER, parsedResult );
+        
+        if ( !Rest_of_identifier_started_basic_exp( parsedResult ) ) return false;
+        
+        ListVariable( parsedResult.tokenName ); 
+        return true;
+      } // end else if      
 
       else if ( gsymbolTable.find( mnextToken.tokenName ) == gsymbolTable.end() && 
                 gLocalsymbolTable.find( mnextToken.tokenName ) == gLocalsymbolTable.end() ) {
@@ -1178,7 +1244,7 @@ private:
         } // end if
         
         return false;
-      }  // end if 
+      }  // end else if 
       
       if ( !Match( IDENTIFIER, parsedResult ) ) return false;
       return Rest_of_identifier_started_basic_exp( parsedResult );
@@ -1697,6 +1763,6 @@ int main() {
   
   Parser parse ;
   parse.Parse() ;
-  cout << "> Our-C exited ..." << endl ; 
+  cout << "Our-C exited ..." << endl ; 
   
 } // end main()
