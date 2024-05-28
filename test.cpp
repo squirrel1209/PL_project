@@ -808,10 +808,9 @@ private:
   void User_input() {
     Token parsedResult ;
     parsedResult = mnextToken;
-    int startLine;
+    int startLine = mnextToken.line;
     while ( mnextToken.type != QUIT && parsedResult.type != QUIT ) {
       cout << "> " ;
-      startLine = mnextToken.line;
       parsedResult = mnextToken;
       if ( mnextToken.type == VOID || Type_specifier() ) {
         Definition( parsedResult );
@@ -825,6 +824,7 @@ private:
         else if ( iStatement ) cout << "Statement executed ...\n"; 
       } // end else if
 
+      else Match( ERROR, parsedResult );
       if ( parsedResult.type == ERROR ) {
         if ( parsedResult.error == LEXICALERROR )
           printf( "Line %d : unrecognized token with first char : '%s'\n", 
@@ -842,6 +842,7 @@ private:
         while ( parsedResult.line >= mnextToken.line ) mnextToken = gtokenizer.GetNextToken();
       } // end if
       
+      startLine = parsedResult.line + 1;
     } // end while
     
     gsymbolTable.clear();
@@ -888,7 +889,7 @@ private:
       parsedResult.tokenName = mnextToken.tokenName;
       
       if ( Match( IDENTIFIER, parsedResult ) ) {
-      	
+
         if ( Function_definition_or_declarators( parsedResult, function ) ) {
           for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
             if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) {
@@ -969,11 +970,11 @@ private:
         // 檢查是否存在 '[' Constant ']' 結構
         if ( mnextToken.type == LBRACKET ) {
           Match( LBRACKET, parsedResult );
-          
+
           if ( Match( CONSTANT, parsedResult ) ) {
-	  Match( RBRACKET, parsedResult ); 
+            Match( RBRACKET, parsedResult ); 
           } // end if
-          
+
           else return false ;
         } // end if
       } // end if 
@@ -1136,11 +1137,17 @@ private:
     } // end else if 
     
     else if ( mnextToken.type == WHILE ) {
+
       Match( WHILE, parsedResult );
+      
       if ( !Match( LPAREN, parsedResult ) ) return false;
+      
       if ( !Expression( parsedResult ) ) return false;
+      
       if ( !Match( RPAREN, parsedResult ) ) return false;
+      
       if ( !Statement( parsedResult ) ) return false; 
+      
       return true;
     } // end else if
     
@@ -1733,13 +1740,14 @@ private:
   bool Match( Type expected, Token &parsedResult ) {
     if ( mnextToken.type == expected ) {
       parsedResult.content.push_back( mnextToken.tokenName );
+      parsedResult.line = mnextToken.line;
       mnextToken = gtokenizer.GetNextToken();
       return true;
     } // end if 
     
     else {
       if ( parsedResult.type == ERROR ) {    } // end if
-    	
+
       else if ( mnextToken.type != ERROR ) {
         
         parsedResult = mnextToken;
