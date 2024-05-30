@@ -1,12 +1,9 @@
-int first,second,
-max;
-cin
-    >>first>>second;cin>>first;
-if ( ( first>(second-5)*
-                        max ) && ( second > 0 ) )
+int first, second, max ;
+cin >> first >> second ;
+if ( ( first > second ) && ( second > 0 ) )
   if ( second > -35 )
-    max=35
-         -second;
+    while ( max < 35 )
+      max = max + 5 ;
   else 
     max = second - 35 ;
 else { // NOT ( ( first > second ) && ( second > 0 ) )
@@ -16,7 +13,7 @@ else { // NOT ( ( first > second ) && ( second > 0 ) )
 
 if ( ( first > second ) && ( second > 0 ) )
   if ( second > -35 )
-    max = 35 - second ;
+    max = 35 - -second ;
   else 
     max = second - 35 }
 else { // NOT ( ( first > second ) && ( second > 0 ) )

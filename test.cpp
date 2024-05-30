@@ -819,12 +819,15 @@ private:
       else if ( StartExpression() || mnextToken.type == SEMICOLON || mnextToken.type == IF ||
                 mnextToken.type == WHILE || mnextToken.type == DO || mnextToken.type == RETURN ||
                 mnextToken.type == ELSE  || mnextToken.type == LBRACE ) {
+
         bool iStatement = Statement( parsedResult );
         if ( parsedResult.type == QUIT ) { }
-        else if ( iStatement ) cout << "Statement executed ...\n"; 
+        else if ( iStatement ) cout << "Statement executed ...\n";
+
       } // end else if
 
       else Match( ERROR, parsedResult );
+
       if ( parsedResult.type == ERROR ) {
         if ( parsedResult.error == LEXICALERROR )
           printf( "Line %d : unrecognized token with first char : '%s'\n", 
@@ -1097,8 +1100,11 @@ private:
     } // end if 
     
     else if ( StartExpression() ) {
+ 
       if ( !Expression( parsedResult ) ) return false;
+
       if ( !Match( SEMICOLON, parsedResult ) ) return false;
+
       return true;
     } // end else if
     
@@ -1137,15 +1143,14 @@ private:
     } // end else if 
     
     else if ( mnextToken.type == WHILE ) {
-
       Match( WHILE, parsedResult );
       
       if ( !Match( LPAREN, parsedResult ) ) return false;
-      
+
       if ( !Expression( parsedResult ) ) return false;
-      
+
       if ( !Match( RPAREN, parsedResult ) ) return false;
-      
+
       if ( !Statement( parsedResult ) ) return false; 
       
       return true;
@@ -1198,7 +1203,6 @@ private:
   } // end Expression()
 
   bool Basic_Expression( Token &parsedResult ) {
-
     if ( mnextToken.type == IDENTIFIER ) { // undefine
       
       if ( mnextToken.tokenName.compare( "cin" ) == 0 || mnextToken.tokenName.compare( "cout" ) == 0 ) {
@@ -1293,10 +1297,12 @@ private:
       return Romce_and_romloe( parsedResult );
     } // end else if
     
+    Match( ERROR, parsedResult );
     return false;
   } // end Basic_Expression()
 
   bool Rest_of_identifier_started_basic_exp( Token &parsedResult ) {
+    bool error = true;
     if ( mnextToken.type == LBRACKET ) {
       Match( LBRACKET, parsedResult );
       if ( !Expression( parsedResult ) ) return false;
@@ -1304,7 +1310,11 @@ private:
     } // end if
 
     if ( AsSignment_operator( parsedResult ) ) {
-      if ( !Basic_Expression( parsedResult ) ) return false;
+    	
+      if ( !Basic_Expression( parsedResult ) ) {
+        return false;
+      } // end if
+      
     } // end if 
     
     else if ( mnextToken.type == PP || mnextToken.type == MM ) {
@@ -1312,7 +1322,7 @@ private:
       if ( !Romce_and_romloe( parsedResult ) ) return false;
     } // end else if
     
-    else Romce_and_romloe( parsedResult );
+    else error = Romce_and_romloe( parsedResult );
     
     if ( mnextToken.type == LPAREN ) {
       Match( LPAREN, parsedResult );
@@ -1333,7 +1343,7 @@ private:
       return Romce_and_romloe( parsedResult );
     } // end if
     
-    return true;
+    return error;
   } // end Rest_of_identifier_started_basic_exp()
 
   bool Rest_of_PPMM_Identifier_started_basic_exp( Token &parsedResult ) {
@@ -1367,9 +1377,8 @@ private:
   } // end AsSignment_operator()
 
   bool Romce_and_romloe( Token &parsedResult ) {
-    
     if ( !Rest_of_maybe_logical_OR_exp( parsedResult ) ) {
-      return false; 
+      return false;
     } // end if 
     
     if ( mnextToken.type == QUESTION ) {
@@ -1435,7 +1444,6 @@ private:
       if ( !Maybe_bit_ex_OR_exp( parsedResult ) ) return false;
     } // end while
 
-    // cout << mnextToken.tokenName;
     return true;
   } // end Rest_of_maybe_bit_OR_exp()
 
@@ -1458,7 +1466,6 @@ private:
       if ( !Maybe_bit_AND_exp( parsedResult ) ) return false;
     } // end while
 
-    // cout << mnextToken.tokenName;
     return true;
   } // end Rest_of_maybe_bit_ex_OR_exp()
   
@@ -1481,7 +1488,6 @@ private:
       if ( !Maybe_equality_exp( parsedResult ) ) return false;
     } // end while
 
-    // cout << mnextToken.tokenName;
     return true;
   } // end Rest_of_maybe_bit_AND_exp()
   
@@ -1504,7 +1510,7 @@ private:
       Match( mnextToken.type, parsedResult );  // 消耗 EQ 或 NEQ
       if ( !Maybe_relational_exp( parsedResult ) ) return false;
     } // end while
-    // cout << mnextToken.tokenName;
+
     return true;
   } // end Rest_of_maybe_equality_exp()
 
@@ -1544,13 +1550,11 @@ private:
 
   bool Rest_of_maybe_shift_exp( Token &parsedResult ) {
     if ( !Rest_of_maybe_additive_exp( parsedResult ) ) return false;
-
     while ( mnextToken.type == LS || mnextToken.type == RS ) {
       Match( mnextToken.type, parsedResult );  // 消耗 LS 或 RS
       if ( !Maybe_additive_exp( parsedResult ) ) return false;
     } // end while
 
-    // cout << mnextToken.tokenName;
     return true;
   } // end Rest_of_maybe_shift_exp()
 
@@ -1577,8 +1581,7 @@ private:
   } // end Rest_of_maybe_additive_exp()
 
   bool Maybe_mult_exp( Token &parsedResult ) {
-    // cout << mnextToken.tokenName << endl;
-    if ( !Unary_exp( parsedResult ) ) return false;
+    if ( !Unary_exp( parsedResult ) ) return false; 
     return Rest_of_maybe_mult_exp( parsedResult );  
   } // end Maybe_mult_exp()
 
@@ -1628,7 +1631,8 @@ private:
 
       return false;
     } // end else if
-    
+     
+    Match( ERROR, parsedResult );
     return false;
   } // end Unary_exp()
 
@@ -1675,6 +1679,7 @@ private:
       return Match( RPAREN, parsedResult ); // 消耗 ')'
     } // end else if
     
+    Match( ERROR, parsedResult );
     return false;
   }  // end Signed_Unary_exp()
 
@@ -1726,6 +1731,7 @@ private:
       return Match( RPAREN, parsedResult ); // 消耗 ')'
     } // end else if
     
+    Match( ERROR, parsedResult );
     return false;
   } // end Unsigned_unary_exp()
 
@@ -1734,6 +1740,7 @@ private:
       return Match( mnextToken.type, parsedResult );
     } // end if
     
+    Match( ERROR, parsedResult );
     return false;
   } // end Sign()
 
@@ -1756,8 +1763,6 @@ private:
       } // end else if
         
       else parsedResult = mnextToken;
-
-      mnextToken = gtokenizer.GetNextToken();
       return false;
     } // end else
   } // end Match()
