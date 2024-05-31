@@ -240,11 +240,10 @@ void ListAllVariables() {
   } // end for 
 } // end ListAllVariables()
 
-// 列出指定函數的定義
 void ListFunction( string name ) {
+   
   map<string, Function>::iterator it = gfunctionMap.find( name );
   if ( it != gfunctionMap.end() ) {
-    cout << "> " ;
     for ( size_t i = 0 ; i < it -> second.body.size() ; ++i ) {
       cout << it -> second.body[i] ;
       if ( it -> second.body[i].compare( ";" ) == 0 || it -> second.body[i].compare( "{" ) == 0 ||
