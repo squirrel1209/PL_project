@@ -112,24 +112,25 @@ struct Token {
   Type type;         // 標記類型
   int line;          // 標記所在的行數
   ErrorType error;       // 關聯的錯誤信息
-  vector<string> content;
+  vector<Token> content;
 };
 
-map<string, Type> gsymbolTable;
-map<string, Type> gLocalsymbolTable;
+
+map<string, Token> gsymbolTable;
+map<string, Token> gLocalsymbolTable;
 vector<string> gIdToeknName;
 vector<string> ginput;
 
 struct Variable {
   string typeName;
   string name;
-  vector<string> body;
+  vector<Token> body;
 };
 
 struct Function {
   string typeName;
   vector<Variable> parameter;
-  vector<string> body;
+  vector<Token> body;
 };
 
 vector<Variable> gTempVariable;
@@ -191,7 +192,7 @@ void InitializegTypeNameMap() {
 } // end InitializegTypeNameMap()
 
 // 函數定義，並存儲到 map 中
-void DefineFunction( string name, string returnType, vector<Variable> params, vector<string> body ) {
+void DefineFunction( string name, string returnType, vector<Variable> params, vector<Token> body ) {
   Function func;
   func.typeName = returnType;
   func.parameter = params;
@@ -199,7 +200,7 @@ void DefineFunction( string name, string returnType, vector<Variable> params, ve
   gfunctionMap[name] = func;
 } // end DefineFunction()
 
-void DefineVariable( string name, string returnType, vector<string> body ) {
+void DefineVariable( string name, string returnType, vector<Token> body ) {
   Variable var;
   var.name = name;
   var.typeName = returnType;
@@ -224,15 +225,51 @@ void ListAllVariables() {
 
 // 列出指定函數的定義
 void ListFunction( string name ) {
-   
+  int space = 0; 
   map<string, Function>::iterator it = gfunctionMap.find( name );
   if ( it != gfunctionMap.end() ) {
     for ( size_t i = 0 ; i < it -> second.body.size() ; ++i ) {
-      if ( i+1 < it -> second.body.size() && it -> second.body[i+1].compare( "\n" ) == 0 ) { cout << "  "; }
-      cout << it -> second.body[i] ;
-      if ( it -> second.body[i].compare( ";" ) == 0 || it -> second.body[i].compare( "{" ) == 0 ||
-           it -> second.body[i].compare( "}" ) == 0 ) cout << endl;
-      else if ( i+1 < it -> second.body.size() && it -> second.body[i+1].compare( "(" ) == 0 ) { }
+      cout << it -> second.body[i].tokenName ;
+      
+      if ( it -> second.body[i].tokenName.compare( "{" ) == 0 ) space++;
+      else if ( it -> second.body[i].tokenName.compare( "}" ) == 0 ) space--;
+
+      if ( ( i + 1 ) <= it -> second.body.size() && 
+           it -> second.body[i].tokenName.compare( ";" ) == 0 && 
+           it -> second.body[i+1].tokenName.compare( "}" ) == 0 ) {
+        cout << endl;
+        for ( int i = 0 ; i < space - 1 ; i++ ) 
+          cout << "  ";
+      } // end if
+      
+      else if ( it -> second.body[i].tokenName.compare( "}" ) == 0 && ( i == it -> second.body.size() - 1 ||
+                                                                        i == it -> second.body.size() - 2 ) )
+        cout << endl;
+      
+      else if ( it -> second.body[i].tokenName.compare( "}" ) == 0 && i != it -> second.body.size() - 1 ) { 
+        cout << endl;
+        for ( int i = 0 ; i < space ; i++ ) 
+          cout << "  ";
+      } // end else if  
+
+      else if ( it -> second.body[i].tokenName.compare( ";" ) == 0 || 
+                it -> second.body[i].tokenName.compare( "{" ) == 0 ) {
+        cout << endl ;
+        for ( int i = 0 ; i < space ; i++ ) 
+          cout << "  ";
+      } // end else if
+      
+      else if ( i+1 < it -> second.body.size() && 
+                it -> second.body[i+1].tokenName.compare( "[" ) == 0  ) { }
+      
+      else if ( i+1 < it -> second.body.size() && ( it -> second.body[i].type == IDENTIFIER && 
+                                                    it -> second.body[i+1].type == LPAREN ) ) { }
+
+      else if ( i+1 < it -> second.body.size() && 
+                ( it -> second.body[i+1].tokenName.compare( "++" ) == 0 || 
+                  it -> second.body[i+1].tokenName.compare( "--" ) == 0 ) ) 
+      { }
+      
       else cout << ' ';
     } // end for
   } // end if 
@@ -247,17 +284,17 @@ void ListVariable( string name ) {
 
   map<string, Variable>::iterator it = gvariableMap.find( name );
   if ( it != gvariableMap.end() ) {
-    if ( it -> second.body[1].compare( name ) == 0 ) isfind = true;
+    if ( it -> second.body[1].tokenName.compare( name ) == 0 ) isfind = true;
     cout << it -> second.typeName << " " << it -> second.name;
     
     for ( size_t i = 2 ; i < it -> second.body.size() ; ++i ) {
-      if ( it -> second.body[i].compare( "," ) == 0 ||
-           it -> second.body[i].compare( ";" ) == 0 ) isfind = false;
-      if ( isfind && it -> second.body[i].compare( "[" ) == 0 ) {
-        cout << it -> second.body[i] ;
+      if ( it -> second.body[i].tokenName.compare( "," ) == 0 ||
+           it -> second.body[i].tokenName.compare( ";" ) == 0 ) isfind = false;
+      if ( isfind && it -> second.body[i].tokenName.compare( "[" ) == 0 ) {
+        cout << it -> second.body[i].tokenName ;
       } // end if
       
-      else if ( isfind ) cout << " " << it -> second.body[i] ;
+      else if ( isfind ) cout << " " << it -> second.body[i].tokenName ;
     } // end for 
 
     cout << " ;" << endl;
@@ -312,7 +349,6 @@ string AnyToString( char ch ) {
   buffer[1] = '\0';        
   return string( buffer );     
 } // end AnyToString()
-
 
 class Tokenizer {
 private:
@@ -793,6 +829,7 @@ private:
     parsedResult = mnextToken;
     int startLine = mnextToken.line;
     while ( mnextToken.type != QUIT && parsedResult.type != QUIT ) {
+      gLocalsymbolTable.clear();
       cout << "> " ;
       parsedResult = mnextToken;
       if ( mnextToken.type == VOID || Type_specifier() ) {
@@ -835,18 +872,22 @@ private:
   } // end User_input()
   
   bool Definition( Token &parsedResult ) {
+    parsedResult.content.clear(); 
     Type type = mnextToken.type;
     vector<Variable> variable;
     Variable temp;
     if ( mnextToken.type == VOID ) {
+      string name ; 
       Match( VOID, parsedResult );
       gIdToeknName.push_back( mnextToken.tokenName );
-      
+      name = mnextToken.tokenName;
+
       if ( Match( IDENTIFIER, parsedResult ) ) {
         parsedResult.type = VOID;
-        parsedResult.tokenName = mnextToken.tokenName;
-        parsedResult.content.clear(); 
+
+
         if ( Function_definition_without_ID( parsedResult ) ) {
+
           for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
             if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end()  ) 
               printf( "Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
@@ -855,24 +896,29 @@ private:
             temp.typeName = "void";
             temp.name = "void";
             variable.push_back( temp );
-            DefineFunction( parsedResult.tokenName, "void", variable, parsedResult.content );
+            DefineFunction( name, "void", variable, parsedResult.content );
             gsymbolTable[gIdToeknName[i]] = type;
           } // end for
           
           gIdToeknName.clear();
         } // end if
+        
+        else gIdToeknName.pop_back();
       } // end if
     } // end if
 
     else {
       bool function = false;
-      parsedResult.type = mnextToken.type;
-      parsedResult.content.clear();
+      string name ;
+      Type type;
+      type = mnextToken.type;
       gTempVariable.clear();
-
+      gIdToeknName.clear();
+      
+      
       Match( mnextToken.type, parsedResult );
       gIdToeknName.push_back( mnextToken.tokenName );
-      parsedResult.tokenName = mnextToken.tokenName;
+      name = mnextToken.tokenName;
       
       if ( Match( IDENTIFIER, parsedResult ) ) {
 
@@ -880,12 +926,11 @@ private:
           for ( int i = 0 ; i < gIdToeknName.size() ; i++ ) {
             if ( gsymbolTable.find( gIdToeknName[i] ) == gsymbolTable.end() ) {
               if ( !function ) {
-                
-                DefineVariable( gIdToeknName[i], ToString( parsedResult.type ), parsedResult.content ); 
+                DefineVariable( gIdToeknName[i], ToString( type ), parsedResult.content ); 
                 printf( "Definition of %s entered ...\n", gIdToeknName[i].c_str() );
               } // end if
               else {
-                DefineFunction( parsedResult.tokenName, ToString( parsedResult.type ), 
+                DefineFunction( name, ToString( type ), 
                                 gTempVariable, parsedResult.content );
                 printf( "Definition of %s() entered ...\n", gIdToeknName[i].c_str() );
               } // end else
@@ -893,11 +938,11 @@ private:
 
             else {
               if ( !function ) {
-                DefineVariable( gIdToeknName[i], ToString( parsedResult.type ), parsedResult.content ); 
+                DefineVariable( gIdToeknName[i], ToString( type ), parsedResult.content ); 
                 printf( "New definition of %s entered ...\n", gIdToeknName[i].c_str() );
               } // end if
               else {
-                DefineFunction( parsedResult.tokenName, ToString( parsedResult.type ), 
+                DefineFunction( name, ToString( type ), 
                                 gTempVariable, parsedResult.content );
                 printf( "New definition of %s() entered ...\n", gIdToeknName[i].c_str() );
               } // end else
@@ -910,12 +955,13 @@ private:
           return true;
         } // end if
         
+        else gIdToeknName.pop_back();
       }  // end if
     } // end else
     
     return false;
   } // end Definition()
-  
+
   bool Type_specifier() {
     return mnextToken.type == INT || mnextToken.type == FLOAT ||
     mnextToken.type == CHAR || mnextToken.type == BOOL || mnextToken.type == STRING ;
@@ -1007,7 +1053,7 @@ private:
     } // end if
     
     if ( mnextToken.type == IDENTIFIER ) {
-      gsymbolTable[mnextToken.tokenName] = type;
+      gLocalsymbolTable[mnextToken.tokenName] = type;
       variable.typeName = ToString( type );
       variable.name = mnextToken.tokenName;
       gTempVariable.push_back( variable );
@@ -1042,10 +1088,12 @@ private:
   bool Compound_Statement( Token &parsedResult ) {
     bool isCompound_Statement = false;
     if ( !Match( LBRACE, parsedResult ) ) return false;
+
     isCompound_Statement = StartStatement();
     if ( isCompound_Statement ) isCompound_Statement = Statement( parsedResult );
     else isCompound_Statement = Declaration( parsedResult );
 
+    if ( !isCompound_Statement && mnextToken.type != RBRACE ) return false;
 
     while ( isCompound_Statement ) {
       isCompound_Statement = StartStatement();
@@ -1053,8 +1101,8 @@ private:
       else isCompound_Statement = Declaration( parsedResult );
     } // end while
 
-    
-    if ( !Match( RBRACE, parsedResult ) ) return false;
+
+    if ( !Match( RBRACE, parsedResult ) || parsedResult.type == ERROR ) return false;
 
     return true;
   } // end Compound_Statement()
@@ -1105,7 +1153,6 @@ private:
     } // end else if
     
     else if ( mnextToken.type == LBRACE ) {
-      gLocalsymbolTable.clear();
       if ( !Compound_Statement( parsedResult ) ) return false;
       return true;
     } // end if 
@@ -1269,7 +1316,7 @@ private:
     } // end else if 
     
     else if ( mnextToken.type == CONSTANT ) {
-      parsedResult.tokenName = mnextToken.tokenName;
+      parsedResult.tokenName = mnextToken.tokenName; 
       return Match( CONSTANT, parsedResult ) && Romce_and_romloe( parsedResult );
     } // end else if
     
@@ -1703,6 +1750,7 @@ private:
     } // end if 
     
     else if ( mnextToken.type == CONSTANT ) {
+      parsedResult = mnextToken;
       return Match( CONSTANT, parsedResult );
     } // end else if 
     
@@ -1710,10 +1758,10 @@ private:
       Match( LPAREN, parsedResult ); // 消耗 '('
       
       if ( !Expression( parsedResult ) ) return false;
-      
+
       return Match( RPAREN, parsedResult ); // 消耗 ')'
     } // end else if
-    
+
     Match( ERROR, parsedResult );
     return false;
   } // end Unsigned_unary_exp()
@@ -1729,7 +1777,7 @@ private:
 
   bool Match( Type expected, Token &parsedResult ) {
     if ( mnextToken.type == expected ) {
-      parsedResult.content.push_back( mnextToken.tokenName );
+      parsedResult.content.push_back( mnextToken );
       parsedResult.line = mnextToken.line;
       mnextToken = gtokenizer.GetNextToken();
       return true;

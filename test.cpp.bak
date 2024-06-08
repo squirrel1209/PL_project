@@ -128,10 +128,14 @@ enum ErrorType {
 struct Token {
   string tokenName;  // 標記名稱
   Type type;         // 標記類型
-  Type true_Type;   
   int line;          // 標記所在的行數
   ErrorType error;       // 關聯的錯誤信息
   vector<Token> content;
+};
+
+struct Assign_Token {
+  string tokenName;
+  Token value;
 };
 
 map<string, Token> gsymbolTable;
@@ -328,9 +332,9 @@ void RemoveKeyFromMap( map<string, Type>& symbolTable, string keyToRemove ) {
   map<string, Type>::iterator it = symbolTable.find( keyToRemove );
   if ( it != symbolTable.end() ) {
         // 若找到，則刪除
-    symbolTable.erase( it );
+    symbolTable.erase(it);
   } // end if
-} // end RemoveKeyFromMap()
+} // end RemoveKeyFromMap
 
 string ToString( Type t ) {
   map<Type, string>::iterator it = gTypeNameMap.find( t );
@@ -444,11 +448,11 @@ public:
          id.compare( "if" ) == 0 || id.compare( "else" ) == 0 || id.compare( "while" ) == 0 || 
          id.compare( "do" ) == 0 || id.compare( "return" ) == 0 ) {
 
-      return CreatToken( id, mlineIndex, GetKeywordType( id ), CONSTANT ,LEXICALERROR );
+      return CreatToken( id, mlineIndex, GetKeywordType( id ), LEXICALERROR );
     } // end if
     
     else {
-      return CreatToken( id, mlineIndex, IDENTIFIER, CONSTANT ,LEXICALERROR );
+      return CreatToken( id, mlineIndex, IDENTIFIER, LEXICALERROR );
     } // end else 
   } // end GetIdentOrKeyword() 
 
@@ -463,11 +467,11 @@ public:
       if ( nextChar == '.' ) {
         if ( hasDot && hasDigit ) {
           PreviousChar();
-          return CreatToken( tokenName, mlineIndex, CONSTANT, FLOAT ,LEXICALERROR );
+          return CreatToken( tokenName, mlineIndex, CONSTANT, LEXICALERROR );
         } // end if
         
         else if ( hasDot && !hasDigit ) { // Error 
-          return CreatToken( ".", mlineIndex, ERROR, ERROR ,LEXICALERROR );
+          return CreatToken( ".", mlineIndex, ERROR, LEXICALERROR );
         } // end else if
         
         hasDot = true;
@@ -481,8 +485,8 @@ public:
 
     // 如果字符不是數字或點，回退一個字符 
     PreviousChar();
-    if ( tokenName == "." ) return CreatToken( ".", mlineIndex, ERROR, ERROR ,LEXICALERROR );
-    else return CreatToken( tokenName, mlineIndex, CONSTANT, INT ,LEXICALERROR );
+    if ( tokenName == "." ) return CreatToken( ".", mlineIndex, ERROR, LEXICALERROR );
+    else return CreatToken( tokenName, mlineIndex, CONSTANT, LEXICALERROR );
   } // end GetNUM() 
 
   bool IsDelimiter( char ch ) {
@@ -676,18 +680,18 @@ public:
     else if ( ch == ':' ) tokenType = COLON;
     else if ( ch == '^' ) tokenType = BIT_XOR;
     // 返回創建的Token
-    return CreatToken( tokenValue, mlineIndex, tokenType, tokenType ,OTHERERROR );
+    return CreatToken( tokenValue, mlineIndex, tokenType, OTHERERROR );
   } // end GetDelimiter()
 
   // ---------------------------------------GetToken--------------------------------------- 
   // 獲取下一個 token，忽略空白，處理註釋，並識別分隔符和普通字符。 
-  Token CreatToken( string TokenName, int line, Type type, Type true_Type ,ErrorType error ) {
+  Token CreatToken( string TokenName, int line, Type type, ErrorType error ) {
     Token token;
     token.tokenName = TokenName;
     token.line = line;
     token.type = type;
     token.error = error;
-    token.true_Type = true_Type;
+    
     return token;
   } // end CreatToken()
   
@@ -714,7 +718,7 @@ public:
     } // end if 
     
     if ( mlineIndex >= ginput.size() ) {
-      return CreatToken( "\0", mlineIndex, QUIT, QUIT ,LEXICALERROR );
+      return CreatToken( "\0", mlineIndex, QUIT, LEXICALERROR );
     } // end if 
         
     else if ( nextChar == '.' || isdigit( nextChar ) ) // NUM
@@ -725,8 +729,8 @@ public:
       string ch = AnyToString( GetNextChar() );
 
       nextChar = GetNextChar();
-      if ( nextChar == '\'' ) return CreatToken( ch, charline, CONSTANT, CHAR ,LEXICALERROR );
-      else return CreatToken( "'", charline, ERROR, ERROR ,LEXICALERROR );
+      if ( nextChar == '\'' ) return CreatToken( ch, charline, CONSTANT, LEXICALERROR );
+      else return CreatToken( "'", charline, ERROR, LEXICALERROR );
     } // end else if 
     
     else if ( nextChar == '\"' ) {  // string
@@ -738,9 +742,9 @@ public:
       } // end while
       
       if ( nextChar == '\0' ) 
-        return CreatToken( "string missing terminating '\"", mlineIndex, ERROR, ERROR ,SYNTACTICALERROR );
+        return CreatToken( "string missing terminating '\"", mlineIndex, ERROR, SYNTACTICALERROR );
 
-      return CreatToken( str, mlineIndex, CONSTANT, STRING ,LEXICALERROR );
+      return CreatToken( str, mlineIndex, CONSTANT, LEXICALERROR );
     } // end else if
     
     else if ( isalpha( nextChar ) ) {  // IDENT
@@ -755,7 +759,7 @@ public:
     
     else {
       string temp = string( 1, nextChar ) ;
-      return CreatToken( temp, mlineIndex, ERROR, ERROR ,LEXICALERROR );
+      return CreatToken( temp, mlineIndex, ERROR, LEXICALERROR );
     } // end else 
     
   } // end GetNextToken()
@@ -1626,9 +1630,8 @@ private:
       while ( mnextToken.type == PLUS || mnextToken.type == MINUS || mnextToken.type == NOT ) {
         Sign( parsedResult );
       } // end while
-
-      Signed_Unary_exp( parsedResult );
-      return 
+        
+      return Signed_Unary_exp( parsedResult );
     } // end if
      
     else if ( mnextToken.type == IDENTIFIER || mnextToken.type == CONSTANT || mnextToken.type == LPAREN ) {
@@ -1697,7 +1700,6 @@ private:
     } // end if 
     
     else if ( mnextToken.type == CONSTANT ) {
-      parsedResult = mnextToken;
       return Match( CONSTANT, parsedResult );
     } // end else if 
     
@@ -1749,7 +1751,6 @@ private:
     } // end if 
     
     else if ( mnextToken.type == CONSTANT ) {
-      parsedResult = mnextToken;
       return Match( CONSTANT, parsedResult );
     } // end else if 
     
