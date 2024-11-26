@@ -33,5 +33,5 @@
 g++ -std=c++11 -o interpreter main.cpp
 
 ## 範例
-![alt text](image.png)
+![alt text](./image.png)
    
