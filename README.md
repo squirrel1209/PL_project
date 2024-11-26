@@ -20,7 +20,6 @@
 
 - `main.cpp`：主程式入口，負責讀取輸入和初始化解釋器。
 - `Tokenizer.h`：負責將輸入文本分割成token。
-   getNextChar() 函數是一個用於逐字符讀取輸入文本的函數。
    
 - `Parser.h`：根據token進行語法分析並執行相應的命令。
 
@@ -32,3 +31,7 @@
 
 ```bash
 g++ -std=c++11 -o interpreter main.cpp
+
+## 範例
+![alt text](image.png)
+   
