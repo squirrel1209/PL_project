@@ -50,7 +50,9 @@
 
 `Token` 結構體包含標記的名稱、類型、所在行數和錯誤訊息。
 
-## 核心函數
+## parse 函數
+
+`parse` 函數負責執行整個解析過程，讀取並處理輸入的 token，直到遇到終止指令為止。
 
 ### CreateToken
 
@@ -90,9 +92,9 @@
 
 `command` 函數負責解析並處理當前命令，根據命令的內容更新 `parsedResult` 變數。
 
-### parse 函數
+## Tokenizer 類
 
-`parse` 函數負責執行整個解析過程，讀取並處理輸入的 token，直到遇到終止指令為止。
+`Tokenizer` 類封裝了詞法分析的邏輯，提供字符讀取和處理的功能。
 
 ### processTokens 函數
 
@@ -155,8 +157,5 @@
 
 `getNextChar` 函數從輸入文本中獲取下一個字符。
 
-## Tokenizer 類
-
-`Tokenizer` 類封裝了詞法分析的邏輯，提供字符讀取和處理的功能。
 
 
